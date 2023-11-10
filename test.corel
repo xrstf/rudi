@@ -1,0 +1,3 @@
+(set .spec.secretName (concat .metadata.name suffix))
+(set .spec.issuerRef.name (concat $globalIssuer .metadata.name))
+(drop .spec.isCA)

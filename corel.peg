@@ -1,0 +1,228 @@
+{
+// Package lang parses COREL programs.
+package lang
+
+func toAnySlice(v any) []any {
+    if v == nil {
+        return nil
+    }
+    return v.([]any)
+}
+
+}
+
+Program <- exprs:(_ Expression)* _ EOF {
+   p := Program{}
+
+   exprsSl := toAnySlice(exprs)
+   if len(exprsSl) == 0 {
+      return p, nil
+   }
+
+   for _, expr := range exprsSl {
+      subSl := toAnySlice(expr)
+      p.Expressions = append(p.Expressions, subSl[1].(Expression))
+   }
+
+   return p, nil
+}
+
+Expression <- val:Symbol {
+   data, _ := val.(Symbol)
+   return Expression{Symbol: &data}, nil
+} / val:Tuple {
+   data, _ := val.(Tuple)
+   return Expression{Tuple: &data}, nil
+} / val:Vector {
+   data, _ := val.(Vector)
+   return Expression{Vector: &data}, nil
+} / val:Object {
+   data, _ := val.(Object)
+   return Expression{Object: &data}, nil
+} / val:Bool {
+   data, _ := val.(Bool)
+   return Expression{Bool: &data}, nil
+} / val:Null {
+   data, _ := val.(Null)
+   return Expression{Null: &data}, nil
+}
+
+Tuple <- '(' _ sym:Symbol exprs:(_ Expression)* _ ')' {
+   t := Tuple{Symbol: sym.(Symbol)}
+
+   exprsSl := toAnySlice(exprs)
+   if len(exprsSl) == 0 {
+      return t, nil
+   }
+
+   for _, expr := range exprsSl {
+      subSl := toAnySlice(expr)
+      t.Expressions = append(t.Expressions, subSl[1].(Expression))
+   }
+
+   return t, nil
+}
+
+Vector <- '[' _ vals:( Expression ( ','? _ Expression )* )? ']' {
+   valsSl := toAnySlice(vals)
+   if len(valsSl) == 0 {
+      return Vector{}, nil
+   }
+
+   vector := Vector{}
+   vector.Expressions = append(vector.Expressions, valsSl[0].(Expression))
+
+   restSl := toAnySlice(valsSl[1])
+   for _, v := range restSl {
+      vSl := toAnySlice(v)
+      vector.Expressions = append(vector.Expressions, vSl[2].(Expression))
+   }
+
+   return vector, nil
+}
+
+Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
+   o := Object{}
+
+   pairsSl := toAnySlice(pairs)
+   if len(pairsSl) == 0 {
+      return o, nil
+   }
+
+   for _, pair := range pairsSl {
+      pairSl := toAnySlice(pair)
+      o.Data = append(o.Data, pairSl[1].(KeyValuePair))
+   }
+
+   return o, nil
+}
+
+KeyValuePair <- (key:Symbol _ value:Expression) {
+   return KeyValuePair{
+      Key: key.(Symbol),
+      Value: value.(Expression),
+   }, nil
+}
+
+Symbol <- val:JSONPath {
+   jsonPath, _ := val.(JSONPath)
+   return Symbol{JSONPath: &jsonPath}, nil
+} / val:Variable {
+   variable, _ := val.(Variable)
+   return Symbol{Variable: &variable}, nil
+} / val:Identifier {
+   ident, _ := val.(Identifier)
+   return Symbol{Identifier: &ident}, nil
+}
+
+JSONPath <- vals:('.' JSONPathStep)+ {
+   path := JSONPath{}
+   for _, val := range toAnySlice(vals) {
+      list := val.([]interface{})
+      path = append(path, list[1].(string))
+   }
+
+   return path, nil
+}
+
+JSONPathStep <- [a-zA-Z0-9_]+ {
+   return string(c.text), nil
+}
+
+Variable <- '$' name:VariableName {
+   return Variable{Name: name.(string)}, nil
+}
+
+VariableName <- [a-zA-Z0-9_]+ {
+   return string(c.text), nil
+}
+
+Identifier <- [a-zA-Z0-9_]+ {
+   return Identifier{Name: string(c.text)}, nil
+}
+
+Bool <- "true" { return Bool{Value: true}, nil } / "false" { return Bool{Value: false}, nil }
+
+Null <- "null" { return Null{}, nil }
+
+_ "whitespace" <- [ \t\r\n]*
+
+EOF <- !.
+
+/*
+
+JSON <- _ val:Value EOF {
+    return val, nil
+}
+
+Value <- val:( Object / Array / Number / String / Bool / Null ) _ {
+    return val, nil
+}
+
+Object <- '{' _ vals:( String _ ':' _ Value ( ',' _ String _ ':' _ Value )* )? '}' {
+    res := make(map[string]any)
+    valsSl := toAnySlice(vals)
+    if len(valsSl) == 0 {
+        return res, nil
+    }
+    res[valsSl[0].(string)] = valsSl[4]
+    restSl := toAnySlice(valsSl[5])
+    for _, v := range restSl {
+        vSl := toAnySlice(v)
+        res[vSl[2].(string)] = vSl[6]
+    }
+    return res, nil
+}
+
+Array <- '[' _ vals:( Value ( ',' _ Value )* )? ']' {
+    valsSl := toAnySlice(vals)
+    if len(valsSl) == 0 {
+        return []any{}, nil
+    }
+    res := []any{valsSl[0]}
+    restSl := toAnySlice(valsSl[1])
+    for _, v := range restSl {
+        vSl := toAnySlice(v)
+        res = append(res, vSl[2])
+    }
+    return res, nil
+}
+
+Number <- '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
+    // JSON numbers have the same syntax as Go's, and are parseable using
+    // strconv.
+    return strconv.ParseFloat(string(c.text), 64)
+}
+
+Integer <- '0' / NonZeroDecimalDigit DecimalDigit*
+
+Exponent <- 'e'i [+-]? DecimalDigit+
+
+String <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
+    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
+    return strconv.Unquote(string(c.text))
+}
+
+EscapedChar <- [\x00-\x1f"\\]
+
+EscapeSequence <- SingleCharEscape / UnicodeEscape
+
+SingleCharEscape <- ["\\/bfnrt]
+
+UnicodeEscape <- 'u' HexDigit HexDigit HexDigit HexDigit
+
+DecimalDigit <- [0-9]
+
+NonZeroDecimalDigit <- [1-9]
+
+HexDigit <- [0-9a-f]i
+
+Bool <- "true" { return true, nil } / "false" { return false, nil }
+
+Null <- "null" { return nil, nil }
+
+_ "whitespace" <- [ \t\r\n]*
+
+EOF <- !.
+
+*/
