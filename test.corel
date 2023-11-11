@@ -1,7 +1,11 @@
-(set .spec.secretName (concat .metadata.name "-suffix"))
+( set .spec.secretName (concat .metadata.name "-suffix")
+)
 (set .spec.issuerRef.name (concat $globalIssuer .metadata.name -7.6))
 (drop .spec.isCA)
 (set .spec {
-	foo (concat "namespace-" .metadata.namespace)
-	bar (add 3 .metadata.resourceVersion)
+	foo
+	(concat "namespace-" .metadata.namespace[5].$var[17].foo[(add .bar 2)])
+	bar
+	  (add 3 .metadata.resourceVersion)
+	muh (example $var $var.foo $var.foo.bar .foo[7] $var[0])
 })

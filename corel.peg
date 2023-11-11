@@ -104,30 +104,96 @@ KeyValuePair <- (key:Symbol _ value:Expression) {
    }, nil
 }
 
-Symbol <- val:JSONPath {
-   jsonPath, _ := val.(ast.JSONPath)
-   return ast.Symbol{JSONPath: &jsonPath}, nil
-} / val:Variable {
+//////////////////////////////////////////////////////////
+// path expressions
+
+/*
+possible symbols:
+
+   (each step is evaluated immediately, so foo.bar[0] is (foo.bar)[0], not foo.(bar[0]))
+
+// regular identifier
+identifier
+
+// regular variable
+$var
+
+// traverse variable
+$var.subkey
+$var[0]
+$var[$var]
+$var[(add $var 1)]
+
+// deeper traversal
+$var.subkey[0].$othervar.subkey
+
+// instead of traversing starting with a var, you can also
+// start traversing the current object
+.subkey
+.subkey[$index].subsubkey.$varstep
+
+*/
+
+Symbol <- val:PathExpression {
+   pathExpr, _ := val.(ast.PathExpression)
+   return ast.Symbol{PathExpression: &pathExpr}, nil
+} / val:Variable pathExpr:PathExpression* {
+   var expr *ast.PathExpression
+   if pathExprSl := toAnySlice(pathExpr); pathExprSl != nil {
+      exp := pathExprSl[0].(ast.PathExpression)
+      expr = &exp
+   }
+
    variable, _ := val.(ast.Variable)
-   return ast.Symbol{Variable: &variable}, nil
+   return ast.Symbol{Variable: &variable, PathExpression: expr}, nil
 } / val:Identifier {
    ident, _ := val.(ast.Identifier)
    return ast.Symbol{Identifier: &ident}, nil
 }
 
-JSONPath <- vals:('.' JSONPathStep)+ {
-   path := ast.JSONPath{}
-   for _, val := range toAnySlice(vals) {
-      list := val.([]interface{})
-      path = append(path, list[1].(string))
+PathExpression <- pathExpr:(PathStep)+ {
+   path := ast.PathExpression{}
+   steps := toAnySlice(pathExpr)
+
+   for i := range steps {
+      step := steps[i]
+
+      switch asserted := step.(type) {
+         case ast.PathObjectStep:
+            path.Steps = append(path.Steps, ast.PathStep{ObjectStep: &asserted})
+         case ast.PathArrayStep:
+            path.Steps = append(path.Steps, ast.PathStep{ArrayStep: &asserted})
+         default:
+            return nil, errors.New("unknown path step")
+      }
    }
 
    return path, nil
 }
 
-JSONPathStep <- [a-zA-Z0-9_]+ {
+PathStep <- '.' val:PathIdentifier {
+   asserted := ast.Identifier{Name: val.(string)}
+   return ast.PathObjectStep{Identifier: &asserted}, nil
+} / '.' val:Variable {
+   asserted := val.(ast.Variable)
+   return ast.PathObjectStep{Variable: &asserted}, nil
+} / '[' val:Variable ']' {
+   asserted := val.(ast.Variable)
+   return ast.PathArrayStep{Variable: &asserted}, nil
+} / '[' val:Tuple ']' {
+   asserted := val.(ast.Tuple)
+   return ast.PathArrayStep{Tuple: &asserted}, nil
+} / '[' val:Integer ']' {
+   asserted := val.(int64)
+   return ast.PathArrayStep{Integer: &asserted}, nil
+}
+
+PathIdentifier <- [a-zA-Z0-9_]+ {
    return string(c.text), nil
 }
+
+//////////////////////////////////////////////////////////
+// other symbols
 
 Variable <- '$' name:VariableName {
    return ast.Variable{Name: name.(string)}, nil
@@ -162,7 +228,11 @@ Number <- '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
     return ast.Number{Value: value}, nil
 }
 
-Integer <- '0' / NonZeroDecimalDigit DecimalDigit*
+Integer <- '0' {
+   return int64(0), nil
+} / NonZeroDecimalDigit DecimalDigit* {
+   return strconv.ParseInt(string(c.text), 10, 64)
+}
 
 DecimalDigit <- [0-9]
 

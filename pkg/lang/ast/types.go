@@ -53,19 +53,24 @@ func (e Expression) String() string {
 }
 
 type Symbol struct {
-	JSONPath   *JSONPath
-	Variable   *Variable
-	Identifier *Identifier
+	PathExpression *PathExpression // can be combined with Variable
+	Variable       *Variable
+	Identifier     *Identifier
 }
 
 func (s Symbol) String() string {
+	path := ""
+	if s.PathExpression != nil {
+		path = s.PathExpression.String()
+	}
+
 	switch {
-	case s.JSONPath != nil:
-		return s.JSONPath.String()
 	case s.Variable != nil:
-		return s.Variable.String()
+		return s.Variable.String() + path
 	case s.Identifier != nil:
 		return s.Identifier.String()
+	case s.PathExpression != nil:
+		return path
 	default:
 		return "<unknown symbol>"
 	}
@@ -177,4 +182,76 @@ type Null struct{}
 
 func (Null) String() string {
 	return "null"
+}
+
+type PathExpression struct {
+	Steps []PathStep
+}
+
+func (e PathExpression) String() string {
+	result := ""
+	for _, step := range e.Steps {
+		result += step.String()
+	}
+
+	return result
+}
+
+type PathStep struct {
+	ObjectStep *PathObjectStep // .something
+	ArrayStep  *PathArrayStep  // [something]
+}
+
+func (s PathStep) String() string {
+	switch {
+	case s.ObjectStep != nil:
+		return s.ObjectStep.String()
+	case s.ArrayStep != nil:
+		return s.ArrayStep.String()
+	default:
+		return "<unknown step>"
+	}
+}
+
+type PathObjectStep struct {
+	Identifier *Identifier
+	Variable   *Variable
+}
+
+func (s PathObjectStep) String() string {
+	step := ""
+
+	switch {
+	case s.Variable != nil:
+		step = s.Variable.String()
+	case s.Identifier != nil:
+		step = s.Identifier.String()
+	default:
+		step = "<unknown object step>"
+	}
+
+	return fmt.Sprintf(".%s", step)
+}
+
+type PathArrayStep struct {
+	Variable *Variable
+	Tuple    *Tuple
+	Integer  *int64
+}
+
+func (s PathArrayStep) String() string {
+	step := ""
+
+	switch {
+	case s.Variable != nil:
+		step = s.Variable.String()
+	case s.Tuple != nil:
+		step = s.Tuple.String()
+	case s.Integer != nil:
+		step = fmt.Sprintf("%d", *s.Integer)
+	default:
+		step = "<unknown object step>"
+	}
+
+	return fmt.Sprintf("[%s]", step)
 }
