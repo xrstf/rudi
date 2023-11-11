@@ -128,28 +128,12 @@ func (o Object) String() string {
 }
 
 type KeyValuePair struct {
-	Key   ObjectKey
+	Key   Symbol
 	Value Expression
 }
 
 func (kv KeyValuePair) String() string {
 	return kv.Key.String() + " " + kv.Value.String()
-}
-
-type ObjectKey struct {
-	Symbol     *Symbol
-	Identifier *Identifier
-}
-
-func (k ObjectKey) String() string {
-	switch {
-	case k.Symbol != nil:
-		return k.Symbol.String()
-	case k.Identifier != nil:
-		return k.Identifier.String()
-	default:
-		return "<unknown object key>"
-	}
 }
 
 type Variable struct {

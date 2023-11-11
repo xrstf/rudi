@@ -103,17 +103,8 @@ Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
 }
 
 KeyValuePair <- (key:Symbol _ value:Expression) {
-   sym := key.(ast.Symbol)
-
    return ast.KeyValuePair{
-      Key: ast.ObjectKey{Symbol: &sym},
-      Value: value.(ast.Expression),
-   }, nil
-} / (key:Identifier _ value:Expression) {
-   ident := key.(ast.Identifier)
-
-   return ast.KeyValuePair{
-      Key: ast.ObjectKey{Identifier: &ident},
+      Key: key.(ast.Symbol),
       Value: value.(ast.Expression),
    }, nil
 }
@@ -160,6 +151,9 @@ Symbol <- val:PathExpression {
 
    variable, _ := val.(ast.Variable)
    return ast.Symbol{Variable: &variable, PathExpression: expr}, nil
+} / val:Identifier {
+   ident, _ := val.(ast.Identifier)
+   return ast.Symbol{Identifier: &ident}, nil
 }
 
 PathExpression <- pathExpr:(PathStep)+ {

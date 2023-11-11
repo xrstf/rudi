@@ -10,7 +10,7 @@ func evalObject(obj *ast.Object, rootObject *Object) (interface{}, error) {
 	result := map[string]interface{}{}
 
 	for _, pair := range obj.Data {
-		key, err := evalObjectKey(&pair.Key, rootObject)
+		key, err := evalSymbol(&pair.Key, rootObject)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
 		}
@@ -29,18 +29,4 @@ func evalObject(obj *ast.Object, rootObject *Object) (interface{}, error) {
 	}
 
 	return result, nil
-}
-
-func evalObjectKey(key *ast.ObjectKey, rootObject *Object) (interface{}, error) {
-	switch {
-	case key.Symbol != nil:
-		return evalSymbol(key.Symbol, rootObject)
-
-	// we use unquoted object keys, where identifers are not actually
-	// evaluated but taken as literal strings
-	case key.Identifier != nil:
-		return key.Identifier.Name, nil
-	}
-
-	return nil, fmt.Errorf("unknown object key %T (%s)", key, key.String())
 }
