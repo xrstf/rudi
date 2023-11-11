@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
@@ -16,6 +17,8 @@ func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 	switch funcName {
 	case "if":
 		return evalIfTuple(tup, rootObject)
+	case "def":
+		return evalDefTuple(tup, rootObject)
 	}
 
 	function, ok := builtin.Functions[funcName]
@@ -23,8 +26,8 @@ func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 		return nil, fmt.Errorf("unknown function %s", funcName)
 	}
 
+	// evaluate all function arguments
 	args := make([]interface{}, len(tup.Expressions))
-
 	for i, expr := range tup.Expressions {
 		arg, err := evalExpression(&expr, rootObject)
 		if err != nil {
@@ -34,6 +37,7 @@ func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 		args[i] = arg
 	}
 
+	// call the function
 	result, err := function(args)
 	if err != nil {
 		return nil, fmt.Errorf("function failed: %w", err)
@@ -84,4 +88,41 @@ func coalesceBool(val interface{}) (bool, error) {
 	default:
 		return false, fmt.Errorf("cannot coalesce %T into bool", val)
 	}
+}
+
+// this should be scoped, but for testing we just use one global map
+var runtimeVariables = map[string]interface{}{}
+
+func evalDefTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
+	if size := len(tup.Expressions); size != 2 {
+		return nil, fmt.Errorf("invalid set tuple: expected exactly 2 expressions, but got %d", size)
+	}
+
+	varNameExpr := tup.Expressions[0]
+	varName := ""
+
+	if varNameExpr.SymbolNode == nil {
+		return nil, errors.New("(def $varname expression)")
+	}
+
+	symNode := varNameExpr.SymbolNode
+	if symNode.Variable == nil {
+		return nil, errors.New("(def $varname expression)")
+	}
+
+	// forbid weird definitions like (def $var.foo (expr)) for now
+	if symNode.PathExpression != nil {
+		return nil, errors.New("(def $varname expression)")
+	}
+
+	varName = symNode.Variable.Name
+
+	value, err := evalExpression(&tup.Expressions[1], rootObject)
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate variable value: %w", err)
+	}
+
+	runtimeVariables[varName] = value
+
+	return rootObject, nil
 }

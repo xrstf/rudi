@@ -1,10 +1,13 @@
 1
 "foo"
 null
-[1 2 "foo" $foo]
+(def $myvar (add 1 2))
+$myvar
+[1 2 "foo" $myvar]
+[(add $myvar 7)]
 {
 	foo "bar"
-	hello (add 5 1.2 true)
+	hello (add 5 1.2 null (add 5 2) true)
 }
 
 ( set .spec.secretName (concat .metadata.name "-suffix")
