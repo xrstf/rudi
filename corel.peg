@@ -27,24 +27,30 @@ Program <- exprs:(_ Expression)* _ EOF {
    return p, nil
 }
 
-Expression <- val:Symbol {
-   data, _ := val.(Symbol)
-   return Expression{Symbol: &data}, nil
-} / val:Tuple {
-   data, _ := val.(Tuple)
-   return Expression{Tuple: &data}, nil
-} / val:Vector {
-   data, _ := val.(Vector)
-   return Expression{Vector: &data}, nil
-} / val:Object {
-   data, _ := val.(Object)
-   return Expression{Object: &data}, nil
-} / val:Bool {
-   data, _ := val.(Bool)
-   return Expression{Bool: &data}, nil
+Expression <- val:Number {
+   data, _ := val.(Number)
+   return Expression{NumberNode: &data}, nil
+} / val:String {
+   data, _ := val.(String)
+   return Expression{StringNode: &data}, nil
 } / val:Null {
    data, _ := val.(Null)
-   return Expression{Null: &data}, nil
+   return Expression{NullNode: &data}, nil
+} / val:Bool {
+   data, _ := val.(Bool)
+   return Expression{BoolNode: &data}, nil
+} / val:Tuple {
+   data, _ := val.(Tuple)
+   return Expression{TupleNode: &data}, nil
+} / val:Vector {
+   data, _ := val.(Vector)
+   return Expression{VectorNode: &data}, nil
+} / val:Object {
+   data, _ := val.(Object)
+   return Expression{ObjectNode: &data}, nil
+} / val:Symbol {
+   data, _ := val.(Symbol)
+   return Expression{SymbolNode: &data}, nil
 }
 
 Tuple <- '(' _ sym:Symbol exprs:(_ Expression)* _ ')' {
@@ -141,66 +147,47 @@ Identifier <- [a-zA-Z0-9_]+ {
    return Identifier{Name: string(c.text)}, nil
 }
 
+//////////////////////////////////////////////////////////
+// special types
+
 Bool <- "true" { return Bool{Value: true}, nil } / "false" { return Bool{Value: false}, nil }
 
 Null <- "null" { return Null{}, nil }
 
-_ "whitespace" <- [ \t\r\n]*
-
-EOF <- !.
-
-/*
-
-JSON <- _ val:Value EOF {
-    return val, nil
-}
-
-Value <- val:( Object / Array / Number / String / Bool / Null ) _ {
-    return val, nil
-}
-
-Object <- '{' _ vals:( String _ ':' _ Value ( ',' _ String _ ':' _ Value )* )? '}' {
-    res := make(map[string]any)
-    valsSl := toAnySlice(vals)
-    if len(valsSl) == 0 {
-        return res, nil
-    }
-    res[valsSl[0].(string)] = valsSl[4]
-    restSl := toAnySlice(valsSl[5])
-    for _, v := range restSl {
-        vSl := toAnySlice(v)
-        res[vSl[2].(string)] = vSl[6]
-    }
-    return res, nil
-}
-
-Array <- '[' _ vals:( Value ( ',' _ Value )* )? ']' {
-    valsSl := toAnySlice(vals)
-    if len(valsSl) == 0 {
-        return []any{}, nil
-    }
-    res := []any{valsSl[0]}
-    restSl := toAnySlice(valsSl[1])
-    for _, v := range restSl {
-        vSl := toAnySlice(v)
-        res = append(res, vSl[2])
-    }
-    return res, nil
-}
+//////////////////////////////////////////////////////////
+// numbers (ints and floats)
 
 Number <- '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
     // JSON numbers have the same syntax as Go's, and are parseable using
     // strconv.
-    return strconv.ParseFloat(string(c.text), 64)
+    value, err := strconv.ParseFloat(string(c.text), 64)
+    if err != nil {
+      return nil, err // should never happen
+    }
+
+    return Number{Value: value}, nil
 }
 
 Integer <- '0' / NonZeroDecimalDigit DecimalDigit*
 
+DecimalDigit <- [0-9]
+
+NonZeroDecimalDigit <- [1-9]
+
 Exponent <- 'e'i [+-]? DecimalDigit+
+
+//////////////////////////////////////////////////////////
+// strings
 
 String <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
     c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
-    return strconv.Unquote(string(c.text))
+
+    unquoted, err := strconv.Unquote(string(c.text))
+    if err != nil {
+      return nil, err
+    }
+
+    return String{Value: unquoted}, nil
 }
 
 EscapedChar <- [\x00-\x1f"\\]
@@ -211,18 +198,11 @@ SingleCharEscape <- ["\\/bfnrt]
 
 UnicodeEscape <- 'u' HexDigit HexDigit HexDigit HexDigit
 
-DecimalDigit <- [0-9]
-
-NonZeroDecimalDigit <- [1-9]
-
 HexDigit <- [0-9a-f]i
 
-Bool <- "true" { return true, nil } / "false" { return false, nil }
-
-Null <- "null" { return nil, nil }
+//////////////////////////////////////////////////////////
+// misc
 
 _ "whitespace" <- [ \t\r\n]*
 
 EOF <- !.
-
-*/

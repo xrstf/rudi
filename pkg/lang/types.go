@@ -1,6 +1,9 @@
 package lang
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Program struct {
 	Expressions []Expression
@@ -16,28 +19,34 @@ func (p Program) String() string {
 }
 
 type Expression struct {
-	Symbol *Symbol
-	Tuple  *Tuple
-	Vector *Vector
-	Object *Object
-	Bool   *Bool
-	Null   *Null
+	SymbolNode *Symbol
+	TupleNode  *Tuple
+	VectorNode *Vector
+	ObjectNode *Object
+	NumberNode *Number
+	StringNode *String
+	BoolNode   *Bool
+	NullNode   *Null
 }
 
 func (e Expression) String() string {
 	switch {
-	case e.Symbol != nil:
-		return e.Symbol.String()
-	case e.Tuple != nil:
-		return e.Tuple.String()
-	case e.Vector != nil:
-		return e.Vector.String()
-	case e.Object != nil:
-		return e.Object.String()
-	case e.Bool != nil:
-		return e.Bool.String()
-	case e.Null != nil:
-		return e.Null.String()
+	case e.SymbolNode != nil:
+		return e.SymbolNode.String()
+	case e.TupleNode != nil:
+		return e.TupleNode.String()
+	case e.VectorNode != nil:
+		return e.VectorNode.String()
+	case e.ObjectNode != nil:
+		return e.ObjectNode.String()
+	case e.NumberNode != nil:
+		return e.NumberNode.String()
+	case e.StringNode != nil:
+		return e.StringNode.String()
+	case e.BoolNode != nil:
+		return e.BoolNode.String()
+	case e.NullNode != nil:
+		return e.NullNode.String()
 	default:
 		return "<unknown expression>"
 	}
@@ -134,6 +143,22 @@ type JSONPath []string
 
 func (p JSONPath) String() string {
 	return "." + strings.Join(p, ".")
+}
+
+type String struct {
+	Value string
+}
+
+func (s String) String() string {
+	return fmt.Sprintf("%q", s.Value)
+}
+
+type Number struct {
+	Value float64
+}
+
+func (n Number) String() string {
+	return fmt.Sprintf("%f", n.Value)
 }
 
 type Bool struct {
