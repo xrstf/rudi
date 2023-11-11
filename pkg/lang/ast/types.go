@@ -144,12 +144,6 @@ func (i Identifier) String() string {
 	return i.Name
 }
 
-type JSONPath []string
-
-func (p JSONPath) String() string {
-	return "." + strings.Join(p, ".")
-}
-
 type String struct {
 	Value string
 }

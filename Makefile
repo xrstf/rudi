@@ -1,6 +1,5 @@
 .PHONY: generate
 generate:
-	mkdir -p pkg/lang/parser
 	pigeon corel.peg > pkg/lang/parser/generated.go
 
 .PHONY: clean
