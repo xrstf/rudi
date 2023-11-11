@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval"
 	"go.xrstf.de/corel/pkg/lang/parser"
 )
 
@@ -41,12 +42,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	program, ok := got.(ast.Program)
+	if !ok {
+		fmt.Printf("Fatal: parse result is not a ast.Program, but %T.\n", got)
+	}
+
 	fmt.Println("---[ INPUT ]-----------------------------------------")
 	fmt.Println(string(b))
 	fmt.Println("---[ AST ]-------------------------------------------")
 	fmt.Printf("%#v\n", got)
 	fmt.Println("---[ PRINTED ]---------------------------------------")
-	fmt.Println(got.(ast.Program).String())
+	fmt.Println(program.String())
+	fmt.Println("---[ EVALUATED ]-------------------------------------")
+
+	fmt.Println(eval.Run(&program, eval.Object{}))
 	fmt.Println("-----------------------------------------------------")
 }
 

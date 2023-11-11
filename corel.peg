@@ -51,8 +51,8 @@ Expression <- val:Number {
    return ast.Expression{SymbolNode: &data}, nil
 }
 
-Tuple <- '(' _ sym:Symbol exprs:(_ Expression)* _ ')' {
-   t := ast.Tuple{Symbol: sym.(ast.Symbol)}
+Tuple <- '(' _ ident:Identifier exprs:(_ Expression)* _ ')' {
+   t := ast.Tuple{Identifier: ident.(ast.Identifier)}
 
    exprsSl := toAnySlice(exprs)
    if len(exprsSl) == 0 {
@@ -103,8 +103,17 @@ Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
 }
 
 KeyValuePair <- (key:Symbol _ value:Expression) {
+   sym := key.(ast.Symbol)
+
    return ast.KeyValuePair{
-      Key: key.(ast.Symbol),
+      Key: ast.ObjectKey{Symbol: &sym},
+      Value: value.(ast.Expression),
+   }, nil
+} / (key:Identifier _ value:Expression) {
+   ident := key.(ast.Identifier)
+
+   return ast.KeyValuePair{
+      Key: ast.ObjectKey{Identifier: &ident},
       Value: value.(ast.Expression),
    }, nil
 }
@@ -151,9 +160,6 @@ Symbol <- val:PathExpression {
 
    variable, _ := val.(ast.Variable)
    return ast.Symbol{Variable: &variable, PathExpression: expr}, nil
-} / val:Identifier {
-   ident, _ := val.(ast.Identifier)
-   return ast.Symbol{Identifier: &ident}, nil
 }
 
 PathExpression <- pathExpr:(PathStep)+ {
