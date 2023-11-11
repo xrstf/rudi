@@ -6,31 +6,41 @@ import (
 	"go.xrstf.de/corel/pkg/lang/ast"
 )
 
-func evalObject(obj *ast.Object, rootObject *Object) (interface{}, error) {
+func evalObject(ctx Context, obj *ast.Object) (Context, interface{}, error) {
+	innerCtx := ctx
 	result := map[string]interface{}{}
 
+	var (
+		key   interface{}
+		value interface{}
+		err   error
+	)
+
 	for _, pair := range obj.Data {
-		key, err := evalSymbol(&pair.Key, rootObject)
+		// Just like with arrays, use a growing context during the object evaluation,
+		// in case someone wants to define a variable here... for some reason.
+		innerCtx, key, err = evalSymbol(innerCtx, &pair.Key)
 		if err != nil {
-			return nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
+			return ctx, nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
 		}
 
 		keyString, ok := key.(string)
 		if !ok {
-			if ident, ok := key.(*ast.Identifier); !ok {
-				return nil, fmt.Errorf("object key must be string or identifier, but got %T", key)
-			} else {
-				keyString = ident.Name
+			ident, ok := key.(*ast.Identifier)
+			if !ok {
+				return ctx, nil, fmt.Errorf("object key must be string or identifier, but got %T", key)
 			}
+
+			keyString = ident.Name
 		}
 
-		value, err := evalExpression(&pair.Value, rootObject)
+		innerCtx, value, err = evalExpression(innerCtx, &pair.Value)
 		if err != nil {
-			return nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
+			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}
 
 		result[keyString] = value
 	}
 
-	return result, nil
+	return ctx, result, nil
 }

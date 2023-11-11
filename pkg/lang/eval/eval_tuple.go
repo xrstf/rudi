@@ -9,7 +9,7 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 )
 
-func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
+func evalTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 	funcName := tup.Identifier.Name
 
 	// hardcode root behaviour for those tuples where not all
@@ -17,22 +17,23 @@ func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 	// the else-path of an if statement would have side effects)
 	switch funcName {
 	case "if":
-		return evalIfTuple(tup, rootObject)
-	case "def":
-		return evalDefTuple(tup, rootObject)
+		return evalIfTuple(ctx, tup)
+	case "set":
+		return evalSetTuple(ctx, tup)
 	}
 
 	function, ok := builtin.Functions[funcName]
 	if !ok {
-		return nil, fmt.Errorf("unknown function %s", funcName)
+		return ctx, nil, fmt.Errorf("unknown function %s", funcName)
 	}
 
 	// evaluate all function arguments
 	args := make([]interface{}, len(tup.Expressions))
 	for i, expr := range tup.Expressions {
-		arg, err := evalExpression(&expr, rootObject)
+		// each function arg on its own cannot change the overall context, so discard it
+		_, arg, err := evalExpression(ctx, &expr)
 		if err != nil {
-			return nil, fmt.Errorf("invalid argument %d: %w", i, err)
+			return ctx, nil, fmt.Errorf("invalid argument %d: %w", i, err)
 		}
 
 		args[i] = arg
@@ -41,72 +42,75 @@ func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 	// call the function
 	result, err := function(args)
 	if err != nil {
-		return nil, fmt.Errorf("function failed: %w", err)
+		return ctx, nil, fmt.Errorf("function failed: %w", err)
 	}
 
-	return result, nil
+	return ctx, result, nil
 }
 
-func evalIfTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
+func evalIfTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 	if size := len(tup.Expressions); size != 2 && size != 3 {
-		return nil, fmt.Errorf("invalid if tuple: expected 2 or 3 expressions, but got %d", size)
+		return ctx, nil, fmt.Errorf("invalid if tuple: expected 2 or 3 expressions, but got %d", size)
 	}
 
-	condition, err := evalExpression(&tup.Expressions[0], rootObject)
+	tupleCtx := ctx
+
+	tupleCtx, condition, err := evalExpression(tupleCtx, &tup.Expressions[0])
 	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate condition: %w", err)
+		return ctx, nil, fmt.Errorf("failed to evaluate condition: %w", err)
 	}
 
 	success, err := coalescing.ToBool(condition)
 	if err != nil {
-		return nil, fmt.Errorf("condition did not return boolish value: %w", err)
+		return ctx, nil, fmt.Errorf("condition did not return boolish value: %w", err)
 	}
 
 	if success {
-		return evalExpression(&tup.Expressions[1], rootObject)
+		// discard context changes from the true path
+		_, result, err := evalExpression(tupleCtx, &tup.Expressions[1])
+		return ctx, result, err
 	}
 
 	// optional else part
 	if len(tup.Expressions) > 2 {
-		return evalExpression(&tup.Expressions[2], rootObject)
+		// discard context changes from the false path
+		_, result, err := evalExpression(tupleCtx, &tup.Expressions[2])
+		return ctx, result, err
 	}
 
-	return rootObject, nil
+	return ctx, nil, nil
 }
 
-// this should be scoped, but for testing we just use one global map
-var runtimeVariables = map[string]interface{}{}
-
-func evalDefTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
+func evalSetTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 	if size := len(tup.Expressions); size != 2 {
-		return nil, fmt.Errorf("invalid set tuple: expected exactly 2 expressions, but got %d", size)
+		return ctx, nil, errors.New("(set $varname EXPRESSION)")
 	}
 
 	varNameExpr := tup.Expressions[0]
 	varName := ""
 
 	if varNameExpr.SymbolNode == nil {
-		return nil, errors.New("(def $varname expression)")
+		return ctx, nil, errors.New("(set $varname EXPRESSION)")
 	}
 
 	symNode := varNameExpr.SymbolNode
 	if symNode.Variable == nil {
-		return nil, errors.New("(def $varname expression)")
+		return ctx, nil, errors.New("(set $varname EXPRESSION)")
 	}
 
-	// forbid weird definitions like (def $var.foo (expr)) for now
+	// forbid weird definitions like (set $var.foo (expr)) for now
 	if symNode.PathExpression != nil {
-		return nil, errors.New("(def $varname expression)")
+		return ctx, nil, errors.New("(set $varname EXPRESSION)")
 	}
 
 	varName = symNode.Variable.Name
 
-	value, err := evalExpression(&tup.Expressions[1], rootObject)
+	// discard any context changes within the value expression
+	_, value, err := evalExpression(ctx, &tup.Expressions[1])
 	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate variable value: %w", err)
+		return ctx, nil, fmt.Errorf("failed to evaluate variable value: %w", err)
 	}
 
-	runtimeVariables[varName] = value
-
-	return rootObject, nil
+	// make the variable's value the return value, so `(def $foo 12)` = 12
+	return ctx.WithVariable(varName, value), value, nil
 }

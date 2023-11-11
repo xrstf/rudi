@@ -4,6 +4,6 @@ import (
 	"go.xrstf.de/corel/pkg/lang/ast"
 )
 
-func evalNumber(number *ast.Number, rootObject *Object) (interface{}, error) {
-	return number.Value, nil
+func evalNumber(ctx Context, n *ast.Number) (Context, interface{}, error) {
+	return ctx, n.Value, nil
 }

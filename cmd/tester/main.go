@@ -55,7 +55,9 @@ func main() {
 	fmt.Println(program.String())
 	fmt.Println("---[ EVALUATED ]-------------------------------------")
 
-	fmt.Println(eval.Run(&program, eval.Object{}))
+	progContext := eval.NewContext()
+
+	fmt.Println(eval.Run(progContext, &program))
 	fmt.Println("-----------------------------------------------------")
 }
 

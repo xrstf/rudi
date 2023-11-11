@@ -6,25 +6,25 @@ import (
 	"go.xrstf.de/corel/pkg/lang/ast"
 )
 
-func evalExpression(expr *ast.Expression, rootObject *Object) (interface{}, error) {
+func evalExpression(ctx Context, expr *ast.Expression) (Context, interface{}, error) {
 	switch {
 	case expr.NullNode != nil:
-		return evalNull(expr.NullNode, rootObject)
+		return evalNull(ctx, expr.NullNode)
 	case expr.BoolNode != nil:
-		return evalBool(expr.BoolNode, rootObject)
+		return evalBool(ctx, expr.BoolNode)
 	case expr.StringNode != nil:
-		return evalString(expr.StringNode, rootObject)
+		return evalString(ctx, expr.StringNode)
 	case expr.NumberNode != nil:
-		return evalNumber(expr.NumberNode, rootObject)
+		return evalNumber(ctx, expr.NumberNode)
 	case expr.ObjectNode != nil:
-		return evalObject(expr.ObjectNode, rootObject)
+		return evalObject(ctx, expr.ObjectNode)
 	case expr.VectorNode != nil:
-		return evalVector(expr.VectorNode, rootObject)
+		return evalVector(ctx, expr.VectorNode)
 	case expr.SymbolNode != nil:
-		return evalSymbol(expr.SymbolNode, rootObject)
+		return evalSymbol(ctx, expr.SymbolNode)
 	case expr.TupleNode != nil:
-		return evalTuple(expr.TupleNode, rootObject)
+		return evalTuple(ctx, expr.TupleNode)
 	}
 
-	return nil, fmt.Errorf("unknown expression %T (%s)", expr, expr.String())
+	return ctx, nil, fmt.Errorf("unknown expression %T (%s)", expr, expr.String())
 }

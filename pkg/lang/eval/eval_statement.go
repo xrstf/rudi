@@ -6,13 +6,13 @@ import (
 	"go.xrstf.de/corel/pkg/lang/ast"
 )
 
-func evalStatement(stmt *ast.Statement, rootObject *Object) (*Object, error) {
-	result, err := evalExpression(&stmt.Expression, rootObject)
+func evalStatement(ctx Context, stmt *ast.Statement) (Context, interface{}, error) {
+	newContext, result, err := evalExpression(ctx, &stmt.Expression)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	fmt.Printf("%s => %v\n", stmt.String(), result)
 
-	return nil, nil
+	return newContext, result, nil
 }

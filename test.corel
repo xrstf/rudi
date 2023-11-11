@@ -6,8 +6,9 @@ null
 (concat "/" "namespace" "name")
 (split "/" "foo/bar/bla")
 (len (split "/" "foo/bar/bla"))
-(def $myvar (+ 1 2))
+(set $myvar (+ 1 2))
 $myvar
+(if (set $foo 23) (+ $foo 23) "nope")
 [1 2 "foo" $myvar]
 [(+ $myvar 7)]
 {

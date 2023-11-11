@@ -8,8 +8,8 @@ type Object struct {
 	Data map[string]interface{}
 }
 
-func Run(p *ast.Program, rootObject Object) (interface{}, error) {
-	result, err := evalProgram(p, &rootObject)
+func Run(ctx Context, p *ast.Program) (interface{}, error) {
+	result, err := evalProgram(ctx, p)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,6 @@ import (
 	"go.xrstf.de/corel/pkg/lang/ast"
 )
 
-func evalNull(n *ast.Null, rootObject *Object) (interface{}, error) {
-	return nil, nil
+func evalNull(ctx Context, n *ast.Null) (Context, interface{}, error) {
+	return ctx, nil, nil
 }

@@ -6,21 +6,21 @@ import (
 	"go.xrstf.de/corel/pkg/lang/ast"
 )
 
-func evalSymbol(sym *ast.Symbol, rootObject *Object) (interface{}, error) {
+func evalSymbol(ctx Context, sym *ast.Symbol) (Context, interface{}, error) {
 	switch {
 	case sym.Identifier != nil:
-		return sym.Identifier, nil
+		return ctx, sym.Identifier, nil
 
 	case sym.Variable != nil:
 		varName := sym.Variable.Name
 
-		value, ok := runtimeVariables[varName]
+		value, ok := ctx.Variables[varName]
 		if !ok {
-			return nil, fmt.Errorf("unknown variable %s", varName)
+			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
 		}
 
-		return value, nil
+		return ctx, value, nil
 	}
 
-	return nil, fmt.Errorf("unknown symbol %T (%s)", sym, sym.String())
+	return ctx, nil, fmt.Errorf("unknown symbol %T (%s)", sym, sym.String())
 }
