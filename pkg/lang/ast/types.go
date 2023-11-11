@@ -6,16 +6,24 @@ import (
 )
 
 type Program struct {
-	Expressions []Expression
+	Statements []Statement
 }
 
 func (p Program) String() string {
-	exprs := make([]string, len(p.Expressions))
-	for i, e := range p.Expressions {
-		exprs[i] = e.String()
+	statements := make([]string, len(p.Statements))
+	for i, s := range p.Statements {
+		statements[i] = s.String()
 	}
 
-	return strings.Join(exprs, "\n")
+	return strings.Join(statements, "\n")
+}
+
+type Statement struct {
+	Expression Expression
+}
+
+func (s Statement) String() string {
+	return s.Expression.String()
 }
 
 type Expression struct {

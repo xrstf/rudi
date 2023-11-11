@@ -4,20 +4,25 @@ package parser
 import "go.xrstf.de/corel/pkg/lang/ast"
 }
 
-Program <- exprs:(_ Expression)* _ EOF {
+Program <- stmts:(_ Statement)* _ EOF {
    p := ast.Program{}
 
-   exprsSl := toAnySlice(exprs)
-   if len(exprsSl) == 0 {
+   stmtsSl := toAnySlice(stmts)
+   if len(stmtsSl) == 0 {
       return p, nil
    }
 
-   for _, expr := range exprsSl {
-      subSl := toAnySlice(expr)
-      p.Expressions = append(p.Expressions, subSl[1].(ast.Expression))
+   for _, stmt := range stmtsSl {
+      subSl := toAnySlice(stmt)
+      p.Statements = append(p.Statements, subSl[1].(ast.Statement))
    }
 
    return p, nil
+}
+
+// Statement is basically an alias, but allows for easier top-level detection during execution
+Statement <- expr:Expression {
+   return ast.Statement{Expression: expr.(ast.Expression)}, nil
 }
 
 Expression <- val:Number {
