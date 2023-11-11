@@ -9,7 +9,7 @@ import (
 func evalSymbol(sym *ast.Symbol, rootObject *Object) (interface{}, error) {
 	switch {
 	case sym.Identifier != nil:
-		return sym.Identifier.Name, nil
+		return sym.Identifier, nil
 
 	case sym.Variable != nil:
 		varName := sym.Variable.Name

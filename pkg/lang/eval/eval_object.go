@@ -17,7 +17,11 @@ func evalObject(obj *ast.Object, rootObject *Object) (interface{}, error) {
 
 		keyString, ok := key.(string)
 		if !ok {
-			return nil, fmt.Errorf("object key must be string, but got %T", key)
+			if ident, ok := key.(*ast.Identifier); !ok {
+				return nil, fmt.Errorf("object key must be string or identifier, but got %T", key)
+			} else {
+				keyString = ident.Name
+			}
 		}
 
 		value, err := evalExpression(&pair.Value, rootObject)

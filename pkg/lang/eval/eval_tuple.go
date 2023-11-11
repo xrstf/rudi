@@ -6,6 +6,7 @@ import (
 
 	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/builtin"
+	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 )
 
 func evalTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
@@ -56,7 +57,7 @@ func evalIfTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 		return nil, fmt.Errorf("failed to evaluate condition: %w", err)
 	}
 
-	success, err := coalesceBool(condition)
+	success, err := coalescing.ToBool(condition)
 	if err != nil {
 		return nil, fmt.Errorf("condition did not return boolish value: %w", err)
 	}
@@ -71,23 +72,6 @@ func evalIfTuple(tup *ast.Tuple, rootObject *Object) (interface{}, error) {
 	}
 
 	return rootObject, nil
-}
-
-func coalesceBool(val interface{}) (bool, error) {
-	switch v := val.(type) {
-	case bool:
-		return v, nil
-	case int64:
-		return v != 0, nil
-	case float64:
-		return v != 0, nil
-	case string:
-		return len(v) > 0, nil
-	case nil:
-		return false, nil
-	default:
-		return false, fmt.Errorf("cannot coalesce %T into bool", val)
-	}
 }
 
 // this should be scoped, but for testing we just use one global map
