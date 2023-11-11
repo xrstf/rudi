@@ -208,7 +208,7 @@ VariableName <- [a-zA-Z0-9_]+ {
    return string(c.text), nil
 }
 
-Identifier <- [a-zA-Z0-9_+/*_%?]+ {
+Identifier <- [a-zA-Z0-9_+/*_%?-]+ {
    return ast.Identifier{Name: string(c.text)}, nil
 }
 

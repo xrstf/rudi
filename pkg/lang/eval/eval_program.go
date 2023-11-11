@@ -7,7 +7,7 @@ import (
 )
 
 func evalProgram(ctx Context, p *ast.Program) (interface{}, error) {
-	finalCtx := ctx
+	innerCtx := ctx
 
 	// This is all sorts of wonky and not really how the program execution should work.
 	// But it compiles.
@@ -16,8 +16,8 @@ func evalProgram(ctx Context, p *ast.Program) (interface{}, error) {
 		err    error
 	)
 
-	for i, stmt := range p.Statements {
-		finalCtx, result, err = evalStatement(finalCtx, &p.Statements[i])
+	for _, stmt := range p.Statements {
+		innerCtx, result, err = evalStatement(innerCtx, &stmt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to eval statement %s: %w", stmt.String(), err)
 		}

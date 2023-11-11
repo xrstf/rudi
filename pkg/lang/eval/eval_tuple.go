@@ -20,6 +20,8 @@ func evalTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 		return evalIfTuple(ctx, tup)
 	case "set":
 		return evalSetTuple(ctx, tup)
+	case "do":
+		return evalDoTuple(ctx, tup)
 	}
 
 	function, ok := builtin.Functions[funcName]
@@ -113,4 +115,27 @@ func evalSetTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 
 	// make the variable's value the return value, so `(def $foo 12)` = 12
 	return ctx.WithVariable(varName, value), value, nil
+}
+
+func evalDoTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
+	if size := len(tup.Expressions); size < 2 {
+		return ctx, nil, errors.New("(do EXPRESSION+)")
+	}
+
+	innerCtx := ctx
+
+	var (
+		result interface{}
+		err    error
+	)
+
+	for _, expr := range tup.Expressions {
+		innerCtx, result, err = evalExpression(innerCtx, &expr)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("failed to eval expression %s: %w", expr.String(), err)
+		}
+	}
+
+	// make the variable's value the return value, so `(def $foo 12)` = 12
+	return ctx, result, nil
 }

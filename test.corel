@@ -9,6 +9,15 @@ null
 (set $myvar (+ 1 2))
 $myvar
 (if (set $foo 23) (+ $foo 23) "nope")
+
+(if false
+  (do
+    (set $bla (+ 3 2))
+    (- $bla 4))
+  (do
+    (set $bla 42)
+	 (set $name "muh")))
+
 [1 2 "foo" $myvar]
 [(+ $myvar 7)]
 {
