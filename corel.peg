@@ -1,18 +1,11 @@
 {
-// Package lang parses COREL programs.
-package lang
+package parser
 
-func toAnySlice(v any) []any {
-    if v == nil {
-        return nil
-    }
-    return v.([]any)
-}
-
+import "go.xrstf.de/corel/pkg/lang/ast"
 }
 
 Program <- exprs:(_ Expression)* _ EOF {
-   p := Program{}
+   p := ast.Program{}
 
    exprsSl := toAnySlice(exprs)
    if len(exprsSl) == 0 {
@@ -21,40 +14,40 @@ Program <- exprs:(_ Expression)* _ EOF {
 
    for _, expr := range exprsSl {
       subSl := toAnySlice(expr)
-      p.Expressions = append(p.Expressions, subSl[1].(Expression))
+      p.Expressions = append(p.Expressions, subSl[1].(ast.Expression))
    }
 
    return p, nil
 }
 
 Expression <- val:Number {
-   data, _ := val.(Number)
-   return Expression{NumberNode: &data}, nil
+   data, _ := val.(ast.Number)
+   return ast.Expression{NumberNode: &data}, nil
 } / val:String {
-   data, _ := val.(String)
-   return Expression{StringNode: &data}, nil
+   data, _ := val.(ast.String)
+   return ast.Expression{StringNode: &data}, nil
 } / val:Null {
-   data, _ := val.(Null)
-   return Expression{NullNode: &data}, nil
+   data, _ := val.(ast.Null)
+   return ast.Expression{NullNode: &data}, nil
 } / val:Bool {
-   data, _ := val.(Bool)
-   return Expression{BoolNode: &data}, nil
+   data, _ := val.(ast.Bool)
+   return ast.Expression{BoolNode: &data}, nil
 } / val:Tuple {
-   data, _ := val.(Tuple)
-   return Expression{TupleNode: &data}, nil
+   data, _ := val.(ast.Tuple)
+   return ast.Expression{TupleNode: &data}, nil
 } / val:Vector {
-   data, _ := val.(Vector)
-   return Expression{VectorNode: &data}, nil
+   data, _ := val.(ast.Vector)
+   return ast.Expression{VectorNode: &data}, nil
 } / val:Object {
-   data, _ := val.(Object)
-   return Expression{ObjectNode: &data}, nil
+   data, _ := val.(ast.Object)
+   return ast.Expression{ObjectNode: &data}, nil
 } / val:Symbol {
-   data, _ := val.(Symbol)
-   return Expression{SymbolNode: &data}, nil
+   data, _ := val.(ast.Symbol)
+   return ast.Expression{SymbolNode: &data}, nil
 }
 
 Tuple <- '(' _ sym:Symbol exprs:(_ Expression)* _ ')' {
-   t := Tuple{Symbol: sym.(Symbol)}
+   t := ast.Tuple{Symbol: sym.(ast.Symbol)}
 
    exprsSl := toAnySlice(exprs)
    if len(exprsSl) == 0 {
@@ -63,32 +56,33 @@ Tuple <- '(' _ sym:Symbol exprs:(_ Expression)* _ ')' {
 
    for _, expr := range exprsSl {
       subSl := toAnySlice(expr)
-      t.Expressions = append(t.Expressions, subSl[1].(Expression))
+      t.Expressions = append(t.Expressions, subSl[1].(ast.Expression))
    }
 
    return t, nil
 }
 
 Vector <- '[' _ vals:( Expression ( ','? _ Expression )* )? ']' {
+   vector := ast.Vector{}
+
    valsSl := toAnySlice(vals)
    if len(valsSl) == 0 {
-      return Vector{}, nil
+      return vector, nil
    }
 
-   vector := Vector{}
-   vector.Expressions = append(vector.Expressions, valsSl[0].(Expression))
+   vector.Expressions = append(vector.Expressions, valsSl[0].(ast.Expression))
 
    restSl := toAnySlice(valsSl[1])
    for _, v := range restSl {
       vSl := toAnySlice(v)
-      vector.Expressions = append(vector.Expressions, vSl[2].(Expression))
+      vector.Expressions = append(vector.Expressions, vSl[2].(ast.Expression))
    }
 
    return vector, nil
 }
 
 Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
-   o := Object{}
+   o := ast.Object{}
 
    pairsSl := toAnySlice(pairs)
    if len(pairsSl) == 0 {
@@ -97,32 +91,32 @@ Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
 
    for _, pair := range pairsSl {
       pairSl := toAnySlice(pair)
-      o.Data = append(o.Data, pairSl[1].(KeyValuePair))
+      o.Data = append(o.Data, pairSl[1].(ast.KeyValuePair))
    }
 
    return o, nil
 }
 
 KeyValuePair <- (key:Symbol _ value:Expression) {
-   return KeyValuePair{
-      Key: key.(Symbol),
-      Value: value.(Expression),
+   return ast.KeyValuePair{
+      Key: key.(ast.Symbol),
+      Value: value.(ast.Expression),
    }, nil
 }
 
 Symbol <- val:JSONPath {
-   jsonPath, _ := val.(JSONPath)
-   return Symbol{JSONPath: &jsonPath}, nil
+   jsonPath, _ := val.(ast.JSONPath)
+   return ast.Symbol{JSONPath: &jsonPath}, nil
 } / val:Variable {
-   variable, _ := val.(Variable)
-   return Symbol{Variable: &variable}, nil
+   variable, _ := val.(ast.Variable)
+   return ast.Symbol{Variable: &variable}, nil
 } / val:Identifier {
-   ident, _ := val.(Identifier)
-   return Symbol{Identifier: &ident}, nil
+   ident, _ := val.(ast.Identifier)
+   return ast.Symbol{Identifier: &ident}, nil
 }
 
 JSONPath <- vals:('.' JSONPathStep)+ {
-   path := JSONPath{}
+   path := ast.JSONPath{}
    for _, val := range toAnySlice(vals) {
       list := val.([]interface{})
       path = append(path, list[1].(string))
@@ -136,7 +130,7 @@ JSONPathStep <- [a-zA-Z0-9_]+ {
 }
 
 Variable <- '$' name:VariableName {
-   return Variable{Name: name.(string)}, nil
+   return ast.Variable{Name: name.(string)}, nil
 }
 
 VariableName <- [a-zA-Z0-9_]+ {
@@ -144,15 +138,15 @@ VariableName <- [a-zA-Z0-9_]+ {
 }
 
 Identifier <- [a-zA-Z0-9_]+ {
-   return Identifier{Name: string(c.text)}, nil
+   return ast.Identifier{Name: string(c.text)}, nil
 }
 
 //////////////////////////////////////////////////////////
 // special types
 
-Bool <- "true" { return Bool{Value: true}, nil } / "false" { return Bool{Value: false}, nil }
+Bool <- "true" { return ast.Bool{Value: true}, nil } / "false" { return ast.Bool{Value: false}, nil }
 
-Null <- "null" { return Null{}, nil }
+Null <- "null" { return ast.Null{}, nil }
 
 //////////////////////////////////////////////////////////
 // numbers (ints and floats)
@@ -165,7 +159,7 @@ Number <- '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
       return nil, err // should never happen
     }
 
-    return Number{Value: value}, nil
+    return ast.Number{Value: value}, nil
 }
 
 Integer <- '0' / NonZeroDecimalDigit DecimalDigit*
@@ -187,7 +181,7 @@ String <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
       return nil, err
     }
 
-    return String{Value: unquoted}, nil
+    return ast.String{Value: unquoted}, nil
 }
 
 EscapedChar <- [\x00-\x1f"\\]

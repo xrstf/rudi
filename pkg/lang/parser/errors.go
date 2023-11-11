@@ -1,4 +1,4 @@
-package lang
+package parser
 
 // ErrorLister is the public interface to access the inner errors
 // included in a errList

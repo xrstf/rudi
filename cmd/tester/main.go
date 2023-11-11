@@ -8,7 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"go.xrstf.de/corel/pkg/lang"
+	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/parser"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	got, err := lang.Parse(nm, b, lang.Debug(false))
+	got, err := parser.Parse(nm, b, parser.Debug(false))
 	if err != nil {
 		fmt.Println(caretError(err, string(b)))
 		os.Exit(1)
@@ -45,15 +46,15 @@ func main() {
 	fmt.Println("---[ AST ]-------------------------------------------")
 	fmt.Printf("%#v\n", got)
 	fmt.Println("---[ PRINTED ]---------------------------------------")
-	fmt.Println(got.(lang.Program).String())
+	fmt.Println(got.(ast.Program).String())
 	fmt.Println("-----------------------------------------------------")
 }
 
 func caretError(err error, input string) string {
-	if el, ok := err.(lang.ErrorLister); ok {
+	if el, ok := err.(parser.ErrorLister); ok {
 		var buffer bytes.Buffer
 		for _, e := range el.Errors() {
-			if parserErr, ok := e.(lang.ParserError); ok {
+			if parserErr, ok := e.(parser.ParserError); ok {
 				_, col, off := parserErr.Pos()
 				line := extractLine(input, off)
 				if col >= len(line) {
