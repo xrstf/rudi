@@ -42,3 +42,16 @@ func orFunction(args []interface{}) (interface{}, error) {
 
 	return result, nil
 }
+
+func notFunction(args []interface{}) (interface{}, error) {
+	if len(args) != 1 {
+		return nil, errors.New("(not CONDITION)")
+	}
+
+	arg, err := coalescing.ToBool(args[0])
+	if err != nil {
+		return nil, fmt.Errorf("arg is nor boolish: %w", err)
+	}
+
+	return !arg, nil
+}
