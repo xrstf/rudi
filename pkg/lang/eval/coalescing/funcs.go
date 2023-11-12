@@ -45,6 +45,19 @@ func ToFloat64(val interface{}) (float64, error) {
 	return result, nil
 }
 
+func Int64Compatible(val interface{}) bool {
+	switch val.(type) {
+	case bool:
+		return true
+	case int64:
+		return true
+	case nil:
+		return true
+	default:
+		return false
+	}
+}
+
 func ToInt64(val interface{}) (int64, error) {
 	var result int64
 

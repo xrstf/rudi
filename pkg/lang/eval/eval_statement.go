@@ -12,7 +12,7 @@ func evalStatement(ctx Context, stmt *ast.Statement) (Context, interface{}, erro
 		return ctx, nil, err
 	}
 
-	fmt.Printf("%s => %v\n", stmt.String(), result)
+	fmt.Printf("%s => %#v (%T)\n", stmt.String(), result, result)
 
 	return newContext, result, nil
 }

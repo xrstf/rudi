@@ -7,9 +7,29 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 )
 
+func int64sOnly(vals []interface{}) bool {
+	for _, val := range vals {
+		if !coalescing.Int64Compatible(val) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func sumFunction(args []interface{}) (interface{}, error) {
 	if len(args) < 1 {
 		return nil, errors.New("(+ NUM+)")
+	}
+
+	if int64sOnly(args) {
+		sum := int64(0)
+		for _, arg := range args {
+			val, _ := coalescing.ToInt64(arg)
+			sum += val
+		}
+
+		return sum, nil
 	}
 
 	sum := float64(0)
@@ -27,6 +47,17 @@ func sumFunction(args []interface{}) (interface{}, error) {
 func minusFunction(args []interface{}) (interface{}, error) {
 	if len(args) < 2 {
 		return nil, errors.New("(- BASE NUM+)")
+	}
+
+	if int64sOnly(args) {
+		difference, _ := coalescing.ToInt64(args[0])
+
+		for _, arg := range args[1:] {
+			val, _ := coalescing.ToInt64(arg)
+			difference -= val
+		}
+
+		return difference, nil
 	}
 
 	difference, err := coalescing.ToFloat64(args[0])
@@ -48,6 +79,17 @@ func minusFunction(args []interface{}) (interface{}, error) {
 func multiplyFunction(args []interface{}) (interface{}, error) {
 	if len(args) < 2 {
 		return nil, errors.New("(* NUM+)")
+	}
+
+	if int64sOnly(args) {
+		product := int64(1)
+
+		for _, arg := range args {
+			factor, _ := coalescing.ToInt64(arg)
+			product *= factor
+		}
+
+		return product, nil
 	}
 
 	product := float64(1)
