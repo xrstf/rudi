@@ -1,4 +1,5 @@
 1
+(+ 4.32 4)
 "foo"
 null
 (concat "-" [1 2 "foo"] "bla")

@@ -27,6 +27,7 @@ Statement <- expr:Expression {
 
 Expression <- val:Number {
    data, _ := val.(ast.Number)
+   fmt.Printf("num: %#v\n", data)
    return ast.Expression{NumberNode: &data}, nil
 } / val:String {
    data, _ := val.(ast.String)
@@ -187,7 +188,7 @@ Accessor <- '.' val:PathIdentifier {
    return ast.Accessor{Integer: &asserted}, nil
 }
 
-PathIdentifier <- [a-zA-Z0-9_]+ {
+PathIdentifier <- [a-zA-Z_][a-zA-Z0-9_]* {
    return ast.Identifier{Name: string(c.text)}, nil
 }
 
@@ -198,11 +199,11 @@ Variable <- '$' name:VariableName {
    return ast.Variable{Name: name.(string)}, nil
 }
 
-VariableName <- [a-zA-Z0-9_]+ {
+VariableName <- [a-zA-Z_][a-zA-Z0-9_]* {
    return string(c.text), nil
 }
 
-Identifier <- [a-zA-Z0-9_+/*_%?-]+ {
+Identifier <- [a-zA-Z_+/*_%?-][a-zA-Z0-9_+/*_%?-]* {
    return ast.Identifier{Name: string(c.text)}, nil
 }
 
@@ -216,9 +217,7 @@ Null <- "null" { return ast.Null{}, nil }
 //////////////////////////////////////////////////////////
 // numbers (ints and floats)
 
-Number <- i:Integer {
-   return ast.Number{Value: i}, nil
-} / '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
+Number <- '-'? Integer (( '.' DecimalDigit+ ) / Exponent) {
    // JSON numbers have the same syntax as Go's, and are parseable using
    // strconv.
    value, err := strconv.ParseFloat(string(c.text), 64)
@@ -227,6 +226,8 @@ Number <- i:Integer {
    }
 
    return ast.Number{Value: value}, nil
+} / i:Integer {
+   return ast.Number{Value: i}, nil
 }
 
 Integer <- '0' {
