@@ -15,4 +15,8 @@ var Functions = map[string]GenericFunc{
 
 	// lists
 	"len": lenFunction,
+
+	// logic
+	"and": andFunction,
+	"or":  orFunction,
 }

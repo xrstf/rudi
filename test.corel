@@ -10,6 +10,8 @@ null
 $myvar
 (if (set $foo 23) (+ $foo 23) "nope")
 
+(if (and true 0) "hurra" "nope")
+
 (if false
   (do
     (set $bla (+ 3 2))
