@@ -30,7 +30,6 @@ Statement <- expr:Expression {
 
 Expression <- val:Number {
    data, _ := val.(ast.Number)
-   fmt.Printf("num: %#v\n", data)
    return ast.Expression{NumberNode: &data}, nil
 } / val:String {
    data, _ := val.(ast.String)
@@ -141,12 +140,35 @@ $var.subkey[0].$othervar.subkey
 .subkey
 .subkey[$index].subsubkey.$varstep
 
+// array acces on the global document; this needs a leading dot to distinguish
+// it from a bare "[index]", which constructs an array with 1 element in it
+.[index]
+
 */
 
-Symbol <- val:PathExpression {
-   pathExpr, _ := val.(ast.PathExpression)
+Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression* {
+   arrAcc, _ := acc.(ast.Accessor)
+
+   pathExpr := ast.PathExpression{}
+   if pathExprSl := toAnySlice(expr); pathExprSl != nil {
+      pathExpr = pathExprSl[0].(ast.PathExpression)
+   }
+
+   pathExpr.Prepend(arrAcc)
+
    return ast.Symbol{PathExpression: &pathExpr}, nil
-} / val:Variable pathExpr:PathExpression* {
+} / acc:ObjectAccessor expr:QualifiedPathExpression* {
+   objAcc, _ := acc.(ast.Accessor)
+
+   pathExpr := ast.PathExpression{}
+   if pathExprSl := toAnySlice(expr); pathExprSl != nil {
+      pathExpr = pathExprSl[0].(ast.PathExpression)
+   }
+
+   pathExpr.Prepend(objAcc)
+
+   return ast.Symbol{PathExpression: &pathExpr}, nil
+} / val:Variable pathExpr:QualifiedPathExpression* {
    var expr *ast.PathExpression
    if pathExprSl := toAnySlice(pathExpr); pathExprSl != nil {
       exp := pathExprSl[0].(ast.PathExpression)
@@ -154,13 +176,17 @@ Symbol <- val:PathExpression {
    }
 
    variable, _ := val.(ast.Variable)
-   return ast.Symbol{Variable: &variable, PathExpression: expr}, nil
+   return ast.Symbol{
+      Variable: &variable,
+      PathExpression: expr,
+   }, nil
 } / val:Identifier {
    ident, _ := val.(ast.Identifier)
    return ast.Symbol{Identifier: &ident}, nil
 }
 
-PathExpression <- pathExpr:(Accessor)+ {
+// QualifiedPathExpression follows any qualifier (currently only variables or another path expression)
+QualifiedPathExpression <- pathExpr:(Accessor)+ {
    path := ast.PathExpression{}
    steps := toAnySlice(pathExpr)
 
@@ -171,13 +197,17 @@ PathExpression <- pathExpr:(Accessor)+ {
    return path, nil
 }
 
-Accessor <- '.' val:PathIdentifier {
+Accessor <- ObjectAccessor / ArrayAccessor
+
+ObjectAccessor <- '.' val:PathIdentifier {
    asserted := val.(ast.Identifier)
    return ast.Accessor{Identifier: &asserted}, nil
 } / '.' val:Variable {
    asserted := val.(ast.Variable)
    return ast.Accessor{Variable: &asserted}, nil
-} / '[' val:String ']' {
+}
+
+ArrayAccessor <- '[' val:String ']' {
    asserted := val.(ast.String)
    return ast.Accessor{StringNode: &asserted}, nil
 } / '[' val:Variable ']' {

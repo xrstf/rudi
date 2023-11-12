@@ -81,6 +81,11 @@ func (s Symbol) String() string {
 	case s.Identifier != nil:
 		return s.Identifier.String()
 	case s.PathExpression != nil:
+		// bare path expressions have a leading dot to distinguish them from array constructors
+		if strings.HasPrefix(path, "[") {
+			path = "." + path
+		}
+
 		return path
 	default:
 		return "<unknown symbol>"
@@ -205,6 +210,10 @@ func (Null) String() string {
 
 type PathExpression struct {
 	Steps []Accessor
+}
+
+func (e *PathExpression) Prepend(step Accessor) {
+	e.Steps = append([]Accessor{step}, e.Steps...)
 }
 
 func (e PathExpression) String() string {
