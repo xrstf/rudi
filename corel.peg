@@ -7,7 +7,7 @@ package parser
 import "go.xrstf.de/corel/pkg/lang/ast"
 }
 
-Program <- stmts:(_ Statement)* _ EOF {
+Program <- stmts:(__ Statement)* __ EOF {
    p := ast.Program{}
 
    stmtsSl := toAnySlice(stmts)
@@ -17,7 +17,9 @@ Program <- stmts:(_ Statement)* _ EOF {
 
    for _, stmt := range stmtsSl {
       subSl := toAnySlice(stmt)
-      p.Statements = append(p.Statements, subSl[1].(ast.Statement))
+      if s, ok := subSl[1].(ast.Statement); ok {
+         p.Statements = append(p.Statements, s)
+      }
    }
 
    return p, nil
@@ -25,6 +27,7 @@ Program <- stmts:(_ Statement)* _ EOF {
 
 // Statement is basically an alias, but allows for easier top-level detection during execution
 Statement <- expr:Expression {
+   fmt.Printf("expr: %q\n", string(c.text))
    return ast.Statement{Expression: expr.(ast.Expression)}, nil
 }
 
@@ -54,7 +57,7 @@ Expression <- val:Number {
    return ast.Expression{SymbolNode: &data}, nil
 }
 
-Tuple <- '(' _ ident:Identifier exprs:(_ Expression)* _ ')' {
+Tuple <- '(' __ ident:Identifier exprs:(__ Expression)* __ ')' {
    t := ast.Tuple{Identifier: ident.(ast.Identifier)}
 
    exprsSl := toAnySlice(exprs)
@@ -70,7 +73,7 @@ Tuple <- '(' _ ident:Identifier exprs:(_ Expression)* _ ')' {
    return t, nil
 }
 
-Vector <- '[' _ vals:( Expression ( ','? _ Expression )* )? ']' {
+Vector <- '[' __ vals:( Expression ( __ ','? __ Expression )* )? __ ']' {
    vector := ast.Vector{}
 
    valsSl := toAnySlice(vals)
@@ -83,13 +86,13 @@ Vector <- '[' _ vals:( Expression ( ','? _ Expression )* )? ']' {
    restSl := toAnySlice(valsSl[1])
    for _, v := range restSl {
       vSl := toAnySlice(v)
-      vector.Expressions = append(vector.Expressions, vSl[2].(ast.Expression))
+      vector.Expressions = append(vector.Expressions, vSl[3].(ast.Expression))
    }
 
    return vector, nil
 }
 
-Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
+Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
    o := ast.Object{}
 
    pairsSl := toAnySlice(pairs)
@@ -105,7 +108,7 @@ Object <- '{' pairs:(_ KeyValuePair)* _ '}' {
    return o, nil
 }
 
-KeyValuePair <- (key:Symbol _ value:Expression) {
+KeyValuePair <- (key:Symbol __ value:Expression) {
    return ast.KeyValuePair{
       Key: key.(ast.Symbol),
       Value: value.(ast.Expression),
@@ -305,8 +308,21 @@ UnicodeEscape <- 'u' HexDigit HexDigit HexDigit HexDigit
 HexDigit <- [0-9a-f]i
 
 //////////////////////////////////////////////////////////
+// comments
+
+SingleLineComment ← "#" ( !EOL . )* {
+   fmt.Printf("SingleLineComment: %q\n", string(c.text))
+   return nil, nil
+}
+
+//////////////////////////////////////////////////////////
 // misc
 
-_ "whitespace" <- [ \t\r\n]*
+__ <- ( Whitespace / EOL / SingleLineComment )*
+_ <- Whitespace*
+
+Whitespace <- [ \t\r]
+EOL <- '\n'
+EOS <- _ SingleLineComment? EOL / __ EOF
 
 EOF <- !.

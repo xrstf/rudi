@@ -1,4 +1,13 @@
-.hello
+.hello # comment
+{
+	foo "Bar"
+}
+# here comes a key
+{
+	hello # foo
+	# bar
+	workd #false
+} # bla
 .["muh"].list[3]["foo"]
 (concat "-" ["hello"] .["hello"] .hello)
 (concat "" $global.hello)
@@ -15,8 +24,9 @@ $myvar
 (if (and true 0) "hurra" "nope")
 
 (if (and true 0)
+# foo
   (do
-    (set $bla (+ 3 2))
+    (set $bla (+ 3 2)) # set variable!
     (- $bla 4))
   (do
     (set $bla "fizz")

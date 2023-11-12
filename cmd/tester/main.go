@@ -40,7 +40,8 @@ func main() {
 
 	got, err := parser.Parse(filename, content, parser.Debug(false))
 	if err != nil {
-		log.Fatal(caretError(err, string(content)))
+		fmt.Println(caretError(err, string(content)))
+		os.Exit(1)
 	}
 
 	program, ok := got.(ast.Program)
