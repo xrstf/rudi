@@ -10,6 +10,7 @@
 	(+ 1 # concat
 	34) "nummy"
 } # bla
+(if (has .foo) "has blargh")
 (default .fuck.me .muh)
 .["muh"].list[3]["foo"]
 (concat "-"
