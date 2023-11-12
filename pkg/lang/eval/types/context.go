@@ -97,11 +97,11 @@ func WrapNative(val any) (any, error) {
 	case ast.Null:
 		return val, nil
 	case string:
-		return ast.String{Value: asserted}, nil
+		return ast.String(asserted), nil
 	case ast.String:
 		return val, nil
 	case bool:
-		return ast.Bool{Value: asserted}, nil
+		return ast.Bool(asserted), nil
 	case ast.Bool:
 		return val, nil
 	case int:
@@ -142,15 +142,15 @@ func UnwrapType(val any) (any, error) {
 	case nil:
 		return nil, nil
 	case ast.Bool:
-		return asserted.Value, nil
+		return bool(asserted), nil
 	case *ast.Bool:
-		return asserted.Value, nil
+		return bool(*asserted), nil
 	case bool:
 		return asserted, nil
 	case ast.String:
-		return asserted.Value, nil
+		return string(asserted), nil
 	case *ast.String:
-		return asserted.Value, nil
+		return string(*asserted), nil
 	case string:
 		return asserted, nil
 	case ast.Number:

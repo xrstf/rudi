@@ -86,7 +86,7 @@ func hasFunction(ctx types.Context, args []Argument) (any, error) {
 		return false, nil
 	}
 
-	return ast.Bool{Value: value != nil}, nil
+	return ast.Bool(value != nil), nil
 }
 
 // (default TEST:Expression FALLBACK:any)
@@ -132,7 +132,7 @@ func setFunction(ctx types.Context, args []Argument) (types.Context, any, error)
 			return ctx, nil, errors.New("argument #0: cannot use path expression when setting variable values")
 		}
 
-		varName = symNode.Variable.Name
+		varName = string(*symNode.Variable)
 
 		// discard any context changes within the value expression
 		_, value, err := args[1].Eval(ctx)

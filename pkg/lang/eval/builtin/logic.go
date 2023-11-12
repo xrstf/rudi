@@ -31,7 +31,7 @@ func andFunction(ctx types.Context, args []Argument) (any, error) {
 		result = result && part
 	}
 
-	return ast.Bool{Value: result}, nil
+	return ast.Bool(result), nil
 }
 
 func orFunction(ctx types.Context, args []Argument) (any, error) {
@@ -54,7 +54,7 @@ func orFunction(ctx types.Context, args []Argument) (any, error) {
 		result = result || part
 	}
 
-	return ast.Bool{Value: result}, nil
+	return ast.Bool(result), nil
 }
 
 func notFunction(ctx types.Context, args []Argument) (any, error) {
@@ -72,5 +72,5 @@ func notFunction(ctx types.Context, args []Argument) (any, error) {
 		return nil, fmt.Errorf("argument is not boolish: %w", err)
 	}
 
-	return ast.Bool{Value: !arg}, nil
+	return ast.Bool(!arg), nil
 }

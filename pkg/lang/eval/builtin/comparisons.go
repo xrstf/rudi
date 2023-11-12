@@ -34,8 +34,8 @@ func eqFunction(ctx types.Context, args []Argument) (any, error) {
 			return nil, fmt.Errorf("cannot compare %T with %T", leftData, rightData)
 		}
 
-		return ast.Bool{Value: rightAsserted == leftAsserted.Value}, nil
+		return ast.Bool(string(leftAsserted) == rightAsserted), nil
 	}
 
-	return ast.Bool{Value: false}, fmt.Errorf("do not know how to compare %T with anything", leftData)
+	return ast.Bool(false), fmt.Errorf("do not know how to compare %T with anything", leftData)
 }

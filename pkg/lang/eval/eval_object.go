@@ -26,7 +26,7 @@ func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any,
 	for _, pair := range obj.Data {
 		// as a convenience feature, we allow unquoted object keys, which are parsed as bare identifiers
 		if pair.Key.IdentifierNode != nil {
-			key = ast.String{Value: pair.Key.IdentifierNode.Name}
+			key = ast.String(string(*pair.Key.IdentifierNode))
 		} else if pair.Key.ObjectNode != nil {
 			return ctx, nil, fmt.Errorf("cannot handle object keys of type %T", pair.Key.ObjectNode)
 		} else if pair.Key.VectorNode != nil {

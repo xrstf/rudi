@@ -224,14 +224,14 @@ ArrayAccessor <- '[' val:String ']' {
 }
 
 PathIdentifier <- [a-zA-Z_][a-zA-Z0-9_]* {
-   return ast.Identifier{Name: string(c.text)}, nil
+   return ast.Identifier(string(c.text)), nil
 }
 
 //////////////////////////////////////////////////////////
 // other symbols
 
 Variable <- '$' name:VariableName {
-   return ast.Variable{Name: name.(string)}, nil
+   return ast.Variable(name.(string)), nil
 }
 
 VariableName <- [a-zA-Z_][a-zA-Z0-9_]* {
@@ -239,13 +239,13 @@ VariableName <- [a-zA-Z_][a-zA-Z0-9_]* {
 }
 
 Identifier <- [a-zA-Z_+/*_%?-][a-zA-Z0-9_+/*_%?-]* {
-   return ast.Identifier{Name: string(c.text)}, nil
+   return ast.Identifier(string(c.text)), nil
 }
 
 //////////////////////////////////////////////////////////
 // special types
 
-Bool <- "true" { return ast.Bool{Value: true}, nil } / "false" { return ast.Bool{Value: false}, nil }
+Bool <- "true" { return ast.Bool(true), nil } / "false" { return ast.Bool(false), nil }
 
 Null <- "null" { return ast.Null{}, nil }
 
@@ -293,7 +293,7 @@ String <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
       return nil, err
    }
 
-   return ast.String{Value: unquoted}, nil
+   return ast.String(unquoted), nil
 }
 
 EscapedChar <- [\x00-\x1f"\\]

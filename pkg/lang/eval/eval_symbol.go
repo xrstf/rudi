@@ -14,11 +14,11 @@ import (
 func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, any, error) {
 	switch {
 	case sym.Variable != nil:
-		varName := sym.Variable.Name
+		varName := string(*sym.Variable)
 
 		value, ok := ctx.GetVariable(varName)
 		if !ok {
-			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
+			return ctx, nil, fmt.Errorf("unknown variable %s (%T)", varName, varName)
 		}
 
 		// descend into the variable value
@@ -59,15 +59,17 @@ func traversePathExpression(ctx types.Context, value any, path *ast.PathExpressi
 
 		switch {
 		case accessor.Identifier != nil:
-			step = ast.String{Value: accessor.Identifier.Name}
+			step = ast.String(string(*accessor.Identifier))
+		case accessor.StringNode != nil:
+			step = ast.String(string(*accessor.StringNode))
 		case accessor.Integer != nil:
 			step = ast.Number{Value: *accessor.Integer}
-		case accessor.StringNode != nil:
-			step = ast.String{Value: accessor.StringNode.Value}
 		case accessor.Variable != nil:
-			value, ok := innerCtx.GetVariable(accessor.Variable.Name)
+			name := string(*accessor.Variable)
+
+			value, ok := innerCtx.GetVariable(name)
 			if !ok {
-				return nil, fmt.Errorf("unknown variable %s", accessor.Variable.Name), nil
+				return nil, fmt.Errorf("unknown variable %s (%T)", name, name), nil
 			}
 			step = value
 		case accessor.Tuple != nil:
@@ -116,7 +118,7 @@ func traversePathExpression(ctx types.Context, value any, path *ast.PathExpressi
 			continue
 		}
 
-		return nil, nil, fmt.Errorf("cannot descend into %T", value)
+		return nil, nil, fmt.Errorf("cannot descend with %s into %T", accessor.String(), value)
 	}
 
 	return value, nil, nil

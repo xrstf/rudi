@@ -55,7 +55,7 @@ func concatFunction(ctx types.Context, args []Argument) (any, error) {
 		}
 	}
 
-	return ast.String{Value: strings.Join(parts, glueString)}, nil
+	return ast.String(strings.Join(parts, glueString)), nil
 }
 
 // (split SEP:String SOURCE:String)
@@ -82,7 +82,7 @@ func splitFunction(ctx types.Context, args []Argument) (any, error) {
 	parts := strings.Split(source, sep)
 	result := make([]any, len(parts))
 	for i, part := range parts {
-		result[i] = ast.String{Value: part}
+		result[i] = ast.String(part)
 	}
 
 	return ast.Vector{Data: result}, nil

@@ -236,36 +236,30 @@ func (KeyValuePair) NodeName() string {
 	return "KeyValuePair"
 }
 
-type Variable struct {
-	Name string
-}
+type Variable string
 
 func (v Variable) String() string {
-	return "$" + v.Name
+	return "$" + string(v)
 }
 
 func (Variable) NodeName() string {
 	return "Variable"
 }
 
-type Identifier struct {
-	Name string
-}
+type Identifier string
 
 func (i Identifier) String() string {
-	return i.Name
+	return string(i)
 }
 
 func (Identifier) NodeName() string {
 	return "Identifier"
 }
 
-type String struct {
-	Value string
-}
+type String string
 
 func (s String) String() string {
-	return fmt.Sprintf("%q", s.Value)
+	return fmt.Sprintf("%q", string(s))
 }
 
 func (String) NodeName() string {
@@ -273,7 +267,7 @@ func (String) NodeName() string {
 }
 
 func (s String) LiteralValue() any {
-	return s.Value
+	return string(s)
 }
 
 type Number struct {
@@ -281,8 +275,16 @@ type Number struct {
 }
 
 func (n Number) ToInteger() (int64, bool) {
-	val, ok := n.Value.(int64)
-	return val, ok
+	switch asserted := n.Value.(type) {
+	case int:
+		return int64(asserted), true
+	case int32:
+		return int64(asserted), true
+	case int64:
+		return asserted, true
+	default:
+		return 0, false
+	}
 }
 
 func (n Number) IsFloat() bool {
@@ -291,12 +293,20 @@ func (n Number) IsFloat() bool {
 }
 
 func (n Number) ToFloat() float64 {
-	val, ok := n.Value.(float64)
-	if ok {
-		return val
+	switch asserted := n.Value.(type) {
+	case int:
+		return float64(asserted)
+	case int32:
+		return float64(asserted)
+	case int64:
+		return float64(asserted)
+	case float32:
+		return float64(asserted)
+	case float64:
+		return asserted
+	default:
+		panic(fmt.Sprintf("Number with non-numeric value %v (%T)", n.Value, n.Value))
 	}
-
-	return float64(n.Value.(int64))
 }
 
 func (n Number) String() string {
@@ -315,12 +325,10 @@ func (n Number) LiteralValue() any {
 	return n.Value
 }
 
-type Bool struct {
-	Value bool
-}
+type Bool bool
 
 func (b Bool) String() string {
-	if b.Value {
+	if b {
 		return "true"
 	} else {
 		return "false"
@@ -332,7 +340,7 @@ func (Bool) NodeName() string {
 }
 
 func (b Bool) LiteralValue() any {
-	return b.Value
+	return bool(b)
 }
 
 type Null struct{}

@@ -22,7 +22,7 @@ func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
 		return ctx, nil, errors.New("invalid tuple: first expression must be an identifier")
 	}
 
-	funcName := funcExpr.IdentifierNode.Name
+	funcName := string(*funcExpr.IdentifierNode)
 	argExprs := tup.Expressions[1:]
 
 	// wrap all args to allow the builtin package to use code from this
