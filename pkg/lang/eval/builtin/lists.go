@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
@@ -20,10 +21,10 @@ func lenFunction(ctx types.Context, args []Argument) (any, error) {
 		return nil, err
 	}
 
-	slice, ok := list.([]any)
+	vector, ok := list.(ast.Vector)
 	if !ok {
 		return nil, errors.New("argument is not a vector")
 	}
 
-	return len(slice), nil
+	return ast.Number{Value: len(vector.Data)}, nil
 }

@@ -6,6 +6,7 @@ package builtin
 import (
 	"fmt"
 
+	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
@@ -30,7 +31,7 @@ func andFunction(ctx types.Context, args []Argument) (any, error) {
 		result = result && part
 	}
 
-	return result, nil
+	return ast.Bool{Value: result}, nil
 }
 
 func orFunction(ctx types.Context, args []Argument) (any, error) {
@@ -53,7 +54,7 @@ func orFunction(ctx types.Context, args []Argument) (any, error) {
 		result = result || part
 	}
 
-	return result, nil
+	return ast.Bool{Value: result}, nil
 }
 
 func notFunction(ctx types.Context, args []Argument) (any, error) {
@@ -71,5 +72,5 @@ func notFunction(ctx types.Context, args []Argument) (any, error) {
 		return nil, fmt.Errorf("argument is not boolish: %w", err)
 	}
 
-	return !arg, nil
+	return ast.Bool{Value: !arg}, nil
 }

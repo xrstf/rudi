@@ -10,13 +10,13 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalProgram(ctx types.Context, p *ast.Program) (interface{}, error) {
+func evalProgram(ctx types.Context, p *ast.Program) (any, error) {
 	innerCtx := ctx
 
 	// This is all sorts of wonky and not really how the program execution should work.
 	// But it compiles.
 	var (
-		result interface{}
+		result any
 		err    error
 	)
 

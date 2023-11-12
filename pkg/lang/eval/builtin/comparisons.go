@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
@@ -27,14 +28,14 @@ func eqFunction(ctx types.Context, args []Argument) (any, error) {
 	}
 
 	switch leftAsserted := leftData.(type) {
-	case string:
+	case ast.String:
 		rightAsserted, err := coalescing.ToString(rightData)
 		if err != nil {
 			return nil, fmt.Errorf("cannot compare %T with %T", leftData, rightData)
 		}
 
-		return rightAsserted == leftAsserted, nil
+		return ast.Bool{Value: rightAsserted == leftAsserted.Value}, nil
 	}
 
-	return false, fmt.Errorf("do not know how to compare %T with anything", leftData)
+	return ast.Bool{Value: false}, fmt.Errorf("do not know how to compare %T with anything", leftData)
 }

@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalExpression(ctx types.Context, expr *ast.Expression) (types.Context, interface{}, error) {
+func evalExpression(ctx types.Context, expr *ast.Expression) (types.Context, any, error) {
 	switch {
 	case expr.NullNode != nil:
 		return evalNull(ctx, expr.NullNode)
@@ -21,14 +21,14 @@ func evalExpression(ctx types.Context, expr *ast.Expression) (types.Context, int
 	case expr.NumberNode != nil:
 		return evalNumber(ctx, expr.NumberNode)
 	case expr.ObjectNode != nil:
-		return evalObject(ctx, expr.ObjectNode)
+		return evalObjectNode(ctx, expr.ObjectNode)
 	case expr.VectorNode != nil:
-		return evalVector(ctx, expr.VectorNode)
+		return evalVectorNode(ctx, expr.VectorNode)
 	case expr.SymbolNode != nil:
 		return evalSymbol(ctx, expr.SymbolNode)
 	case expr.TupleNode != nil:
 		return evalTuple(ctx, expr.TupleNode)
 	}
 
-	return ctx, nil, fmt.Errorf("unknown expression %T (%s)", expr, expr.String())
+	return ctx, nil, fmt.Errorf("unknown expression %T (%s)", expr.NodeName(), expr.String())
 }

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
@@ -42,7 +43,7 @@ func ifFunction(ctx types.Context, args []Argument) (any, error) {
 		return result, err
 	}
 
-	return nil, nil
+	return ast.Null{}, nil
 }
 
 // (do STEP:Expr+)
@@ -85,7 +86,7 @@ func hasFunction(ctx types.Context, args []Argument) (any, error) {
 		return false, nil
 	}
 
-	return value != nil, nil
+	return ast.Bool{Value: value != nil}, nil
 }
 
 // (default TEST:Expression FALLBACK:any)
@@ -100,8 +101,6 @@ func defaultFunction(ctx types.Context, args []Argument) (any, error) {
 		if err != nil {
 			return nil, fmt.Errorf("argument #1: %w", err)
 		}
-
-		return false, nil
 	}
 
 	return result, nil

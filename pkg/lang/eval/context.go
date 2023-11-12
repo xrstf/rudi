@@ -13,6 +13,6 @@ func NewVariables() types.Variables {
 	return types.NewVariables()
 }
 
-func NewDocument(data any) types.Document {
+func NewDocument(data any) (types.Document, error) {
 	return types.NewDocument(data)
 }

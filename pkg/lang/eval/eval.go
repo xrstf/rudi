@@ -8,7 +8,7 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func Run(ctx types.Context, p *ast.Program) (interface{}, error) {
+func Run(ctx types.Context, p *ast.Program) (any, error) {
 	result, err := evalProgram(ctx, p)
 	if err != nil {
 		return nil, err

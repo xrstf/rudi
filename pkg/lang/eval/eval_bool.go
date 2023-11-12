@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalBool(ctx types.Context, b *ast.Bool) (types.Context, interface{}, error) {
-	return ctx, b.Value, nil
+func evalBool(ctx types.Context, b *ast.Bool) (types.Context, any, error) {
+	return ctx, *b, nil
 }

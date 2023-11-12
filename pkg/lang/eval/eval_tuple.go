@@ -12,7 +12,7 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, interface{}, error) {
+func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
 	if len(tup.Expressions) == 0 {
 		return ctx, nil, errors.New("invalid tuple: tuple cannot be empty")
 	}

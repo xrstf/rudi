@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
@@ -34,7 +35,7 @@ func concatFunction(ctx types.Context, args []Argument) (any, error) {
 
 	parts := []string{}
 	for i, list := range values {
-		items, ok := list.([]any)
+		vector, ok := list.(ast.Vector)
 		if !ok {
 			part, err := coalescing.ToString(list)
 			if err != nil {
@@ -45,7 +46,7 @@ func concatFunction(ctx types.Context, args []Argument) (any, error) {
 			continue
 		}
 
-		for j, item := range items {
+		for j, item := range vector.Data {
 			part, err := coalescing.ToString(item)
 			if err != nil {
 				return nil, fmt.Errorf("argument #%d.%d is not stringish: %w", i+1, j, err)
@@ -54,7 +55,7 @@ func concatFunction(ctx types.Context, args []Argument) (any, error) {
 		}
 	}
 
-	return strings.Join(parts, glueString), nil
+	return ast.String{Value: strings.Join(parts, glueString)}, nil
 }
 
 // (split SEP:String SOURCE:String)
@@ -81,8 +82,8 @@ func splitFunction(ctx types.Context, args []Argument) (any, error) {
 	parts := strings.Split(source, sep)
 	result := make([]any, len(parts))
 	for i, part := range parts {
-		result[i] = part
+		result[i] = ast.String{Value: part}
 	}
 
-	return result, nil
+	return ast.Vector{Data: result}, nil
 }

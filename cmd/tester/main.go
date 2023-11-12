@@ -14,6 +14,7 @@ import (
 
 	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 	"go.xrstf.de/corel/pkg/lang/parser"
 )
 
@@ -33,7 +34,7 @@ func main() {
 		log.Fatalf("Failed to read test document: %v", err)
 	}
 
-	var document interface{}
+	var document any
 	if err := json.Unmarshal(docData, &document); err != nil {
 		log.Fatalf("Failed to parse test document: %v", err)
 	}
@@ -61,7 +62,15 @@ func main() {
 	encoder.Encode(document)
 	fmt.Println("---[ EVALUATED ]-------------------------------------")
 
-	progContext := eval.NewContext(eval.NewDocument(document), eval.NewVariables().Set("global", document))
+	doc, err := eval.NewDocument(document)
+	if err != nil {
+		log.Fatalf("Failed to create parser document: %v", err)
+	}
+
+	vars := eval.NewVariables().
+		Set("global", types.Must(types.WrapNative(document)))
+
+	progContext := eval.NewContext(doc, vars)
 
 	fmt.Println(eval.Run(progContext, &program))
 	fmt.Println("-----------------------------------------------------")

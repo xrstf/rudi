@@ -17,7 +17,7 @@ type Argument interface {
 }
 
 func evalArgs(ctx types.Context, args []Argument, argShift int) ([]any, error) {
-	values := make([]any, len(args))
+	values := make([]any, len(args)-argShift)
 	for i, arg := range args[argShift:] {
 		_, evaluated, err := arg.Eval(ctx)
 		if err != nil {

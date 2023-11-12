@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalNull(ctx types.Context, n *ast.Null) (types.Context, interface{}, error) {
-	return ctx, nil, nil
+func evalNull(ctx types.Context, n *ast.Null) (types.Context, any, error) {
+	return ctx, *n, nil
 }

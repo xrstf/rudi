@@ -163,11 +163,15 @@ func (Tuple) NodeName() string {
 
 // Vector is an evaluated vector.
 type Vector struct {
-	Data []interface{}
+	Data []any
 }
 
 func (Vector) NodeName() string {
 	return "Vector"
+}
+
+func (v Vector) LiteralValue() any {
+	return v.Data
 }
 
 // VectorNode represents the parsed code for constructing an vector.
@@ -190,11 +194,15 @@ func (VectorNode) NodeName() string {
 
 // Object is an evaluated object.
 type Object struct {
-	Data map[string]interface{}
+	Data map[string]any
 }
 
 func (Object) NodeName() string {
 	return "Object"
+}
+
+func (o Object) LiteralValue() any {
+	return o.Data
 }
 
 // ObjectNode represents the parsed code for constructing an object.
@@ -264,18 +272,31 @@ func (String) NodeName() string {
 	return "String"
 }
 
-type Number struct {
-	Value interface{}
+func (s String) LiteralValue() any {
+	return s.Value
 }
 
-func (n Number) IsInteger() bool {
-	_, ok := n.Value.(int64)
-	return ok
+type Number struct {
+	Value any
+}
+
+func (n Number) ToInteger() (int64, bool) {
+	val, ok := n.Value.(int64)
+	return val, ok
 }
 
 func (n Number) IsFloat() bool {
 	_, ok := n.Value.(float64)
 	return ok
+}
+
+func (n Number) ToFloat() float64 {
+	val, ok := n.Value.(float64)
+	if ok {
+		return val
+	}
+
+	return float64(n.Value.(int64))
 }
 
 func (n Number) String() string {
@@ -288,6 +309,10 @@ func (n Number) String() string {
 
 func (Number) NodeName() string {
 	return "Number"
+}
+
+func (n Number) LiteralValue() any {
+	return n.Value
 }
 
 type Bool struct {
@@ -306,6 +331,10 @@ func (Bool) NodeName() string {
 	return "Bool"
 }
 
+func (b Bool) LiteralValue() any {
+	return b.Value
+}
+
 type Null struct{}
 
 func (Null) String() string {
@@ -314,6 +343,10 @@ func (Null) String() string {
 
 func (Null) NodeName() string {
 	return "Null"
+}
+
+func (Null) LiteralValue() any {
+	return nil
 }
 
 type PathExpression struct {

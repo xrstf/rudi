@@ -11,20 +11,22 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalObject(ctx types.Context, obj *ast.ObjectNode) (types.Context, interface{}, error) {
+func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any, error) {
 	innerCtx := ctx
-	result := map[string]interface{}{}
+	result := ast.Object{
+		Data: map[string]any{},
+	}
 
 	var (
-		key   interface{}
-		value interface{}
+		key   any
+		value any
 		err   error
 	)
 
 	for _, pair := range obj.Data {
 		// as a convenience feature, we allow unquoted object keys, which are parsed as bare identifiers
 		if pair.Key.IdentifierNode != nil {
-			key = pair.Key.IdentifierNode.Name
+			key = ast.String{Value: pair.Key.IdentifierNode.Name}
 		} else if pair.Key.ObjectNode != nil {
 			return ctx, nil, fmt.Errorf("cannot handle object keys of type %T", pair.Key.ObjectNode)
 		} else if pair.Key.VectorNode != nil {
@@ -48,7 +50,7 @@ func evalObject(ctx types.Context, obj *ast.ObjectNode) (types.Context, interfac
 			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}
 
-		result[keyString] = value
+		result.Data[keyString] = value
 	}
 
 	return ctx, result, nil

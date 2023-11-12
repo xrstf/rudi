@@ -10,12 +10,14 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalVector(ctx types.Context, vec *ast.VectorNode) (types.Context, interface{}, error) {
+func evalVectorNode(ctx types.Context, vec *ast.VectorNode) (types.Context, any, error) {
 	innerCtx := ctx
-	result := make([]interface{}, len(vec.Expressions))
+	result := ast.Vector{
+		Data: make([]any, len(vec.Expressions)),
+	}
 
 	var (
-		data interface{}
+		data any
 		err  error
 	)
 
@@ -28,7 +30,7 @@ func evalVector(ctx types.Context, vec *ast.VectorNode) (types.Context, interfac
 			return ctx, nil, fmt.Errorf("failed to eval expression %s: %w", expr.String(), err)
 		}
 
-		result[i] = data
+		result.Data[i] = data
 	}
 
 	return ctx, result, nil

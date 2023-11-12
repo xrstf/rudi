@@ -11,7 +11,7 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, interface{}, error) {
+func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, any, error) {
 	switch {
 	case sym.Variable != nil:
 		varName := sym.Variable.Name
@@ -36,7 +36,8 @@ func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, interface{},
 		return ctx, value, nil
 
 	case sym.PathExpression != nil:
-		value, pathErr, traverseErr := traversePathExpression(ctx, ctx.GetDocument().Data, sym.PathExpression)
+		rootDoc := ctx.GetDocument()
+		value, pathErr, traverseErr := traversePathExpression(ctx, rootDoc.Get(), sym.PathExpression)
 		if pathErr != nil {
 			return ctx, nil, fmt.Errorf("invalid path expression %s: %w", sym.PathExpression.String(), pathErr)
 		}
@@ -50,19 +51,19 @@ func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, interface{},
 	return ctx, nil, fmt.Errorf("unknown symbol %T (%s)", sym, sym.String())
 }
 
-func traversePathExpression(ctx types.Context, value interface{}, path *ast.PathExpression) (result interface{}, pathErr error, traverseErr error) {
+func traversePathExpression(ctx types.Context, value any, path *ast.PathExpression) (result any, pathErr error, traverseErr error) {
 	innerCtx := ctx
 
 	for _, accessor := range path.Steps {
-		var step interface{}
+		var step any
 
 		switch {
 		case accessor.Identifier != nil:
-			step = accessor.Identifier.Name
+			step = ast.String{Value: accessor.Identifier.Name}
 		case accessor.Integer != nil:
-			step = *accessor.Integer
+			step = ast.Number{Value: *accessor.Integer}
 		case accessor.StringNode != nil:
-			step = accessor.StringNode.Value
+			step = ast.String{Value: accessor.StringNode.Value}
 		case accessor.Variable != nil:
 			value, ok := innerCtx.GetVariable(accessor.Variable.Name)
 			if !ok {
@@ -71,7 +72,7 @@ func traversePathExpression(ctx types.Context, value interface{}, path *ast.Path
 			step = value
 		case accessor.Tuple != nil:
 			var (
-				value interface{}
+				value any
 				err   error
 			)
 
@@ -85,23 +86,33 @@ func traversePathExpression(ctx types.Context, value interface{}, path *ast.Path
 			step = value
 		}
 
-		if valueAsSlice, ok := value.([]interface{}); ok {
+		if valueAsVector, ok := value.(ast.Vector); ok {
 			stepInt, err := coalescing.ToInt64(step)
 			if err != nil {
-				return nil, nil, fmt.Errorf("cannot use %v (%T) as an array index", step, step)
+				return nil, nil, fmt.Errorf("cannot use %v (%T) as an array index: %w", step, step, err)
 			}
 
-			value = valueAsSlice[stepInt]
+			rawValue := valueAsVector.Data[stepInt]
+			value, err = types.WrapNative(rawValue)
+			if err != nil {
+				return nil, nil, fmt.Errorf("cannot wrap %v (%T): %w", rawValue, rawValue, err)
+			}
+
 			continue
 		}
 
-		if valueAsMap, ok := value.(map[string]interface{}); ok {
+		if valueAsObject, ok := value.(ast.Object); ok {
 			stepString, err := coalescing.ToString(step)
 			if err != nil {
-				return nil, nil, fmt.Errorf("cannot use %v (%T) as an object key", step, step)
+				return nil, nil, fmt.Errorf("cannot use %v (%T) as an object key: %w", step, step, err)
 			}
 
-			value = valueAsMap[stepString]
+			rawValue := valueAsObject.Data[stepString]
+			value, err = types.WrapNative(rawValue)
+			if err != nil {
+				return nil, nil, fmt.Errorf("cannot wrap %v (%T): %w", rawValue, rawValue, err)
+			}
+
 			continue
 		}
 
