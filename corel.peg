@@ -46,10 +46,10 @@ Expression <- val:Number {
    data, _ := val.(ast.Tuple)
    return ast.Expression{TupleNode: &data}, nil
 } / val:Vector {
-   data, _ := val.(ast.Vector)
+   data, _ := val.(ast.VectorNode)
    return ast.Expression{VectorNode: &data}, nil
 } / val:Object {
-   data, _ := val.(ast.Object)
+   data, _ := val.(ast.ObjectNode)
    return ast.Expression{ObjectNode: &data}, nil
 } / val:Symbol {
    data, _ := val.(ast.Symbol)
@@ -76,7 +76,7 @@ Tuple <- '(' __ exprs:(__ Expression)* __ ')' {
 }
 
 Vector <- '[' __ vals:( Expression ( __ ','? __ Expression )* )? __ ']' {
-   vector := ast.Vector{}
+   vector := ast.VectorNode{}
 
    valsSl := toAnySlice(vals)
    if len(valsSl) == 0 {
@@ -95,7 +95,7 @@ Vector <- '[' __ vals:( Expression ( __ ','? __ Expression )* )? __ ']' {
 }
 
 Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
-   o := ast.Object{}
+   o := ast.ObjectNode{}
 
    pairsSl := toAnySlice(pairs)
    if len(pairsSl) == 0 {

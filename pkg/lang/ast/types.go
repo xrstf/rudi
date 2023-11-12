@@ -40,8 +40,8 @@ func (Statement) NodeName() string {
 type Expression struct {
 	SymbolNode     *Symbol
 	TupleNode      *Tuple
-	VectorNode     *Vector
-	ObjectNode     *Object
+	VectorNode     *VectorNode
+	ObjectNode     *ObjectNode
 	NumberNode     *Number
 	IdentifierNode *Identifier
 	StringNode     *String
@@ -161,11 +161,22 @@ func (Tuple) NodeName() string {
 	return "Tuple"
 }
 
+// Vector is an evaluated vector.
 type Vector struct {
+	Data []interface{}
+}
+
+func (Vector) NodeName() string {
+	return "Vector"
+}
+
+// VectorNode represents the parsed code for constructing an vector.
+// When an VectorNode is evaluated, it turns into an Vector.
+type VectorNode struct {
 	Expressions []Expression
 }
 
-func (v Vector) String() string {
+func (v VectorNode) String() string {
 	exprs := make([]string, len(v.Expressions))
 	for i, expr := range v.Expressions {
 		exprs[i] = expr.String()
@@ -173,15 +184,26 @@ func (v Vector) String() string {
 	return "[" + strings.Join(exprs, " ") + "]"
 }
 
-func (Vector) NodeName() string {
+func (VectorNode) NodeName() string {
 	return "Vector"
 }
 
+// Object is an evaluated object.
 type Object struct {
+	Data map[string]interface{}
+}
+
+func (Object) NodeName() string {
+	return "Object"
+}
+
+// ObjectNode represents the parsed code for constructing an object.
+// When an ObjectNode is evaluated, it turns into an Object.
+type ObjectNode struct {
 	Data []KeyValuePair
 }
 
-func (o Object) String() string {
+func (o ObjectNode) String() string {
 	pairs := make([]string, len(o.Data))
 	for i, pair := range o.Data {
 		pairs[i] = pair.String()
@@ -189,7 +211,7 @@ func (o Object) String() string {
 	return "{" + strings.Join(pairs, " ") + "}"
 }
 
-func (Object) NodeName() string {
+func (ObjectNode) NodeName() string {
 	return "Object"
 }
 

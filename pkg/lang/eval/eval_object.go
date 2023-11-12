@@ -11,7 +11,7 @@ import (
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalObject(ctx types.Context, obj *ast.Object) (types.Context, interface{}, error) {
+func evalObject(ctx types.Context, obj *ast.ObjectNode) (types.Context, interface{}, error) {
 	innerCtx := ctx
 	result := map[string]interface{}{}
 
