@@ -12,9 +12,6 @@ import (
 
 func evalSymbol(ctx Context, sym *ast.Symbol) (Context, interface{}, error) {
 	switch {
-	case sym.Identifier != nil:
-		return ctx, sym.Identifier, nil
-
 	case sym.Variable != nil:
 		varName := sym.Variable.Name
 

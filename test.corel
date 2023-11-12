@@ -6,10 +6,19 @@
 {
 	hello # foo
 	# bar
-	workd #false
+	"workd" #false
+	(+ 1 # concat
+	34) "nummy"
 } # bla
+(default .fuck.me .muh)
 .["muh"].list[3]["foo"]
-(concat "-" ["hello"] .["hello"] .hello)
+(concat "-"
+# ["hello"]
+.["hello"] # foo
+# bar
+.hello
+# bar
+)
 (concat "" $global.hello)
 (concat "-" [1 2 "foo"] "bla")
 (concat "-" (split "#" "foo#bar#hello"))

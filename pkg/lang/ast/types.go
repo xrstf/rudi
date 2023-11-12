@@ -30,14 +30,15 @@ func (s Statement) String() string {
 }
 
 type Expression struct {
-	SymbolNode *Symbol
-	TupleNode  *Tuple
-	VectorNode *Vector
-	ObjectNode *Object
-	NumberNode *Number
-	StringNode *String
-	BoolNode   *Bool
-	NullNode   *Null
+	SymbolNode     *Symbol
+	TupleNode      *Tuple
+	VectorNode     *Vector
+	ObjectNode     *Object
+	NumberNode     *Number
+	IdentifierNode *Identifier
+	StringNode     *String
+	BoolNode       *Bool
+	NullNode       *Null
 }
 
 func (e Expression) String() string {
@@ -52,6 +53,8 @@ func (e Expression) String() string {
 		return e.ObjectNode.String()
 	case e.NumberNode != nil:
 		return e.NumberNode.String()
+	case e.IdentifierNode != nil:
+		return e.IdentifierNode.String()
 	case e.StringNode != nil:
 		return e.StringNode.String()
 	case e.BoolNode != nil:
@@ -66,7 +69,6 @@ func (e Expression) String() string {
 type Symbol struct {
 	PathExpression *PathExpression // can be combined with Variable
 	Variable       *Variable
-	Identifier     *Identifier
 }
 
 func (s Symbol) String() string {
@@ -78,8 +80,6 @@ func (s Symbol) String() string {
 	switch {
 	case s.Variable != nil:
 		return s.Variable.String() + path
-	case s.Identifier != nil:
-		return s.Identifier.String()
 	case s.PathExpression != nil:
 		// bare path expressions have a leading dot to distinguish them from array constructors
 		if strings.HasPrefix(path, "[") {
@@ -93,7 +93,6 @@ func (s Symbol) String() string {
 }
 
 type Tuple struct {
-	Identifier  Identifier
 	Expressions []Expression
 }
 
@@ -103,12 +102,7 @@ func (t Tuple) String() string {
 		exprs[i] = expr.String()
 	}
 
-	result := "(" + t.Identifier.String()
-	if len(exprs) > 0 {
-		result += " " + strings.Join(exprs, " ")
-	}
-
-	return result + ")"
+	return "(" + strings.Join(exprs, " ") + ")"
 }
 
 type Vector struct {
@@ -135,8 +129,24 @@ func (o Object) String() string {
 	return "{" + strings.Join(pairs, " ") + "}"
 }
 
+// type ObjectKey struct {
+// 	Symbol     *Symbol
+// 	Identifier *Identifier
+// }
+
+// func (k ObjectKey) String() string {
+// 	switch {
+// 	case k.Symbol != nil:
+// 		return k.Symbol.String()
+// 	case k.Identifier != nil:
+// 		return k.Identifier.String()
+// 	default:
+// 		return "<unknown object key>"
+// 	}
+// }
+
 type KeyValuePair struct {
-	Key   Symbol
+	Key   Expression
 	Value Expression
 }
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
 )
 
 func evalObject(ctx Context, obj *ast.Object) (Context, interface{}, error) {
@@ -20,21 +21,25 @@ func evalObject(ctx Context, obj *ast.Object) (Context, interface{}, error) {
 	)
 
 	for _, pair := range obj.Data {
-		// Just like with arrays, use a growing context during the object evaluation,
-		// in case someone wants to define a variable here... for some reason.
-		innerCtx, key, err = evalSymbol(innerCtx, &pair.Key)
-		if err != nil {
-			return ctx, nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
+		// as a convenience feature, we allow unquoted object keys, which are parsed as bare identifiers
+		if pair.Key.IdentifierNode != nil {
+			key = pair.Key.IdentifierNode.Name
+		} else if pair.Key.ObjectNode != nil {
+			return ctx, nil, fmt.Errorf("cannot handle object keys of type %T", pair.Key.ObjectNode)
+		} else if pair.Key.VectorNode != nil {
+			return ctx, nil, fmt.Errorf("cannot handle object keys of type %T", pair.Key.VectorNode)
+		} else {
+			// Just like with arrays, use a growing context during the object evaluation,
+			// in case someone wants to define a variable here... for some reason.
+			innerCtx, key, err = evalExpression(innerCtx, &pair.Key)
+			if err != nil {
+				return ctx, nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
+			}
 		}
 
-		keyString, ok := key.(string)
-		if !ok {
-			ident, ok := key.(*ast.Identifier)
-			if !ok {
-				return ctx, nil, fmt.Errorf("object key must be string or identifier, but got %T", key)
-			}
-
-			keyString = ident.Name
+		keyString, err := coalescing.ToString(key)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("object key must be stringish, but got %T", key)
 		}
 
 		innerCtx, value, err = evalExpression(innerCtx, &pair.Value)

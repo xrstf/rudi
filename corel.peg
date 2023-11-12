@@ -27,7 +27,6 @@ Program <- stmts:(__ Statement)* __ EOF {
 
 // Statement is basically an alias, but allows for easier top-level detection during execution
 Statement <- expr:Expression {
-   fmt.Printf("expr: %q\n", string(c.text))
    return ast.Statement{Expression: expr.(ast.Expression)}, nil
 }
 
@@ -55,10 +54,13 @@ Expression <- val:Number {
 } / val:Symbol {
    data, _ := val.(ast.Symbol)
    return ast.Expression{SymbolNode: &data}, nil
+} / val:Identifier {
+   data, _ := val.(ast.Identifier)
+   return ast.Expression{IdentifierNode: &data}, nil
 }
 
-Tuple <- '(' __ ident:Identifier exprs:(__ Expression)* __ ')' {
-   t := ast.Tuple{Identifier: ident.(ast.Identifier)}
+Tuple <- '(' __ exprs:(__ Expression)* __ ')' {
+   t := ast.Tuple{}
 
    exprsSl := toAnySlice(exprs)
    if len(exprsSl) == 0 {
@@ -108,9 +110,9 @@ Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
    return o, nil
 }
 
-KeyValuePair <- (key:Symbol __ value:Expression) {
+KeyValuePair <- (key:Expression __ value:Expression) {
    return ast.KeyValuePair{
-      Key: key.(ast.Symbol),
+      Key: key.(ast.Expression),
       Value: value.(ast.Expression),
    }, nil
 }
@@ -183,9 +185,6 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression* {
       Variable: &variable,
       PathExpression: expr,
    }, nil
-} / val:Identifier {
-   ident, _ := val.(ast.Identifier)
-   return ast.Symbol{Identifier: &ident}, nil
 }
 
 // QualifiedPathExpression follows any qualifier (currently only variables or another path expression)
@@ -310,10 +309,7 @@ HexDigit <- [0-9a-f]i
 //////////////////////////////////////////////////////////
 // comments
 
-SingleLineComment ← "#" ( !EOL . )* {
-   fmt.Printf("SingleLineComment: %q\n", string(c.text))
-   return nil, nil
-}
+SingleLineComment ← "#" ( !EOL . )*
 
 //////////////////////////////////////////////////////////
 // misc
