@@ -156,45 +156,39 @@ Symbol <- val:PathExpression {
    return ast.Symbol{Identifier: &ident}, nil
 }
 
-PathExpression <- pathExpr:(PathStep)+ {
+PathExpression <- pathExpr:(Accessor)+ {
    path := ast.PathExpression{}
    steps := toAnySlice(pathExpr)
 
    for i := range steps {
-      step := steps[i]
-
-      switch asserted := step.(type) {
-         case ast.PathObjectStep:
-            path.Steps = append(path.Steps, ast.PathStep{ObjectStep: &asserted})
-         case ast.PathArrayStep:
-            path.Steps = append(path.Steps, ast.PathStep{ArrayStep: &asserted})
-         default:
-            return nil, errors.New("unknown path step")
-      }
+      path.Steps = append(path.Steps, steps[i].(ast.Accessor))
    }
 
    return path, nil
 }
 
-PathStep <- '.' val:PathIdentifier {
-   asserted := ast.Identifier{Name: val.(string)}
-   return ast.PathObjectStep{Identifier: &asserted}, nil
+Accessor <- '.' val:PathIdentifier {
+   asserted := val.(ast.Identifier)
+   return ast.Accessor{Identifier: &asserted}, nil
 } / '.' val:Variable {
    asserted := val.(ast.Variable)
-   return ast.PathObjectStep{Variable: &asserted}, nil
+   return ast.Accessor{Variable: &asserted}, nil
+} / '[' val:String ']' {
+   asserted := val.(ast.String)
+   return ast.Accessor{StringNode: &asserted}, nil
 } / '[' val:Variable ']' {
    asserted := val.(ast.Variable)
-   return ast.PathArrayStep{Variable: &asserted}, nil
+   return ast.Accessor{Variable: &asserted}, nil
 } / '[' val:Tuple ']' {
    asserted := val.(ast.Tuple)
-   return ast.PathArrayStep{Tuple: &asserted}, nil
+   return ast.Accessor{Tuple: &asserted}, nil
 } / '[' val:Integer ']' {
    asserted := val.(int64)
-   return ast.PathArrayStep{Integer: &asserted}, nil
+   return ast.Accessor{Integer: &asserted}, nil
 }
 
 PathIdentifier <- [a-zA-Z0-9_]+ {
-   return string(c.text), nil
+   return ast.Identifier{Name: string(c.text)}, nil
 }
 
 //////////////////////////////////////////////////////////
@@ -222,21 +216,28 @@ Null <- "null" { return ast.Null{}, nil }
 //////////////////////////////////////////////////////////
 // numbers (ints and floats)
 
-Number <- '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
-    // JSON numbers have the same syntax as Go's, and are parseable using
-    // strconv.
-    value, err := strconv.ParseFloat(string(c.text), 64)
-    if err != nil {
+Number <- i:Integer {
+   return ast.Number{Value: i}, nil
+} / '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
+   // JSON numbers have the same syntax as Go's, and are parseable using
+   // strconv.
+   value, err := strconv.ParseFloat(string(c.text), 64)
+   if err != nil {
       return nil, err // should never happen
-    }
+   }
 
-    return ast.Number{Value: value}, nil
+   return ast.Number{Value: value}, nil
 }
 
 Integer <- '0' {
    return int64(0), nil
-} / NonZeroDecimalDigit DecimalDigit* {
-   return strconv.ParseInt(string(c.text), 10, 64)
+} / '-'? NonZeroDecimalDigit DecimalDigit* {
+   value, err := strconv.ParseInt(string(c.text), 10, 64)
+   if err != nil {
+      return nil, err // should never happen
+   }
+
+   return value, nil
 }
 
 DecimalDigit <- [0-9]
@@ -249,14 +250,14 @@ Exponent <- 'e'i [+-]? DecimalDigit+
 // strings
 
 String <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
-    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
+   c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
 
-    unquoted, err := strconv.Unquote(string(c.text))
-    if err != nil {
+   unquoted, err := strconv.Unquote(string(c.text))
+   if err != nil {
       return nil, err
-    }
+   }
 
-    return ast.String{Value: unquoted}, nil
+   return ast.String{Value: unquoted}, nil
 }
 
 EscapedChar <- [\x00-\x1f"\\]

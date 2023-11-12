@@ -161,11 +161,25 @@ func (s String) String() string {
 }
 
 type Number struct {
-	Value float64
+	Value interface{}
+}
+
+func (n Number) IsInteger() bool {
+	_, ok := n.Value.(int64)
+	return ok
+}
+
+func (n Number) IsFloat() bool {
+	_, ok := n.Value.(float64)
+	return ok
 }
 
 func (n Number) String() string {
-	return fmt.Sprintf("%f", n.Value)
+	if n.IsFloat() {
+		return fmt.Sprintf("%f", n.Value)
+	}
+
+	return fmt.Sprintf("%d", n.Value)
 }
 
 type Bool struct {
@@ -187,7 +201,7 @@ func (Null) String() string {
 }
 
 type PathExpression struct {
-	Steps []PathStep
+	Steps []Accessor
 }
 
 func (e PathExpression) String() string {
@@ -199,61 +213,27 @@ func (e PathExpression) String() string {
 	return result
 }
 
-type PathStep struct {
-	ObjectStep *PathObjectStep // .something
-	ArrayStep  *PathArrayStep  // [something]
-}
-
-func (s PathStep) String() string {
-	switch {
-	case s.ObjectStep != nil:
-		return s.ObjectStep.String()
-	case s.ArrayStep != nil:
-		return s.ArrayStep.String()
-	default:
-		return "<unknown step>"
-	}
-}
-
-type PathObjectStep struct {
+type Accessor struct {
 	Identifier *Identifier
+	StringNode *String
 	Variable   *Variable
+	Tuple      *Tuple
+	Integer    *int64
 }
 
-func (s PathObjectStep) String() string {
-	step := ""
-
+func (a Accessor) String() string {
 	switch {
-	case s.Variable != nil:
-		step = s.Variable.String()
-	case s.Identifier != nil:
-		step = s.Identifier.String()
+	case a.Identifier != nil:
+		return fmt.Sprintf(".%s", a.Identifier.String())
+	case a.Variable != nil:
+		return fmt.Sprintf(".%s", a.Variable.String())
+	case a.StringNode != nil:
+		return fmt.Sprintf("[%s]", a.StringNode.String())
+	case a.Tuple != nil:
+		return fmt.Sprintf("[%s]", a.Tuple.String())
+	case a.Integer != nil:
+		return fmt.Sprintf("[%d]", *a.Integer)
 	default:
-		step = "<unknown object step>"
+		return "<unknown accessor>"
 	}
-
-	return fmt.Sprintf(".%s", step)
-}
-
-type PathArrayStep struct {
-	Variable *Variable
-	Tuple    *Tuple
-	Integer  *int64
-}
-
-func (s PathArrayStep) String() string {
-	step := ""
-
-	switch {
-	case s.Variable != nil:
-		step = s.Variable.String()
-	case s.Tuple != nil:
-		step = s.Tuple.String()
-	case s.Integer != nil:
-		step = fmt.Sprintf("%d", *s.Integer)
-	default:
-		step = "<unknown object step>"
-	}
-
-	return fmt.Sprintf("[%s]", step)
 }
