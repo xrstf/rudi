@@ -7,18 +7,19 @@ null
 (split "/" "foo/bar/bla")
 (len (split "/" "foo/bar/bla"))
 (set $myvar (+ 1 2))
+(eq "foo" "foo")
 $myvar
 (if (set $foo 23) (+ $foo 23) "nope")
 
 (if (and true 0) "hurra" "nope")
 
-(if false
+(if (and true 0)
   (do
     (set $bla (+ 3 2))
     (- $bla 4))
   (do
-    (set $bla 42)
-	 (set $name "muh")))
+    (set $bla "fizz")
+	 (set $name (concat "-" $bla "buzz"))))
 
 [1 2 "foo" $myvar]
 [(+ $myvar 7)]

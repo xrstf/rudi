@@ -19,4 +19,7 @@ var Functions = map[string]GenericFunc{
 	// logic
 	"and": andFunction,
 	"or":  orFunction,
+
+	// comparisons
+	"eq": eqFunction,
 }
