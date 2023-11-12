@@ -1,9 +1,13 @@
+// SPDX-FileCopyrightText: 2023 Christoph Mewes
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strings"
@@ -14,48 +18,51 @@ import (
 )
 
 func main() {
-	in := os.Stdin
-	nm := "stdin"
-	if len(os.Args) > 1 {
-		f, err := os.Open(os.Args[1])
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer func() {
-			err := f.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-		}()
-		in = f
-		nm = os.Args[1]
+	filename := "test.corel"
+	if flag.NArg() > 0 {
+		filename = flag.Arg(0)
 	}
 
-	b, err := io.ReadAll(in)
+	content, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to read %s: %v", filename, err)
 	}
 
-	got, err := parser.Parse(nm, b, parser.Debug(false))
+	docData, err := os.ReadFile("document.json")
 	if err != nil {
-		fmt.Println(caretError(err, string(b)))
-		os.Exit(1)
+		log.Fatalf("Failed to read test document: %v", err)
+	}
+
+	var document interface{}
+	if err := json.Unmarshal(docData, &document); err != nil {
+		log.Fatalf("Failed to parse test document: %v", err)
+	}
+
+	got, err := parser.Parse(filename, content, parser.Debug(false))
+	if err != nil {
+		log.Fatal(caretError(err, string(content)))
 	}
 
 	program, ok := got.(ast.Program)
 	if !ok {
-		fmt.Printf("Fatal: parse result is not a ast.Program, but %T.\n", got)
+		log.Fatalf("Parsed result is not a ast.Program, but %T", got)
 	}
 
 	fmt.Println("---[ INPUT ]-----------------------------------------")
-	fmt.Println(string(b))
-	fmt.Println("---[ AST ]-------------------------------------------")
-	fmt.Printf("%#v\n", got)
-	fmt.Println("---[ PRINTED ]---------------------------------------")
-	fmt.Println(program.String())
+	fmt.Println(string(content))
+	// fmt.Println("---[ AST ]-------------------------------------------")
+	// fmt.Printf("%#v\n", program)
+	// fmt.Println("---[ PRINTED ]---------------------------------------")
+	// fmt.Println(program.String())
+	fmt.Println("---[ DOCUMENT ]--------------------------------------")
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	encoder.Encode(document)
 	fmt.Println("---[ EVALUATED ]-------------------------------------")
 
-	progContext := eval.NewContext()
+	progContext := eval.NewContext(eval.Document{
+		Data: document,
+	}, eval.NewVariables().Set("global", "global value!"))
 
 	fmt.Println(eval.Run(progContext, &program))
 	fmt.Println("-----------------------------------------------------")

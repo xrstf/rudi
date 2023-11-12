@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 Christoph Mewes
+// SPDX-License-Identifier: MIT
+
 package builtin
 
 type GenericFunc func(args []interface{}) (interface{}, error)

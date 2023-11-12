@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 Christoph Mewes
+// SPDX-License-Identifier: MIT
+
 package eval
 
 import (
@@ -14,7 +17,7 @@ func evalSymbol(ctx Context, sym *ast.Symbol) (Context, interface{}, error) {
 	case sym.Variable != nil:
 		varName := sym.Variable.Name
 
-		value, ok := ctx.Variables[varName]
+		value, ok := ctx.variables[varName]
 		if !ok {
 			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
 		}

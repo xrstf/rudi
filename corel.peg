@@ -1,4 +1,7 @@
 {
+// SPDX-FileCopyrightText: 2023 Christoph Mewes
+// SPDX-License-Identifier: MIT
+
 package parser
 
 import "go.xrstf.de/corel/pkg/lang/ast"
