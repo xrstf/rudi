@@ -3,27 +3,69 @@
 
 package builtin
 
-type GenericFunc func(args []interface{}) (interface{}, error)
+import (
+	"fmt"
+
+	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
+)
+
+type Argument interface {
+	Eval(ctx types.Context) (types.Context, any, error)
+	String() string
+	Expression() *ast.Expression
+}
+
+func evalArgs(ctx types.Context, args []Argument, argShift int) ([]any, error) {
+	values := make([]any, len(args))
+	for i, arg := range args[argShift:] {
+		_, evaluated, err := arg.Eval(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("argument #%d: %w", i+argShift, err)
+		}
+
+		values[i] = evaluated
+	}
+
+	return values, nil
+}
+
+type GenericFunc func(ctx types.Context, args []Argument) (types.Context, any, error)
+type StatelessFunc func(ctx types.Context, args []Argument) (any, error)
+
+func stateless(f StatelessFunc) GenericFunc {
+	return func(ctx types.Context, args []Argument) (types.Context, any, error) {
+		result, err := f(ctx, args)
+		return ctx, result, err
+	}
+}
 
 var Functions = map[string]GenericFunc{
+	// core
+	"if":      stateless(ifFunction),
+	"do":      stateless(doFunction),
+	"has":     stateless(hasFunction),
+	"default": stateless(defaultFunction),
+	"set":     setFunction,
+
 	// math
-	"+": sumFunction,
-	"-": minusFunction,
-	"*": multiplyFunction,
-	"/": divideFunction,
+	"+": stateless(sumFunction),
+	"-": stateless(minusFunction),
+	"*": stateless(multiplyFunction),
+	"/": stateless(divideFunction),
 
 	// strings
-	"concat": concatFunction,
-	"split":  splitFunction,
+	"concat": stateless(concatFunction),
+	"split":  stateless(splitFunction),
 
 	// lists
-	"len": lenFunction,
+	"len": stateless(lenFunction),
 
 	// logic
-	"and": andFunction,
-	"or":  orFunction,
-	"not": notFunction,
+	"and": stateless(andFunction),
+	"or":  stateless(orFunction),
+	"not": stateless(notFunction),
 
 	// comparisons
-	"eq": eqFunction,
+	"eq": stateless(eqFunction),
 }

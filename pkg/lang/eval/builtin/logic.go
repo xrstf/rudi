@@ -4,22 +4,27 @@
 package builtin
 
 import (
-	"errors"
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func andFunction(args []interface{}) (interface{}, error) {
-	if len(args) < 1 {
-		return nil, errors.New("(and CONDITION+)")
+func andFunction(ctx types.Context, args []Argument) (any, error) {
+	if size := len(args); size < 1 {
+		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
+	}
+
+	evaluated, err := evalArgs(ctx, args, 0)
+	if err != nil {
+		return nil, err
 	}
 
 	result := true
-	for i, item := range args {
-		part, err := coalescing.ToBool(item)
+	for i, arg := range evaluated {
+		part, err := coalescing.ToBool(arg)
 		if err != nil {
-			return nil, fmt.Errorf("arg %d is nor boolish: %w", i, err)
+			return nil, fmt.Errorf("argument #%d not boolish: %w", i, err)
 		}
 
 		result = result && part
@@ -28,16 +33,21 @@ func andFunction(args []interface{}) (interface{}, error) {
 	return result, nil
 }
 
-func orFunction(args []interface{}) (interface{}, error) {
-	if len(args) < 1 {
-		return nil, errors.New("(or CONDITION+)")
+func orFunction(ctx types.Context, args []Argument) (any, error) {
+	if size := len(args); size < 1 {
+		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
+	}
+
+	evaluated, err := evalArgs(ctx, args, 0)
+	if err != nil {
+		return nil, err
 	}
 
 	result := false
-	for i, item := range args {
-		part, err := coalescing.ToBool(item)
+	for i, arg := range evaluated {
+		part, err := coalescing.ToBool(arg)
 		if err != nil {
-			return nil, fmt.Errorf("arg %d is nor boolish: %w", i, err)
+			return nil, fmt.Errorf("argument #%d not boolish: %w", i, err)
 		}
 
 		result = result || part
@@ -46,14 +56,19 @@ func orFunction(args []interface{}) (interface{}, error) {
 	return result, nil
 }
 
-func notFunction(args []interface{}) (interface{}, error) {
-	if len(args) != 1 {
-		return nil, errors.New("(not CONDITION)")
+func notFunction(ctx types.Context, args []Argument) (any, error) {
+	if size := len(args); size != 1 {
+		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	arg, err := coalescing.ToBool(args[0])
+	_, evaluated, err := args[0].Eval(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("arg is nor boolish: %w", err)
+		return nil, err
+	}
+
+	arg, err := coalescing.ToBool(evaluated)
+	if err != nil {
+		return nil, fmt.Errorf("argument is not boolish: %w", err)
 	}
 
 	return !arg, nil

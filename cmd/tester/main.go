@@ -61,9 +61,7 @@ func main() {
 	encoder.Encode(document)
 	fmt.Println("---[ EVALUATED ]-------------------------------------")
 
-	progContext := eval.NewContext(eval.Document{
-		Data: document,
-	}, eval.NewVariables().Set("global", document))
+	progContext := eval.NewContext(eval.NewDocument(document), eval.NewVariables().Set("global", document))
 
 	fmt.Println(eval.Run(progContext, &program))
 	fmt.Println("-----------------------------------------------------")

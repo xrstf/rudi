@@ -4,30 +4,41 @@
 package builtin
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func concatFunction(args []interface{}) (interface{}, error) {
-	if len(args) < 2 {
-		return nil, errors.New("(concat GLUE LIST+)")
+// (concat GLUE:String ELEMENTS:(Vector/String)+)
+func concatFunction(ctx types.Context, args []Argument) (any, error) {
+	if size := len(args); size < 2 {
+		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
 
-	glue, err := coalescing.ToString(args[0])
+	_, glue, err := args[0].Eval(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	glueString, err := coalescing.ToString(glue)
 	if err != nil {
 		return nil, fmt.Errorf("glue is not stringish: %w", err)
 	}
 
+	values, err := evalArgs(ctx, args, 1)
+	if err != nil {
+		return nil, err
+	}
+
 	parts := []string{}
-	for i, list := range args[1:] {
-		items, ok := list.([]interface{})
+	for i, list := range values {
+		items, ok := list.([]any)
 		if !ok {
 			part, err := coalescing.ToString(list)
 			if err != nil {
-				return nil, fmt.Errorf("arg %d is neither vector nor stringish: %w", i+1, err)
+				return nil, fmt.Errorf("argument #%d is neither vector nor stringish: %w", i+1, err)
 			}
 
 			parts = append(parts, part)
@@ -37,32 +48,38 @@ func concatFunction(args []interface{}) (interface{}, error) {
 		for j, item := range items {
 			part, err := coalescing.ToString(item)
 			if err != nil {
-				return nil, fmt.Errorf("element %d in arg %d is not stringish: %w", j, i+1, err)
+				return nil, fmt.Errorf("argument #%d.%d is not stringish: %w", i+1, j, err)
 			}
 			parts = append(parts, part)
 		}
 	}
 
-	return strings.Join(parts, glue), nil
+	return strings.Join(parts, glueString), nil
 }
 
-func splitFunction(args []interface{}) (interface{}, error) {
-	if len(args) != 2 {
-		return nil, errors.New("(split SEPARATOR STRING)")
+// (split SEP:String SOURCE:String)
+func splitFunction(ctx types.Context, args []Argument) (any, error) {
+	if size := len(args); size != 2 {
+		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
 	}
 
-	sep, err := coalescing.ToString(args[0])
+	values, err := evalArgs(ctx, args, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	sep, err := coalescing.ToString(values[0])
 	if err != nil {
 		return nil, fmt.Errorf("separator is not stringish: %w", err)
 	}
 
-	source, err := coalescing.ToString(args[1])
+	source, err := coalescing.ToString(values[1])
 	if err != nil {
 		return nil, fmt.Errorf("source is not stringish: %w", err)
 	}
 
 	parts := strings.Split(source, sep)
-	result := make([]interface{}, len(parts))
+	result := make([]any, len(parts))
 	for i, part := range parts {
 		result[i] = part
 	}

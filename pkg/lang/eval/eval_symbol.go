@@ -8,14 +8,15 @@ import (
 
 	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalSymbol(ctx Context, sym *ast.Symbol) (Context, interface{}, error) {
+func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, interface{}, error) {
 	switch {
 	case sym.Variable != nil:
 		varName := sym.Variable.Name
 
-		value, ok := ctx.variables[varName]
+		value, ok := ctx.GetVariable(varName)
 		if !ok {
 			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
 		}
@@ -35,7 +36,7 @@ func evalSymbol(ctx Context, sym *ast.Symbol) (Context, interface{}, error) {
 		return ctx, value, nil
 
 	case sym.PathExpression != nil:
-		value, pathErr, traverseErr := traversePathExpression(ctx, ctx.document.Data, sym.PathExpression)
+		value, pathErr, traverseErr := traversePathExpression(ctx, ctx.GetDocument().Data, sym.PathExpression)
 		if pathErr != nil {
 			return ctx, nil, fmt.Errorf("invalid path expression %s: %w", sym.PathExpression.String(), pathErr)
 		}
@@ -49,7 +50,7 @@ func evalSymbol(ctx Context, sym *ast.Symbol) (Context, interface{}, error) {
 	return ctx, nil, fmt.Errorf("unknown symbol %T (%s)", sym, sym.String())
 }
 
-func traversePathExpression(ctx Context, value interface{}, path *ast.PathExpression) (result interface{}, pathErr error, traverseErr error) {
+func traversePathExpression(ctx types.Context, value interface{}, path *ast.PathExpression) (result interface{}, pathErr error, traverseErr error) {
 	innerCtx := ctx
 
 	for _, accessor := range path.Steps {
@@ -63,7 +64,7 @@ func traversePathExpression(ctx Context, value interface{}, path *ast.PathExpres
 		case accessor.StringNode != nil:
 			step = accessor.StringNode.Value
 		case accessor.Variable != nil:
-			value, ok := innerCtx.variables[accessor.Variable.Name]
+			value, ok := innerCtx.GetVariable(accessor.Variable.Name)
 			if !ok {
 				return nil, fmt.Errorf("unknown variable %s", accessor.Variable.Name), nil
 			}

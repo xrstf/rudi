@@ -7,9 +7,10 @@ import (
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalStatement(ctx Context, stmt *ast.Statement) (Context, interface{}, error) {
+func evalStatement(ctx types.Context, stmt *ast.Statement) (types.Context, interface{}, error) {
 	newContext, result, err := evalExpression(ctx, &stmt.Expression)
 	if err != nil {
 		return ctx, nil, err

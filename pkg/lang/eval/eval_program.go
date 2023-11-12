@@ -7,9 +7,10 @@ import (
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalProgram(ctx Context, p *ast.Program) (interface{}, error) {
+func evalProgram(ctx types.Context, p *ast.Program) (interface{}, error) {
 	innerCtx := ctx
 
 	// This is all sorts of wonky and not really how the program execution should work.

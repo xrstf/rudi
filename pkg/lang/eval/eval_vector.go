@@ -7,9 +7,10 @@ import (
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalVector(ctx Context, vec *ast.Vector) (Context, interface{}, error) {
+func evalVector(ctx types.Context, vec *ast.Vector) (types.Context, interface{}, error) {
 	innerCtx := ctx
 	result := make([]interface{}, len(vec.Expressions))
 

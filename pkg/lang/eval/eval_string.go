@@ -5,8 +5,9 @@ package eval
 
 import (
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalString(ctx Context, str *ast.String) (Context, interface{}, error) {
+func evalString(ctx types.Context, str *ast.String) (types.Context, interface{}, error) {
 	return ctx, str.Value, nil
 }

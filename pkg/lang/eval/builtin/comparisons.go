@@ -8,25 +8,33 @@ import (
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func eqFunction(args []interface{}) (interface{}, error) {
+func eqFunction(ctx types.Context, args []Argument) (any, error) {
 	if len(args) != 2 {
-		return nil, errors.New("(eq EXPRESSION EXPRESSION)")
+		return nil, errors.New("(eq LEFT RIGHT)")
 	}
 
-	left := args[0]
-	right := args[1]
+	_, leftData, err := args[0].Eval(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
 
-	switch leftAsserted := left.(type) {
+	_, rightData, err := args[1].Eval(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
+	switch leftAsserted := leftData.(type) {
 	case string:
-		rightAsserted, err := coalescing.ToString(right)
+		rightAsserted, err := coalescing.ToString(rightData)
 		if err != nil {
-			return nil, fmt.Errorf("cannot compare %T with %T", left, right)
+			return nil, fmt.Errorf("cannot compare %T with %T", leftData, rightData)
 		}
 
 		return rightAsserted == leftAsserted, nil
 	}
 
-	return false, fmt.Errorf("do not know how to compare %T with anything", left)
+	return false, fmt.Errorf("do not know how to compare %T with anything", leftData)
 }

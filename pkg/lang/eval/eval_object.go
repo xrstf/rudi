@@ -8,9 +8,10 @@ import (
 
 	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalObject(ctx Context, obj *ast.Object) (Context, interface{}, error) {
+func evalObject(ctx types.Context, obj *ast.Object) (types.Context, interface{}, error) {
 	innerCtx := ctx
 	result := map[string]interface{}{}
 

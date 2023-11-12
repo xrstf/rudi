@@ -9,9 +9,10 @@ import (
 
 	"go.xrstf.de/corel/pkg/lang/ast"
 	"go.xrstf.de/corel/pkg/lang/eval/builtin"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
+func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, interface{}, error) {
 	if len(tup.Expressions) == 0 {
 		return ctx, nil, errors.New("invalid tuple: tuple cannot be empty")
 	}
@@ -24,20 +25,13 @@ func evalTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 	funcName := funcExpr.IdentifierNode.Name
 	argExprs := tup.Expressions[1:]
 
-	// hardcode root behaviour for those tuples where not all
-	// expressions can be pre-computed (in case, for example,
-	// the else-path of an if statement would have side effects)
-	switch funcName {
-	case "if":
-		return evalIfTuple(ctx, argExprs)
-	case "set":
-		return evalSetTuple(ctx, argExprs)
-	case "default":
-		return evalDefaultTuple(ctx, argExprs)
-	case "do":
-		return evalDoTuple(ctx, argExprs)
-	case "has":
-		return evalHasTuple(ctx, argExprs)
+	// wrap all args to allow the builtin package to use code from this
+	// package without causing a circular dependency
+	funcArgs := make([]builtin.Argument, len(argExprs))
+	for i := range argExprs {
+		funcArgs[i] = &argument{
+			expression: &argExprs[i],
+		}
 	}
 
 	function, ok := builtin.Functions[funcName]
@@ -45,23 +39,29 @@ func evalTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 		return ctx, nil, fmt.Errorf("unknown function %s", funcName)
 	}
 
-	// evaluate all function arguments
-	args := make([]interface{}, len(argExprs))
-	for i, expr := range argExprs {
-		// each function arg on its own cannot change the overall context, so discard it
-		_, arg, err := evalExpression(ctx, &expr)
-		if err != nil {
-			return ctx, nil, fmt.Errorf("invalid argument %d: %w", i, err)
-		}
-
-		args[i] = arg
-	}
-
 	// call the function
-	result, err := function(args)
+	newContext, result, err := function(ctx, funcArgs)
 	if err != nil {
-		return ctx, nil, fmt.Errorf("function failed: %w", err)
+		return ctx, nil, fmt.Errorf("%s: %w", funcName, err)
 	}
 
-	return ctx, result, nil
+	return newContext, result, nil
+}
+
+type argument struct {
+	expression *ast.Expression
+}
+
+var _ builtin.Argument = &argument{}
+
+func (a *argument) String() string {
+	return a.expression.String()
+}
+
+func (a *argument) Eval(ctx types.Context) (types.Context, any, error) {
+	return evalExpression(ctx, a.expression)
+}
+
+func (a *argument) Expression() *ast.Expression {
+	return a.expression
 }

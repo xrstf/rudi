@@ -7,9 +7,10 @@ import (
 	"fmt"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/eval/types"
 )
 
-func evalExpression(ctx Context, expr *ast.Expression) (Context, interface{}, error) {
+func evalExpression(ctx types.Context, expr *ast.Expression) (types.Context, interface{}, error) {
 	switch {
 	case expr.NullNode != nil:
 		return evalNull(ctx, expr.NullNode)
