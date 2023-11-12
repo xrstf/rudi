@@ -86,38 +86,45 @@ func evalIfTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 	return ctx, nil, nil
 }
 
+var setTupleSyntaxError = errors.New("(set $varname EXPRESSION) or (set PATH_EXPRESSION EXPRESSION)")
+
 func evalSetTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 	if size := len(tup.Expressions); size != 2 {
-		return ctx, nil, errors.New("(set $varname EXPRESSION)")
+		return ctx, nil, setTupleSyntaxError
 	}
 
 	varNameExpr := tup.Expressions[0]
 	varName := ""
 
 	if varNameExpr.SymbolNode == nil {
-		return ctx, nil, errors.New("(set $varname EXPRESSION)")
+		return ctx, nil, setTupleSyntaxError
 	}
 
 	symNode := varNameExpr.SymbolNode
-	if symNode.Variable == nil {
-		return ctx, nil, errors.New("(set $varname EXPRESSION)")
+	if symNode.Variable == nil && symNode.PathExpression == nil {
+		return ctx, nil, setTupleSyntaxError
 	}
 
-	// forbid weird definitions like (set $var.foo (expr)) for now
-	if symNode.PathExpression != nil {
-		return ctx, nil, errors.New("(set $varname EXPRESSION)")
+	// set a variable, which will result in a new context
+	if symNode.Variable != nil {
+		// forbid weird definitions like (set $var.foo (expr)) for now
+		if symNode.PathExpression != nil {
+			return ctx, nil, setTupleSyntaxError
+		}
+
+		varName = symNode.Variable.Name
+
+		// discard any context changes within the value expression
+		_, value, err := evalExpression(ctx, &tup.Expressions[1])
+		if err != nil {
+			return ctx, nil, fmt.Errorf("failed to evaluate variable value: %w", err)
+		}
+
+		// make the variable's value the return value, so `(def $foo 12)` = 12
+		return ctx.WithVariable(varName, value), value, nil
 	}
 
-	varName = symNode.Variable.Name
-
-	// discard any context changes within the value expression
-	_, value, err := evalExpression(ctx, &tup.Expressions[1])
-	if err != nil {
-		return ctx, nil, fmt.Errorf("failed to evaluate variable value: %w", err)
-	}
-
-	// make the variable's value the return value, so `(def $foo 12)` = 12
-	return ctx.WithVariable(varName, value), value, nil
+	return ctx, nil, errors.New("setting a document path expression is not yet implemented")
 }
 
 func evalDoTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
@@ -139,6 +146,5 @@ func evalDoTuple(ctx Context, tup *ast.Tuple) (Context, interface{}, error) {
 		}
 	}
 
-	// make the variable's value the return value, so `(def $foo 12)` = 12
 	return ctx, result, nil
 }

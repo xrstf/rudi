@@ -62,7 +62,7 @@ func main() {
 
 	progContext := eval.NewContext(eval.Document{
 		Data: document,
-	}, eval.NewVariables().Set("global", "global value!"))
+	}, eval.NewVariables().Set("global", document))
 
 	fmt.Println(eval.Run(progContext, &program))
 	fmt.Println("-----------------------------------------------------")

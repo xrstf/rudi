@@ -2,7 +2,9 @@
 (+ 4.32 4)
 "foo"
 null
-$global
+.hello
+["hello"]
+(concat "" $global.hello)
 (concat "-" [1 2 "foo"] "bla")
 (concat "-" (split "#" "foo#bar#hello"))
 (concat "/" "namespace" "name")
