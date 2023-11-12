@@ -21,12 +21,20 @@ func (p Program) String() string {
 	return strings.Join(statements, "\n")
 }
 
+func (Program) NodeName() string {
+	return "Program"
+}
+
 type Statement struct {
 	Expression Expression
 }
 
 func (s Statement) String() string {
 	return s.Expression.String()
+}
+
+func (Statement) NodeName() string {
+	return "Statement"
 }
 
 type Expression struct {
@@ -66,6 +74,35 @@ func (e Expression) String() string {
 	}
 }
 
+func (e Expression) NodeName() string {
+	name := ""
+
+	switch {
+	case e.SymbolNode != nil:
+		name = "Symbol"
+	case e.TupleNode != nil:
+		name = "Tuple"
+	case e.VectorNode != nil:
+		name = "Vector"
+	case e.ObjectNode != nil:
+		name = "Object"
+	case e.NumberNode != nil:
+		name = "Number"
+	case e.IdentifierNode != nil:
+		name = "Identifier"
+	case e.StringNode != nil:
+		name = "String"
+	case e.BoolNode != nil:
+		name = "Bool"
+	case e.NullNode != nil:
+		name = "Null"
+	default:
+		name = "?"
+	}
+
+	return "Expression(" + name + ")"
+}
+
 type Symbol struct {
 	PathExpression *PathExpression // can be combined with Variable
 	Variable       *Variable
@@ -92,6 +129,21 @@ func (s Symbol) String() string {
 	}
 }
 
+func (s Symbol) NodeName() string {
+	name := ""
+
+	switch {
+	case s.Variable != nil:
+		name = "Variable"
+	case s.PathExpression != nil:
+		name = "PathExpression"
+	default:
+		name = "?"
+	}
+
+	return "Symbol(" + name + ")"
+}
+
 type Tuple struct {
 	Expressions []Expression
 }
@@ -103,6 +155,10 @@ func (t Tuple) String() string {
 	}
 
 	return "(" + strings.Join(exprs, " ") + ")"
+}
+
+func (Tuple) NodeName() string {
+	return "Tuple"
 }
 
 type Vector struct {
@@ -117,6 +173,10 @@ func (v Vector) String() string {
 	return "[" + strings.Join(exprs, " ") + "]"
 }
 
+func (Vector) NodeName() string {
+	return "Vector"
+}
+
 type Object struct {
 	Data []KeyValuePair
 }
@@ -129,21 +189,9 @@ func (o Object) String() string {
 	return "{" + strings.Join(pairs, " ") + "}"
 }
 
-// type ObjectKey struct {
-// 	Symbol     *Symbol
-// 	Identifier *Identifier
-// }
-
-// func (k ObjectKey) String() string {
-// 	switch {
-// 	case k.Symbol != nil:
-// 		return k.Symbol.String()
-// 	case k.Identifier != nil:
-// 		return k.Identifier.String()
-// 	default:
-// 		return "<unknown object key>"
-// 	}
-// }
+func (Object) NodeName() string {
+	return "Object"
+}
 
 type KeyValuePair struct {
 	Key   Expression
@@ -154,12 +202,20 @@ func (kv KeyValuePair) String() string {
 	return kv.Key.String() + " " + kv.Value.String()
 }
 
+func (KeyValuePair) NodeName() string {
+	return "KeyValuePair"
+}
+
 type Variable struct {
 	Name string
 }
 
 func (v Variable) String() string {
 	return "$" + v.Name
+}
+
+func (Variable) NodeName() string {
+	return "Variable"
 }
 
 type Identifier struct {
@@ -170,12 +226,20 @@ func (i Identifier) String() string {
 	return i.Name
 }
 
+func (Identifier) NodeName() string {
+	return "Identifier"
+}
+
 type String struct {
 	Value string
 }
 
 func (s String) String() string {
 	return fmt.Sprintf("%q", s.Value)
+}
+
+func (String) NodeName() string {
+	return "String"
 }
 
 type Number struct {
@@ -200,6 +264,10 @@ func (n Number) String() string {
 	return fmt.Sprintf("%d", n.Value)
 }
 
+func (Number) NodeName() string {
+	return "Number"
+}
+
 type Bool struct {
 	Value bool
 }
@@ -212,10 +280,18 @@ func (b Bool) String() string {
 	}
 }
 
+func (Bool) NodeName() string {
+	return "Bool"
+}
+
 type Null struct{}
 
 func (Null) String() string {
 	return "null"
+}
+
+func (Null) NodeName() string {
+	return "Null"
 }
 
 type PathExpression struct {
@@ -233,6 +309,10 @@ func (e PathExpression) String() string {
 	}
 
 	return result
+}
+
+func (PathExpression) NodeName() string {
+	return "PathExpression"
 }
 
 type Accessor struct {
@@ -258,4 +338,25 @@ func (a Accessor) String() string {
 	default:
 		return "<unknown accessor>"
 	}
+}
+
+func (a Accessor) NodeName() string {
+	name := ""
+
+	switch {
+	case a.Identifier != nil:
+		name = "Identifier"
+	case a.Variable != nil:
+		name = "Variable"
+	case a.StringNode != nil:
+		name = "StringNode"
+	case a.Tuple != nil:
+		name = "Tuple"
+	case a.Integer != nil:
+		name = "Integer"
+	default:
+		name = "?"
+	}
+
+	return "Accessor(" + name + ")"
 }
