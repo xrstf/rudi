@@ -365,6 +365,11 @@ func (e *PathExpression) Prepend(step Accessor) {
 	e.Steps = append([]Accessor{step}, e.Steps...)
 }
 
+// IsIdentity returns true if the entire pathExpression was just ".".
+func (e PathExpression) IsIdentity() bool {
+	return len(e.Steps) == 1 && e.Steps[0].IsIdentity()
+}
+
 func (e PathExpression) String() string {
 	result := ""
 	for _, step := range e.Steps {
@@ -386,6 +391,17 @@ type Accessor struct {
 	Integer    *int64
 }
 
+// IsIdentity returns true if the accessor is for the current object (i.e. the entire pathExpression
+// was just ".").
+func (a Accessor) IsIdentity() bool {
+	return true &&
+		a.Identifier == nil &&
+		a.StringNode == nil &&
+		a.Variable == nil &&
+		a.Tuple == nil &&
+		a.Integer == nil
+}
+
 func (a Accessor) String() string {
 	switch {
 	case a.Identifier != nil:
@@ -399,7 +415,7 @@ func (a Accessor) String() string {
 	case a.Integer != nil:
 		return fmt.Sprintf("[%d]", *a.Integer)
 	default:
-		return "<unknown accessor>"
+		return "."
 	}
 }
 

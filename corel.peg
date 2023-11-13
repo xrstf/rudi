@@ -207,6 +207,8 @@ ObjectAccessor <- '.' val:PathIdentifier {
 } / '.' val:Variable {
    asserted := val.(ast.Variable)
    return ast.Accessor{Variable: &asserted}, nil
+} / '.' {
+   return ast.Accessor{}, nil
 }
 
 ArrayAccessor <- '[' val:String ']' {
