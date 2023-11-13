@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/eval/coalescing"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 // (concat GLUE:String ELEMENTS:(Vector/String)+)

@@ -6,8 +6,8 @@ package eval
 import (
 	"fmt"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, any, error) {

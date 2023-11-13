@@ -3,7 +3,7 @@
 
 package eval
 
-import "go.xrstf.de/corel/pkg/lang/eval/types"
+import "go.xrstf.de/otto/pkg/lang/eval/types"
 
 func NewContext(doc types.Document, variables types.Variables) types.Context {
 	return types.NewContext(doc, variables)

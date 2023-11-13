@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 func lenFunction(ctx types.Context, args []Argument) (any, error) {

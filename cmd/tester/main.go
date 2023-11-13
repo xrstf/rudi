@@ -12,15 +12,17 @@ import (
 	"os"
 	"strings"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/debug"
-	"go.xrstf.de/corel/pkg/lang/eval"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
-	"go.xrstf.de/corel/pkg/lang/parser"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/debug"
+	"go.xrstf.de/otto/pkg/lang/eval"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/parser"
 )
 
 func main() {
-	filename := "test.corel"
+	flag.Parse()
+
+	filename := "test.otto"
 	if flag.NArg() > 0 {
 		filename = flag.Arg(0)
 	}

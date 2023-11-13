@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 func dumpExpression(expr *ast.Expression, out io.Writer, depth int) error {

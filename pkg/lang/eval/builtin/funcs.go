@@ -6,8 +6,8 @@ package builtin
 import (
 	"fmt"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 type Argument interface {

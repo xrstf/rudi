@@ -6,8 +6,8 @@ package eval
 import (
 	"fmt"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 func evalVectorNode(ctx types.Context, vec *ast.VectorNode) (types.Context, any, error) {

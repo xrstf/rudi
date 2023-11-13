@@ -6,7 +6,7 @@ package types
 import (
 	"fmt"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 type Document struct {

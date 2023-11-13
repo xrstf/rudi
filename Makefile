@@ -1,6 +1,6 @@
 .PHONY: generate
 generate:
-	pigeon corel.peg > pkg/lang/parser/generated.go
+	pigeon grammar/otto.peg > pkg/lang/parser/generated.go
 
 .PHONY: clean
 clean:
@@ -13,4 +13,4 @@ build:
 
 .PHONY: test
 test:
-	_build/tester test.corel
+	_build/tester test.otto

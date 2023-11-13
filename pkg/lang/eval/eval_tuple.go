@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
-	"go.xrstf.de/corel/pkg/lang/eval/builtin"
-	"go.xrstf.de/corel/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/builtin"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {

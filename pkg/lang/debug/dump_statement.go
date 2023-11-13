@@ -6,7 +6,7 @@ package debug
 import (
 	"io"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 func dumpStatement(stmt *ast.Statement, out io.Writer, depth int) error {

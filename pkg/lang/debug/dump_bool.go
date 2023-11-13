@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 func dumpBool(b *ast.Bool, out io.Writer) error {

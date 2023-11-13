@@ -6,7 +6,7 @@ package debug
 import (
 	"io"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 var Indent = "  "

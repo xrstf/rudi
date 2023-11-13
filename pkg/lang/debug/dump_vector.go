@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 func dumpVector(vec *ast.VectorNode, out io.Writer, depth int) error {
