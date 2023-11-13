@@ -56,6 +56,10 @@ func ptrTo[T any](s T) *T {
 
 func convertToAccessor(evaluated any) (*ast.EvaluatedAccessor, error) {
 	switch asserted := evaluated.(type) {
+	case ast.String:
+		return &ast.EvaluatedAccessor{StringValue: ptrTo(string(asserted))}, nil
+	case ast.Identifier:
+		return &ast.EvaluatedAccessor{StringValue: ptrTo(string(asserted))}, nil
 	case ast.Number:
 		intVal, ok := asserted.ToInteger()
 		if !ok {
@@ -63,16 +67,6 @@ func convertToAccessor(evaluated any) (*ast.EvaluatedAccessor, error) {
 		}
 
 		return &ast.EvaluatedAccessor{IntegerValue: &intVal}, nil
-
-	case ast.String:
-		return &ast.EvaluatedAccessor{StringValue: ptrTo(string(asserted))}, nil
-
-	// the following cannot be the result of expression evaluation, but it's handy
-	// to handle it here to keep evalPathExpression() shorter
-
-	case ast.Identifier:
-		return &ast.EvaluatedAccessor{StringValue: ptrTo(string(asserted))}, nil
-
 	default:
 		return nil, fmt.Errorf("cannot use %T in path expression", asserted)
 	}
@@ -109,32 +103,13 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 		var (
 			evaluated any
 			err       error
-			ok        bool
 		)
 
-		switch {
-		case accessor.Identifier != nil:
-			evaluated = *accessor.Identifier
-		case accessor.StringNode != nil:
-			evaluated = *accessor.StringNode
-		case accessor.Integer != nil:
-			evaluated = ast.Number{Value: *accessor.Integer}
-		case accessor.Variable != nil:
-			name := string(*accessor.Variable)
-
-			evaluated, ok = innerCtx.GetVariable(name)
-			if !ok {
-				return nil, fmt.Errorf("unknown variable %s (%T)", name, name)
-			}
-		case accessor.Tuple != nil:
-			// keep accumulating context changes, so you _could_ in theory do
-			// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
-			innerCtx, evaluated, err = evalTuple(innerCtx, accessor.Tuple)
-			if err != nil {
-				return nil, fmt.Errorf("invalid accessor: %w", err)
-			}
-		default:
-			return nil, fmt.Errorf("unexpected %s in path expression", accessor.String())
+		// keep accumulating context changes, so you _could_ in theory do
+		// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
+		innerCtx, evaluated, err = evalExpression(innerCtx, &accessor.Expression)
+		if err != nil {
+			return nil, fmt.Errorf("invalid accessor: %w", err)
 		}
 
 		evaledAccessor, err := convertToAccessor(evaluated)

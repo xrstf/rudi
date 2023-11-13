@@ -30,7 +30,19 @@ Statement <- tup:Tuple {
    return ast.Statement{Tuple: tup.(ast.Tuple)}, nil
 }
 
-Expression <- val:Number {
+Expression <- ComplexExpression / ScalarExpression
+
+// ComplexExpression are expressions that are 100% not scalars.
+ComplexExpression <- val:Vector {
+   data, _ := val.(ast.VectorNode)
+   return ast.Expression{VectorNode: &data}, nil
+} / val:Object {
+   data, _ := val.(ast.ObjectNode)
+   return ast.Expression{ObjectNode: &data}, nil
+}
+
+// ScalarExpression are expressions that have a _chance_ to turn into a scalar.
+ScalarExpression <- val:Number {
    data, _ := val.(ast.Number)
    return ast.Expression{NumberNode: &data}, nil
 } / val:String {
@@ -45,12 +57,6 @@ Expression <- val:Number {
 } / val:Tuple {
    data, _ := val.(ast.Tuple)
    return ast.Expression{TupleNode: &data}, nil
-} / val:Vector {
-   data, _ := val.(ast.VectorNode)
-   return ast.Expression{VectorNode: &data}, nil
-} / val:Object {
-   data, _ := val.(ast.ObjectNode)
-   return ast.Expression{ObjectNode: &data}, nil
 } / val:Symbol {
    data, _ := val.(ast.Symbol)
    return ast.Expression{SymbolNode: &data}, nil
@@ -118,7 +124,7 @@ Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
    return o, nil
 }
 
-KeyValuePair <- (key:Expression __ value:Expression) {
+KeyValuePair <- (key:ScalarExpression __ value:Expression) {
    return ast.KeyValuePair{
       Key: key.(ast.Expression),
       Value: value.(ast.Expression),
@@ -215,24 +221,11 @@ Accessor <- ObjectAccessor / ArrayAccessor
 
 ObjectAccessor <- '.' val:PathIdentifier {
    asserted := val.(ast.Identifier)
-   return ast.Accessor{Identifier: &asserted}, nil
-} / '.' val:Variable {
-   asserted := val.(ast.Variable)
-   return ast.Accessor{Variable: &asserted}, nil
+   return ast.Accessor{Expression: ast.Expression{IdentifierNode: &asserted}}, nil
 }
 
-ArrayAccessor <- '[' val:String ']' {
-   asserted := val.(ast.String)
-   return ast.Accessor{StringNode: &asserted}, nil
-} / '[' val:Variable ']' {
-   asserted := val.(ast.Variable)
-   return ast.Accessor{Variable: &asserted}, nil
-} / '[' val:Tuple ']' {
-   asserted := val.(ast.Tuple)
-   return ast.Accessor{Tuple: &asserted}, nil
-} / '[' val:Integer ']' {
-   asserted := val.(int64)
-   return ast.Accessor{Integer: &asserted}, nil
+ArrayAccessor <- '[' expr:ScalarExpression ']' {
+   return ast.Accessor{Expression: expr.(ast.Expression)}, nil
 }
 
 PathIdentifier <- [a-zA-Z_][a-zA-Z0-9_]* {

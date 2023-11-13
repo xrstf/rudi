@@ -367,7 +367,7 @@ func (e *PathExpression) Prepend(step Accessor) {
 
 // IsIdentity returns true if the entire pathExpression was just ".".
 func (e PathExpression) IsIdentity() bool {
-	return len(e.Steps) == 1 && e.Steps[0].IsIdentity()
+	return len(e.Steps) == 0
 }
 
 func (e PathExpression) String() string {
@@ -410,60 +410,34 @@ func (EvaluatedPathExpression) NodeName() string {
 }
 
 type Accessor struct {
-	Identifier *Identifier
-	StringNode *String
-	Variable   *Variable
-	Tuple      *Tuple
-	Integer    *int64
-}
-
-// IsIdentity returns true if the accessor is for the current document (i.e. the entire pathExpression
-// was just ".").
-func (a Accessor) IsIdentity() bool {
-	return true &&
-		a.Identifier == nil &&
-		a.StringNode == nil &&
-		a.Variable == nil &&
-		a.Tuple == nil &&
-		a.Integer == nil
+	Expression Expression
 }
 
 func (a Accessor) String() string {
+	e := a.Expression
+
 	switch {
-	case a.Identifier != nil:
-		return fmt.Sprintf(".%s", a.Identifier.String())
-	case a.Variable != nil:
-		return fmt.Sprintf(".%s", a.Variable.String())
-	case a.StringNode != nil:
-		return fmt.Sprintf("[%s]", a.StringNode.String())
-	case a.Tuple != nil:
-		return fmt.Sprintf("[%s]", a.Tuple.String())
-	case a.Integer != nil:
-		return fmt.Sprintf("[%d]", *a.Integer)
+	case e.SymbolNode != nil:
+		return "[" + e.SymbolNode.String() + "]"
+	case e.TupleNode != nil:
+		return "[" + e.TupleNode.String() + "]"
+	case e.NumberNode != nil:
+		return "[" + e.NumberNode.String() + "]"
+	case e.IdentifierNode != nil:
+		return "." + e.IdentifierNode.String()
+	case e.StringNode != nil:
+		return "[" + e.StringNode.String() + "]"
+	case e.BoolNode != nil:
+		return "[" + e.BoolNode.String() + "]"
+	case e.NullNode != nil:
+		return "[" + e.NullNode.String() + "]"
 	default:
-		return "."
+		return "?<unknown accessor expression>"
 	}
 }
 
 func (a Accessor) NodeName() string {
-	name := ""
-
-	switch {
-	case a.Identifier != nil:
-		name = "Identifier"
-	case a.Variable != nil:
-		name = "Variable"
-	case a.StringNode != nil:
-		name = "StringNode"
-	case a.Tuple != nil:
-		name = "Tuple"
-	case a.Integer != nil:
-		name = "Integer"
-	default:
-		name = "?"
-	}
-
-	return "Accessor(" + name + ")"
+	return "Accessor(" + a.Expression.NodeName() + ")"
 }
 
 type EvaluatedAccessor struct {

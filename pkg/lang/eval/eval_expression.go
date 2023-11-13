@@ -28,6 +28,8 @@ func evalExpression(ctx types.Context, expr *ast.Expression) (types.Context, any
 		return evalSymbol(ctx, expr.SymbolNode)
 	case expr.TupleNode != nil:
 		return evalTuple(ctx, expr.TupleNode)
+	case expr.IdentifierNode != nil:
+		return evalIdentifier(ctx, expr.IdentifierNode)
 	}
 
 	return ctx, nil, fmt.Errorf("unknown expression %T (%s)", expr.NodeName(), expr.String())
