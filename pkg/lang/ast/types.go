@@ -383,6 +383,32 @@ func (PathExpression) NodeName() string {
 	return "PathExpression"
 }
 
+type EvaluatedPathExpression struct {
+	Steps []EvaluatedAccessor
+}
+
+func (e *EvaluatedPathExpression) Prepend(step EvaluatedAccessor) {
+	e.Steps = append([]EvaluatedAccessor{step}, e.Steps...)
+}
+
+// IsIdentity returns true if the entire EvaluatedPathExpression was just ".".
+func (e EvaluatedPathExpression) IsIdentity() bool {
+	return len(e.Steps) == 0
+}
+
+func (e EvaluatedPathExpression) String() string {
+	result := ""
+	for _, step := range e.Steps {
+		result += step.String()
+	}
+
+	return result
+}
+
+func (EvaluatedPathExpression) NodeName() string {
+	return "EvaluatedPathExpression"
+}
+
 type Accessor struct {
 	Identifier *Identifier
 	StringNode *String
@@ -391,7 +417,7 @@ type Accessor struct {
 	Integer    *int64
 }
 
-// IsIdentity returns true if the accessor is for the current object (i.e. the entire pathExpression
+// IsIdentity returns true if the accessor is for the current document (i.e. the entire pathExpression
 // was just ".").
 func (a Accessor) IsIdentity() bool {
 	return true &&
@@ -438,4 +464,35 @@ func (a Accessor) NodeName() string {
 	}
 
 	return "Accessor(" + name + ")"
+}
+
+type EvaluatedAccessor struct {
+	StringValue  *string
+	IntegerValue *int64
+}
+
+func (a EvaluatedAccessor) String() string {
+	switch {
+	case a.StringValue != nil:
+		return fmt.Sprintf("[%q]", *a.StringValue)
+	case a.IntegerValue != nil:
+		return fmt.Sprintf("[%d]", *a.IntegerValue)
+	default:
+		return "<unknown evaluatedAccessor>"
+	}
+}
+
+func (a EvaluatedAccessor) NodeName() string {
+	name := ""
+
+	switch {
+	case a.StringValue != nil:
+		name = "String"
+	case a.IntegerValue != nil:
+		name = "Integer"
+	default:
+		name = "?"
+	}
+
+	return "EvaluatedAccessor(" + name + ")"
 }

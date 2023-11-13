@@ -207,7 +207,8 @@ ObjectAccessor <- '.' val:PathIdentifier {
 } / '.' val:Variable {
    asserted := val.(ast.Variable)
    return ast.Accessor{Variable: &asserted}, nil
-} / '.' {
+} / '.' _ {
+   // TODO: Turn this into nil, nil to remove the weird empty step
    return ast.Accessor{}, nil
 }
 
