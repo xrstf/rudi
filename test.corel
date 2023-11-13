@@ -1,3 +1,8 @@
+(concat .foo.bla ["foo" "bar"])
+(concat .foo[0] ["foo" "bar"])
+(concat .foo["foo"] ["foo" "bar"])
+(concat . ["foo" "bar"])
+(concat .[0] ["foo" "bar"])
 .hello # comment
 {
 	foo "Bar"

@@ -185,6 +185,9 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression* {
       Variable: &variable,
       PathExpression: expr,
    }, nil
+} / '.' Whitespace {
+   pathExpr := ast.PathExpression{}
+   return ast.Symbol{PathExpression: &pathExpr}, nil
 }
 
 // QualifiedPathExpression follows any qualifier (currently only variables or another path expression)
@@ -207,9 +210,6 @@ ObjectAccessor <- '.' val:PathIdentifier {
 } / '.' val:Variable {
    asserted := val.(ast.Variable)
    return ast.Accessor{Variable: &asserted}, nil
-} / '.' _ {
-   // TODO: Turn this into nil, nil to remove the weird empty step
-   return ast.Accessor{}, nil
 }
 
 ArrayAccessor <- '[' val:String ']' {
@@ -317,6 +317,7 @@ SingleLineComment ← "#" ( !EOL . )*
 //////////////////////////////////////////////////////////
 // misc
 
+___ <- ( Whitespace / EOL / SingleLineComment )+
 __ <- ( Whitespace / EOL / SingleLineComment )*
 _ <- Whitespace*
 

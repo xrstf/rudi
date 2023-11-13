@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"go.xrstf.de/corel/pkg/lang/ast"
+	"go.xrstf.de/corel/pkg/lang/debug"
 	"go.xrstf.de/corel/pkg/lang/eval"
 	"go.xrstf.de/corel/pkg/lang/eval/types"
 	"go.xrstf.de/corel/pkg/lang/parser"
@@ -52,10 +53,8 @@ func main() {
 
 	fmt.Println("---[ INPUT ]-----------------------------------------")
 	fmt.Println(string(content))
-	// fmt.Println("---[ AST ]-------------------------------------------")
-	// fmt.Printf("%#v\n", program)
-	// fmt.Println("---[ PRINTED ]---------------------------------------")
-	// fmt.Println(program.String())
+	fmt.Println("---[ PRINTED ]---------------------------------------")
+	fmt.Println(debug.Dump(&program, os.Stdout))
 	fmt.Println("---[ DOCUMENT ]--------------------------------------")
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")

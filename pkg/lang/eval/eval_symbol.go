@@ -98,6 +98,8 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 		Steps: []ast.EvaluatedAccessor{},
 	}
 
+	fmt.Printf("pathExpr: %#v\n", path)
+
 	// The parsed path might just be "."; in this case it would still have 1 step in it,
 	// because my peg syntax is wonky, but here we skip that step and just return an empty
 	// result instead.
@@ -134,7 +136,7 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 				return nil, fmt.Errorf("invalid accessor: %w", err)
 			}
 		default:
-			return nil, fmt.Errorf("unexpected %T in path expression", accessor.String())
+			return nil, fmt.Errorf("unexpected %s in path expression", accessor.String())
 		}
 
 		evaledAccessor, err := convertToAccessor(evaluated)
