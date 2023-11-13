@@ -11,7 +11,7 @@ import (
 )
 
 func evalStatement(ctx types.Context, stmt *ast.Statement) (types.Context, any, error) {
-	newContext, result, err := evalExpression(ctx, &stmt.Expression)
+	newContext, result, err := evalTuple(ctx, &stmt.Tuple)
 	if err != nil {
 		return ctx, nil, err
 	}

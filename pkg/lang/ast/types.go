@@ -26,11 +26,11 @@ func (Program) NodeName() string {
 }
 
 type Statement struct {
-	Expression Expression
+	Tuple Tuple
 }
 
 func (s Statement) String() string {
-	return s.Expression.String()
+	return s.Tuple.String()
 }
 
 func (Statement) NodeName() string {

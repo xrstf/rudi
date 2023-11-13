@@ -10,7 +10,7 @@ import (
 )
 
 func dumpStatement(stmt *ast.Statement, out io.Writer, depth int) error {
-	if err := dumpExpression(&stmt.Expression, out, depth); err != nil {
+	if err := dumpTuple(&stmt.Tuple, out, depth); err != nil {
 		return err
 	}
 

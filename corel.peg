@@ -26,8 +26,8 @@ Program <- stmts:(__ Statement)* __ EOF {
 }
 
 // Statement is basically an alias, but allows for easier top-level detection during execution
-Statement <- expr:Expression {
-   return ast.Statement{Expression: expr.(ast.Expression)}, nil
+Statement <- tup:Tuple {
+   return ast.Statement{Tuple: tup.(ast.Tuple)}, nil
 }
 
 Expression <- val:Number {
@@ -59,8 +59,10 @@ Expression <- val:Number {
    return ast.Expression{IdentifierNode: &data}, nil
 }
 
-Tuple <- '(' __ exprs:(__ Expression)* __ ')' {
-   t := ast.Tuple{}
+Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' {
+   t := ast.Tuple{
+      Expressions: []ast.Expression{expr.(ast.Expression)},
+   }
 
    exprsSl := toAnySlice(exprs)
    if len(exprsSl) == 0 {
@@ -75,23 +77,29 @@ Tuple <- '(' __ exprs:(__ Expression)* __ ')' {
    return t, nil
 }
 
-Vector <- '[' __ vals:( Expression ( __ ','? __ Expression )* )? __ ']' {
-   vector := ast.VectorNode{}
+VectorItemSeparator <- (__ ',' __) / ___
 
-   valsSl := toAnySlice(vals)
-   if len(valsSl) == 0 {
+Vector <- '[' __ expr:Expression exprs:( VectorItemSeparator Expression )* __ ']' {
+   vector := ast.VectorNode{
+      Expressions: []ast.Expression{expr.(ast.Expression)},
+   }
+
+   exprsSl := toAnySlice(exprs)
+   if len(exprsSl) == 0 {
       return vector, nil
    }
 
-   vector.Expressions = append(vector.Expressions, valsSl[0].(ast.Expression))
-
-   restSl := toAnySlice(valsSl[1])
-   for _, v := range restSl {
+   for _, v := range exprsSl {
       vSl := toAnySlice(v)
-      vector.Expressions = append(vector.Expressions, vSl[3].(ast.Expression))
+
+      if len(vSl) > 1 {
+         vector.Expressions = append(vector.Expressions, vSl[1].(ast.Expression))
+      }
    }
 
    return vector, nil
+} / '[' __ ']' {
+   return ast.VectorNode{}, nil
 }
 
 Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
@@ -185,9 +193,10 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression* {
       Variable: &variable,
       PathExpression: expr,
    }, nil
-} / '.' Whitespace {
-   pathExpr := ast.PathExpression{}
-   return ast.Symbol{PathExpression: &pathExpr}, nil
+} / '.' {
+   return ast.Symbol{
+      PathExpression: &ast.PathExpression{},
+   }, nil
 }
 
 // QualifiedPathExpression follows any qualifier (currently only variables or another path expression)

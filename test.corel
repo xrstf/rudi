@@ -1,24 +1,6 @@
-(concat .foo.bla ["foo" "bar"])
-(concat .foo[0] ["foo" "bar"])
-(concat .foo["foo"] ["foo" "bar"])
-(concat . ["foo" "bar"])
-(concat .[0] ["foo" "bar"])
-.hello # comment
-{
-	foo "Bar"
-}
-# here comes a key
-{
-	hello # foo
-	# bar
-	"workd" #false
-	(+ 1 # concat
-	34) "nummy"
-} # bla
 (if (has .foo) "has blargh")
 (default .fuck.me .muh)
 .["muh"].list[3]["foo"]
-(set . 42)
 (concat "-"
 # ["hello"]
 .["hello"] # foo

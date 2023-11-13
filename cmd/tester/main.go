@@ -54,7 +54,9 @@ func main() {
 	fmt.Println("---[ INPUT ]-----------------------------------------")
 	fmt.Println(string(content))
 	fmt.Println("---[ PRINTED ]---------------------------------------")
-	fmt.Println(debug.Dump(&program, os.Stdout))
+	if err := debug.Dump(&program, os.Stdout); err != nil {
+		log.Fatalf("Failed to dump AST: %v", err)
+	}
 	fmt.Println("---[ DOCUMENT ]--------------------------------------")
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")

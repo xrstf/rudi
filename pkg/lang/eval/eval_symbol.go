@@ -98,8 +98,6 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 		Steps: []ast.EvaluatedAccessor{},
 	}
 
-	fmt.Printf("pathExpr: %#v\n", path)
-
 	// The parsed path might just be "."; in this case it would still have 1 step in it,
 	// because my peg syntax is wonky, but here we skip that step and just return an empty
 	// result instead.
