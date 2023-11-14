@@ -336,7 +336,24 @@ func (e PathExpression) IsIdentity() bool {
 func (e PathExpression) String() string {
 	result := ""
 	for _, step := range e.Steps {
-		result += step.String()
+		switch asserted := step.(type) {
+		case Symbol:
+			result += "[" + asserted.String() + "]"
+		case Tuple:
+			result += "[" + asserted.String() + "]"
+		case Number:
+			result += "[" + asserted.String() + "]"
+		case Identifier:
+			result += "." + asserted.String()
+		case String:
+			result += "[" + asserted.String() + "]"
+		case Bool:
+			result += "[" + asserted.String() + "]"
+		case Null:
+			result += "[" + asserted.String() + "]"
+		default:
+			result += "?<unknown accessor expression>"
+		}
 	}
 
 	return result
@@ -371,37 +388,6 @@ func (e EvaluatedPathExpression) String() string {
 func (EvaluatedPathExpression) NodeName() string {
 	return "EvaluatedPathExpression"
 }
-
-// type Accessor struct {
-// 	Expression Node
-// }
-
-// func (a Accessor) String() string {
-// 	e := a.Expression
-
-// 	switch {
-// 	case e.SymbolNode != nil:
-// 		return "[" + e.SymbolNode.String() + "]"
-// 	case e.TupleNode != nil:
-// 		return "[" + e.TupleNode.String() + "]"
-// 	case e.NumberNode != nil:
-// 		return "[" + e.NumberNode.String() + "]"
-// 	case e.IdentifierNode != nil:
-// 		return "." + e.IdentifierNode.String()
-// 	case e.StringNode != nil:
-// 		return "[" + e.StringNode.String() + "]"
-// 	case e.BoolNode != nil:
-// 		return "[" + e.BoolNode.String() + "]"
-// 	case e.NullNode != nil:
-// 		return "[" + e.NullNode.String() + "]"
-// 	default:
-// 		return "?<unknown accessor expression>"
-// 	}
-// }
-
-// func (a Accessor) NodeName() string {
-// 	return "Accessor(" + a.Expression.NodeName() + ")"
-// }
 
 type EvaluatedPathStep struct {
 	StringValue  *string
