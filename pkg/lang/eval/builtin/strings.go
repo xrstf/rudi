@@ -59,28 +59,36 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return ast.String(strings.Join(parts, string(glueString))), nil
 }
 
+type genericStringFunc func(ctx types.Context, args []string) (any, error)
+
+func fromStringFunc(f genericStringFunc, expectedArgs int) StatelessFunc {
+	return func(ctx types.Context, args []ast.Expression) (any, error) {
+		if size := len(args); size != expectedArgs {
+			return nil, fmt.Errorf("expected %d argument(s), got %d", expectedArgs, size)
+		}
+
+		values, err := evalArgs(ctx, args, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		stringValues := make([]string, len(values))
+		for i, value := range values {
+			strValue, ok := value.(ast.String)
+			if !ok {
+				return nil, fmt.Errorf("argument #%d is not a string, but %T", i, value)
+			}
+
+			stringValues[i] = string(strValue)
+		}
+
+		return f(ctx, stringValues)
+	}
+}
+
 // (split SEP:String SOURCE:String)
-func splitFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
-	}
-
-	values, err := evalArgs(ctx, args, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	sep, ok := values[0].(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("separator is not a string, but %T", values[0])
-	}
-
-	source, ok := values[1].(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("source is not a string, but %T", values[1])
-	}
-
-	parts := strings.Split(string(source), string(sep))
+func splitFunction(ctx types.Context, args []string) (any, error) {
+	parts := strings.Split(args[1], args[0])
 	result := make([]any, len(parts))
 	for i, part := range parts {
 		result[i] = ast.String(part)
@@ -89,106 +97,44 @@ func splitFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return ast.Vector{Data: result}, nil
 }
 
-// (trim-suffix SUFFIX:String SOURCE:String)
-func trimSuffixFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
-	}
+// (has-suffix SOURCE:String SUFFIX:String)
+func hasSuffixFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.HasSuffix(args[0], args[1])
 
-	_, suffix, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
+	return ast.Bool(result), nil
+}
 
-	suffixStr, ok := suffix.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a string, but %T", suffix)
-	}
+// (has-prefix SOURCE:String PREFIX:String)
+func hasPrefixFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.HasPrefix(args[0], args[1])
 
-	_, source, err := eval.EvalExpression(ctx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
+	return ast.Bool(result), nil
+}
 
-	sourceStr, ok := source.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a string, but %T", source)
-	}
-
-	result := strings.TrimSuffix(string(sourceStr), string(suffixStr))
+// (trim-suffix SOURCE:String SUFFIX:String)
+func trimSuffixFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.TrimSuffix(args[0], args[1])
 
 	return ast.String(result), nil
 }
 
-// (trim-prefix PREFIX:String SOURCE:String)
-func trimPrefixFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
-	}
-
-	_, prefix, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	prefixStr, ok := prefix.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a string, but %T", prefix)
-	}
-
-	_, source, err := eval.EvalExpression(ctx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
-
-	sourceStr, ok := source.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a string, but %T", source)
-	}
-
-	result := strings.TrimPrefix(string(sourceStr), string(prefixStr))
+// (trim-prefix SOURCE:String PREFIX:String)
+func trimPrefixFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.TrimPrefix(args[0], args[1])
 
 	return ast.String(result), nil
 }
 
 // (to-lower SOURCE:String)
-func toLowerFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 argument, got %d", size)
-	}
-
-	_, prefix, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	str, ok := prefix.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument is not a string, but %T", prefix)
-	}
-
-	result := strings.ToLower(string(str))
+func toLowerFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.ToLower(args[0])
 
 	return ast.String(result), nil
 }
 
 // (to-upper SOURCE:String)
-func toUpperFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 argument, got %d", size)
-	}
-
-	_, prefix, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	str, ok := prefix.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument is not a string, but %T", prefix)
-	}
-
-	result := strings.ToUpper(string(str))
+func toUpperFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.ToUpper(args[0])
 
 	return ast.String(result), nil
 }

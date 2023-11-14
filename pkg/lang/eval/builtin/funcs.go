@@ -53,11 +53,13 @@ var Functions = types.Functions{
 	// strings
 	// "len": stateless(lenFunction) is defined for lists, but works for strings as well
 	"concat":      stateless(concatFunction),
-	"split":       stateless(splitFunction),
-	"trim-prefix": stateless(trimPrefixFunction),
-	"trim-suffix": stateless(trimSuffixFunction),
-	"to-lower":    stateless(toLowerFunction),
-	"to-upper":    stateless(toUpperFunction),
+	"split":       stateless(fromStringFunc(splitFunction, 2)),
+	"has-prefix?": stateless(fromStringFunc(hasPrefixFunction, 2)),
+	"has-suffix?": stateless(fromStringFunc(hasSuffixFunction, 2)),
+	"trim-prefix": stateless(fromStringFunc(trimPrefixFunction, 2)),
+	"trim-suffix": stateless(fromStringFunc(trimSuffixFunction, 2)),
+	"to-lower":    stateless(fromStringFunc(toLowerFunction, 1)),
+	"to-upper":    stateless(fromStringFunc(toUpperFunction, 1)),
 
 	// lists
 	"len":     stateless(lenFunction),

@@ -72,6 +72,10 @@ func TestLenFunction(t *testing.T) {
 			expr:     `(len [1 2 3])`,
 			expected: 3,
 		},
+		{
+			expr:     `(len {})`,
+			expected: 0,
+		},
 	}
 
 	for _, testcase := range testcases {

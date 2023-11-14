@@ -22,17 +22,19 @@ func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	str, ok := list.(ast.String)
-	if ok {
+	if str, ok := list.(ast.String); ok {
 		return ast.Number{Value: len(str)}, nil
 	}
 
-	vector, ok := list.(ast.Vector)
-	if !ok {
-		return nil, errors.New("argument is not a vector")
+	if vector, ok := list.(ast.Vector); ok {
+		return ast.Number{Value: len(vector.Data)}, nil
 	}
 
-	return ast.Number{Value: len(vector.Data)}, nil
+	if obj, ok := list.(ast.Object); ok {
+		return ast.Number{Value: len(obj.Data)}, nil
+	}
+
+	return nil, errors.New("argument is neither a string, vector nor object")
 }
 
 func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
