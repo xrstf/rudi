@@ -6,6 +6,8 @@ package coalescing
 import (
 	"fmt"
 	"strconv"
+
+	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
 type literal interface {
@@ -13,14 +15,7 @@ type literal interface {
 }
 
 func ToBool(val any) (bool, error) {
-	lit, ok := val.(literal)
-	if !ok {
-		return false, fmt.Errorf("cannot coalesce %T into bool", val)
-	}
-
-	litVal := lit.LiteralValue()
-
-	switch v := litVal.(type) {
+	switch v := val.(type) {
 	case bool:
 		return v, nil
 	case int64:
@@ -32,19 +27,17 @@ func ToBool(val any) (bool, error) {
 	case nil:
 		return false, nil
 	default:
-		return false, fmt.Errorf("cannot coalesce %T into bool", litVal)
+		lit, ok := val.(literal)
+		if !ok {
+			return false, fmt.Errorf("cannot coalesce %s into bool", typeName(val))
+		}
+
+		return ToBool(lit.LiteralValue())
 	}
 }
 
 func ToFloat64(val any) (float64, error) {
-	lit, ok := val.(literal)
-	if !ok {
-		return 0, fmt.Errorf("cannot coalesce %T into float64", val)
-	}
-
-	litVal := lit.LiteralValue()
-
-	switch v := litVal.(type) {
+	switch v := val.(type) {
 	case bool:
 		if v {
 			return 1, nil
@@ -58,17 +51,17 @@ func ToFloat64(val any) (float64, error) {
 	case nil:
 		return 0, nil
 	default:
-		return 0, fmt.Errorf("cannot coalesce %T into float64", litVal)
+		lit, ok := val.(literal)
+		if !ok {
+			return 0, fmt.Errorf("cannot coalesce %s into float64", typeName(val))
+		}
+
+		return ToFloat64(lit.LiteralValue())
 	}
 }
 
 func Int64Compatible(val any) bool {
-	lit, ok := val.(literal)
-	if !ok {
-		return false
-	}
-
-	switch lit.LiteralValue().(type) {
+	switch val.(type) {
 	case bool:
 		return true
 	case int64:
@@ -76,19 +69,17 @@ func Int64Compatible(val any) bool {
 	case nil:
 		return true
 	default:
-		return false
+		lit, ok := val.(literal)
+		if !ok {
+			return false
+		}
+
+		return Int64Compatible(lit.LiteralValue())
 	}
 }
 
 func ToInt64(val any) (int64, error) {
-	lit, ok := val.(literal)
-	if !ok {
-		return 0, fmt.Errorf("cannot coalesce %T into int64", val)
-	}
-
-	litVal := lit.LiteralValue()
-
-	switch v := litVal.(type) {
+	switch v := val.(type) {
 	case bool:
 		if v {
 			return 1, nil
@@ -100,19 +91,17 @@ func ToInt64(val any) (int64, error) {
 	case nil:
 		return 0, nil
 	default:
-		return 0, fmt.Errorf("cannot coalesce %T into int64", litVal)
+		lit, ok := val.(literal)
+		if !ok {
+			return 0, fmt.Errorf("cannot coalesce %s into int64", typeName(val))
+		}
+
+		return ToInt64(lit.LiteralValue())
 	}
 }
 
 func ToString(val any) (string, error) {
-	lit, ok := val.(literal)
-	if !ok {
-		return "", fmt.Errorf("cannot coalesce %T into string", val)
-	}
-
-	litVal := lit.LiteralValue()
-
-	switch v := litVal.(type) {
+	switch v := val.(type) {
 	case bool:
 		return strconv.FormatBool(v), nil
 	case int64:
@@ -124,6 +113,24 @@ func ToString(val any) (string, error) {
 	case string:
 		return v, nil
 	default:
-		return "", fmt.Errorf("cannot coalesce %T into string", litVal)
+		lit, ok := val.(literal)
+		if !ok {
+			return "", fmt.Errorf("cannot coalesce %s into string", typeName(val))
+		}
+
+		return ToString(lit.LiteralValue())
+	}
+}
+
+func typeName(v any) string {
+	switch asserted := v.(type) {
+	case ast.Node:
+		return asserted.NodeName()
+	case map[string]interface{}:
+		return "object" // lowercase, to distinguish from Objects and ObjectNodes
+	case []interface{}:
+		return "vector"
+	default:
+		return fmt.Sprintf("%T", v)
 	}
 }
