@@ -63,4 +63,10 @@ var Functions = types.Functions{
 
 	// comparisons
 	"eq": stateless(eqFunction),
+
+	// types
+	"to-string": stateless(toStringFunction),
+	"to-int":    stateless(toIntFunction),
+	"to-float":  stateless(toFloatFunction),
+	"to-bool":   stateless(toBoolFunction),
 }
