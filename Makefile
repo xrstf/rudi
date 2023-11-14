@@ -13,7 +13,7 @@ build:
 
 .PHONY: run-tests
 run-tests:
-	go test -v ./...
+	go test ./...
 
 .PHONY: test
 test:
