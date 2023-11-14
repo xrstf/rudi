@@ -5,8 +5,6 @@ package builtin
 
 import (
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 type logicTestcase struct {
@@ -31,8 +29,8 @@ func (tc *logicTestcase) Test(t *testing.T) {
 		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
 	}
 
-	if !cmp.Equal(result, tc.expected) {
-		t.Fatalf("Did not receive expected output:\n%s", cmp.Diff(tc.expected, result))
+	if result != tc.expected {
+		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
 	}
 }
 

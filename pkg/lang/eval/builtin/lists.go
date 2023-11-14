@@ -22,6 +22,11 @@ func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
+	str, ok := list.(ast.String)
+	if ok {
+		return ast.Number{Value: len(str)}, nil
+	}
+
 	vector, ok := list.(ast.Vector)
 	if !ok {
 		return nil, errors.New("argument is not a vector")
