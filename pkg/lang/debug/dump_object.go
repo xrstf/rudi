@@ -14,11 +14,11 @@ func dumpObject(obj *ast.ObjectNode, out io.Writer, depth int) error {
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, pair := range obj.Data {
-		if err := dumpExpression(&pair.Key, &buf, 0); err != nil {
+		if err := dumpNode(pair.Key, &buf, 0); err != nil {
 			return err
 		}
 
-		if err := dumpExpression(&pair.Value, &buf, 0); err != nil {
+		if err := dumpNode(pair.Value, &buf, 0); err != nil {
 			return err
 		}
 	}
@@ -36,7 +36,7 @@ func dumpObjectSingleline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 	}
 
 	for i, pair := range obj.Data {
-		if err := dumpExpression(&pair.Key, out, depth); err != nil {
+		if err := dumpNode(pair.Key, out, depth); err != nil {
 			return err
 		}
 
@@ -44,7 +44,7 @@ func dumpObjectSingleline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpExpression(&pair.Value, out, depth); err != nil {
+		if err := dumpNode(pair.Value, out, depth); err != nil {
 			return err
 		}
 
@@ -70,7 +70,7 @@ func dumpObjectMultiline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpExpression(&pair.Key, out, depth+1); err != nil {
+		if err := dumpNode(pair.Key, out, depth+1); err != nil {
 			return err
 		}
 
@@ -78,7 +78,7 @@ func dumpObjectMultiline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpExpression(&pair.Value, out, depth+1); err != nil {
+		if err := dumpNode(pair.Value, out, depth+1); err != nil {
 			return err
 		}
 	}

@@ -13,7 +13,7 @@ import (
 type Argument interface {
 	Eval(ctx types.Context) (types.Context, any, error)
 	String() string
-	Expression() *ast.Expression
+	Node() ast.Node
 }
 
 func evalArgs(ctx types.Context, args []Argument, argShift int) ([]any, error) {

@@ -34,40 +34,31 @@ Expression <- ComplexExpression / ScalarExpression
 
 // ComplexExpression are expressions that are 100% not scalars.
 ComplexExpression <- val:Vector {
-   data, _ := val.(ast.VectorNode)
-   return ast.Expression{VectorNode: &data}, nil
+   return val, nil
 } / val:Object {
-   data, _ := val.(ast.ObjectNode)
-   return ast.Expression{ObjectNode: &data}, nil
+   return val, nil
 }
 
 // ScalarExpression are expressions that have a _chance_ to turn into a scalar.
 ScalarExpression <- val:Number {
-   data, _ := val.(ast.Number)
-   return ast.Expression{NumberNode: &data}, nil
+   return val, nil
 } / val:String {
-   data, _ := val.(ast.String)
-   return ast.Expression{StringNode: &data}, nil
+   return val, nil
 } / val:Null {
-   data, _ := val.(ast.Null)
-   return ast.Expression{NullNode: &data}, nil
+   return val, nil
 } / val:Bool {
-   data, _ := val.(ast.Bool)
-   return ast.Expression{BoolNode: &data}, nil
+   return val, nil
 } / val:Tuple {
-   data, _ := val.(ast.Tuple)
-   return ast.Expression{TupleNode: &data}, nil
+   return val, nil
 } / val:Symbol {
-   data, _ := val.(ast.Symbol)
-   return ast.Expression{SymbolNode: &data}, nil
+   return val, nil
 } / val:Identifier {
-   data, _ := val.(ast.Identifier)
-   return ast.Expression{IdentifierNode: &data}, nil
+   return val, nil
 }
 
 Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' {
    t := ast.Tuple{
-      Expressions: []ast.Expression{expr.(ast.Expression)},
+      Expressions: []ast.Node{expr.(ast.Node)},
    }
 
    exprsSl := toAnySlice(exprs)
@@ -77,7 +68,7 @@ Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' {
 
    for _, expr := range exprsSl {
       subSl := toAnySlice(expr)
-      t.Expressions = append(t.Expressions, subSl[1].(ast.Expression))
+      t.Expressions = append(t.Expressions, subSl[1].(ast.Node))
    }
 
    return t, nil
@@ -87,7 +78,7 @@ VectorItemSeparator <- (__ ',' __) / ___
 
 Vector <- '[' __ expr:Expression exprs:( VectorItemSeparator Expression )* __ ']' {
    vector := ast.VectorNode{
-      Expressions: []ast.Expression{expr.(ast.Expression)},
+      Expressions: []ast.Node{expr.(ast.Node)},
    }
 
    exprsSl := toAnySlice(exprs)
@@ -99,7 +90,7 @@ Vector <- '[' __ expr:Expression exprs:( VectorItemSeparator Expression )* __ ']
       vSl := toAnySlice(v)
 
       if len(vSl) > 1 {
-         vector.Expressions = append(vector.Expressions, vSl[1].(ast.Expression))
+         vector.Expressions = append(vector.Expressions, vSl[1].(ast.Node))
       }
    }
 
@@ -126,8 +117,8 @@ Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
 
 KeyValuePair <- (key:ScalarExpression __ value:Expression) {
    return ast.KeyValuePair{
-      Key: key.(ast.Expression),
-      Value: value.(ast.Expression),
+      Key: key.(ast.Node),
+      Value: value.(ast.Node),
    }, nil
 }
 
@@ -166,7 +157,7 @@ $var.subkey[0].$othervar.subkey
 */
 
 Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression* {
-   arrAcc, _ := acc.(ast.Accessor)
+   arrAcc, _ := acc.(ast.Node)
 
    pathExpr := ast.PathExpression{}
    if pathExprSl := toAnySlice(expr); pathExprSl != nil {
@@ -177,7 +168,7 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression* {
 
    return ast.Symbol{PathExpression: &pathExpr}, nil
 } / acc:ObjectAccessor expr:QualifiedPathExpression* {
-   objAcc, _ := acc.(ast.Accessor)
+   objAcc, _ := acc.(ast.Node)
 
    pathExpr := ast.PathExpression{}
    if pathExprSl := toAnySlice(expr); pathExprSl != nil {
@@ -211,7 +202,7 @@ QualifiedPathExpression <- pathExpr:(Accessor)+ {
    steps := toAnySlice(pathExpr)
 
    for i := range steps {
-      path.Steps = append(path.Steps, steps[i].(ast.Accessor))
+      path.Steps = append(path.Steps, steps[i].(ast.Node))
    }
 
    return path, nil
@@ -220,12 +211,11 @@ QualifiedPathExpression <- pathExpr:(Accessor)+ {
 Accessor <- ObjectAccessor / ArrayAccessor
 
 ObjectAccessor <- '.' val:PathIdentifier {
-   asserted := val.(ast.Identifier)
-   return ast.Accessor{Expression: ast.Expression{IdentifierNode: &asserted}}, nil
+   return val, nil
 }
 
 ArrayAccessor <- '[' expr:ScalarExpression ']' {
-   return ast.Accessor{Expression: expr.(ast.Expression)}, nil
+   return expr, nil
 }
 
 PathIdentifier <- [a-zA-Z_][a-zA-Z0-9_]* {

@@ -14,7 +14,7 @@ func dumpTuple(tup *ast.Tuple, out io.Writer, depth int) error {
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, expr := range tup.Expressions {
-		if err := dumpExpression(&expr, &buf, 0); err != nil {
+		if err := dumpNode(expr, &buf, 0); err != nil {
 			return err
 		}
 	}
@@ -32,7 +32,7 @@ func dumpTupleSingleline(tup *ast.Tuple, out io.Writer, depth int) error {
 	}
 
 	for i, expr := range tup.Expressions {
-		if err := dumpExpression(&expr, out, depth); err != nil {
+		if err := dumpNode(expr, out, depth); err != nil {
 			return err
 		}
 
@@ -61,7 +61,7 @@ func dumpTupleMultiline(tup *ast.Tuple, out io.Writer, depth int) error {
 		return err
 	}
 
-	if err := dumpExpression(&tup.Expressions[0], out, depth+1); err != nil {
+	if err := dumpNode(tup.Expressions[0], out, depth+1); err != nil {
 		return err
 	}
 
@@ -70,7 +70,7 @@ func dumpTupleMultiline(tup *ast.Tuple, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpExpression(&expr, out, depth+1); err != nil {
+		if err := dumpNode(expr, out, depth+1); err != nil {
 			return err
 		}
 	}

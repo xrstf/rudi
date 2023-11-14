@@ -54,19 +54,19 @@ func ptrTo[T any](s T) *T {
 	return &s
 }
 
-func convertToAccessor(evaluated any) (*ast.EvaluatedAccessor, error) {
+func convertToAccessor(evaluated any) (*ast.EvaluatedPathStep, error) {
 	switch asserted := evaluated.(type) {
 	case ast.String:
-		return &ast.EvaluatedAccessor{StringValue: ptrTo(string(asserted))}, nil
+		return &ast.EvaluatedPathStep{StringValue: ptrTo(string(asserted))}, nil
 	case ast.Identifier:
-		return &ast.EvaluatedAccessor{StringValue: ptrTo(string(asserted))}, nil
+		return &ast.EvaluatedPathStep{StringValue: ptrTo(string(asserted))}, nil
 	case ast.Number:
 		intVal, ok := asserted.ToInteger()
 		if !ok {
 			return nil, fmt.Errorf("cannot use floats as indices: %v", asserted.ToFloat())
 		}
 
-		return &ast.EvaluatedAccessor{IntegerValue: &intVal}, nil
+		return &ast.EvaluatedPathStep{IntegerValue: &intVal}, nil
 	default:
 		return nil, fmt.Errorf("cannot use %T in path expression", asserted)
 	}
@@ -89,7 +89,7 @@ func traversePathExpression(ctx types.Context, value any, path *ast.PathExpressi
 func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpression, error) {
 	innerCtx := ctx
 	result := &ast.EvaluatedPathExpression{
-		Steps: []ast.EvaluatedAccessor{},
+		Steps: []ast.EvaluatedPathStep{},
 	}
 
 	// The parsed path might just be "."; in this case it would still have 1 step in it,
@@ -99,7 +99,7 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 		return result, nil
 	}
 
-	for _, accessor := range path.Steps {
+	for _, step := range path.Steps {
 		var (
 			evaluated any
 			err       error
@@ -107,7 +107,7 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 
 		// keep accumulating context changes, so you _could_ in theory do
 		// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
-		innerCtx, evaluated, err = evalExpression(innerCtx, &accessor.Expression)
+		innerCtx, evaluated, err = evalNode(innerCtx, step)
 		if err != nil {
 			return nil, fmt.Errorf("invalid accessor: %w", err)
 		}
@@ -126,13 +126,13 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.EvaluatedPathExpression) (any, error) {
 	var err error
 
-	for _, accessor := range path.Steps {
+	for _, step := range path.Steps {
 		if valueAsVector, ok := value.(ast.Vector); ok {
-			if accessor.IntegerValue == nil {
-				return nil, fmt.Errorf("cannot use %v as an array index", accessor.String())
+			if step.IntegerValue == nil {
+				return nil, fmt.Errorf("cannot use %v as an array index", step.String())
 			}
 
-			rawValue := valueAsVector.Data[*accessor.IntegerValue]
+			rawValue := valueAsVector.Data[*step.IntegerValue]
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
 				return nil, fmt.Errorf("cannot wrap %v (%T): %w", rawValue, rawValue, err)
@@ -142,11 +142,11 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.Eva
 		}
 
 		if valueAsObject, ok := value.(ast.Object); ok {
-			if accessor.StringValue == nil {
-				return nil, fmt.Errorf("cannot use %v as an object key", accessor.String())
+			if step.StringValue == nil {
+				return nil, fmt.Errorf("cannot use %v as an object key", step.String())
 			}
 
-			rawValue := valueAsObject.Data[*accessor.StringValue]
+			rawValue := valueAsObject.Data[*step.StringValue]
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
 				return nil, fmt.Errorf("cannot wrap %v (%T): %w", rawValue, rawValue, err)
@@ -155,7 +155,7 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.Eva
 			continue
 		}
 
-		return nil, fmt.Errorf("cannot descend with %s into %T", accessor.String(), value)
+		return nil, fmt.Errorf("cannot descend with %s into %T", step.String(), value)
 	}
 
 	return value, nil

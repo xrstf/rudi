@@ -8,9 +8,16 @@ import (
 	"strings"
 )
 
+type Node interface {
+	String() string
+	NodeName() string
+}
+
 type Program struct {
 	Statements []Statement
 }
+
+var _ Node = Program{}
 
 func (p Program) String() string {
 	statements := make([]string, len(p.Statements))
@@ -29,6 +36,8 @@ type Statement struct {
 	Tuple Tuple
 }
 
+var _ Node = Statement{}
+
 func (s Statement) String() string {
 	return s.Tuple.String()
 }
@@ -37,76 +46,12 @@ func (Statement) NodeName() string {
 	return "Statement"
 }
 
-type Expression struct {
-	SymbolNode     *Symbol
-	TupleNode      *Tuple
-	VectorNode     *VectorNode
-	ObjectNode     *ObjectNode
-	NumberNode     *Number
-	IdentifierNode *Identifier
-	StringNode     *String
-	BoolNode       *Bool
-	NullNode       *Null
-}
-
-func (e Expression) String() string {
-	switch {
-	case e.SymbolNode != nil:
-		return e.SymbolNode.String()
-	case e.TupleNode != nil:
-		return e.TupleNode.String()
-	case e.VectorNode != nil:
-		return e.VectorNode.String()
-	case e.ObjectNode != nil:
-		return e.ObjectNode.String()
-	case e.NumberNode != nil:
-		return e.NumberNode.String()
-	case e.IdentifierNode != nil:
-		return e.IdentifierNode.String()
-	case e.StringNode != nil:
-		return e.StringNode.String()
-	case e.BoolNode != nil:
-		return e.BoolNode.String()
-	case e.NullNode != nil:
-		return e.NullNode.String()
-	default:
-		return "<unknown expression>"
-	}
-}
-
-func (e Expression) NodeName() string {
-	name := ""
-
-	switch {
-	case e.SymbolNode != nil:
-		name = "Symbol"
-	case e.TupleNode != nil:
-		name = "Tuple"
-	case e.VectorNode != nil:
-		name = "Vector"
-	case e.ObjectNode != nil:
-		name = "Object"
-	case e.NumberNode != nil:
-		name = "Number"
-	case e.IdentifierNode != nil:
-		name = "Identifier"
-	case e.StringNode != nil:
-		name = "String"
-	case e.BoolNode != nil:
-		name = "Bool"
-	case e.NullNode != nil:
-		name = "Null"
-	default:
-		name = "?"
-	}
-
-	return "Expression(" + name + ")"
-}
-
 type Symbol struct {
 	PathExpression *PathExpression // can be combined with Variable
 	Variable       *Variable
 }
+
+var _ Node = Symbol{}
 
 func (s Symbol) String() string {
 	path := ""
@@ -145,8 +90,10 @@ func (s Symbol) NodeName() string {
 }
 
 type Tuple struct {
-	Expressions []Expression
+	Expressions []Node
 }
+
+var _ Node = Tuple{}
 
 func (t Tuple) String() string {
 	exprs := make([]string, len(t.Expressions))
@@ -177,8 +124,10 @@ func (v Vector) LiteralValue() any {
 // VectorNode represents the parsed code for constructing an vector.
 // When an VectorNode is evaluated, it turns into an Vector.
 type VectorNode struct {
-	Expressions []Expression
+	Expressions []Node
 }
+
+var _ Node = VectorNode{}
 
 func (v VectorNode) String() string {
 	exprs := make([]string, len(v.Expressions))
@@ -211,6 +160,8 @@ type ObjectNode struct {
 	Data []KeyValuePair
 }
 
+var _ Node = ObjectNode{}
+
 func (o ObjectNode) String() string {
 	pairs := make([]string, len(o.Data))
 	for i, pair := range o.Data {
@@ -224,8 +175,8 @@ func (ObjectNode) NodeName() string {
 }
 
 type KeyValuePair struct {
-	Key   Expression
-	Value Expression
+	Key   Node
+	Value Node
 }
 
 func (kv KeyValuePair) String() string {
@@ -238,6 +189,8 @@ func (KeyValuePair) NodeName() string {
 
 type Variable string
 
+var _ Node = Variable("")
+
 func (v Variable) String() string {
 	return "$" + string(v)
 }
@@ -248,6 +201,8 @@ func (Variable) NodeName() string {
 
 type Identifier string
 
+var _ Node = Identifier("")
+
 func (i Identifier) String() string {
 	return string(i)
 }
@@ -257,6 +212,8 @@ func (Identifier) NodeName() string {
 }
 
 type String string
+
+var _ Node = String("")
 
 func (s String) String() string {
 	return fmt.Sprintf("%q", string(s))
@@ -273,6 +230,8 @@ func (s String) LiteralValue() any {
 type Number struct {
 	Value any
 }
+
+var _ Node = Number{}
 
 func (n Number) ToInteger() (int64, bool) {
 	switch asserted := n.Value.(type) {
@@ -327,6 +286,8 @@ func (n Number) LiteralValue() any {
 
 type Bool bool
 
+var _ Node = Bool(false)
+
 func (b Bool) String() string {
 	if b {
 		return "true"
@@ -345,6 +306,8 @@ func (b Bool) LiteralValue() any {
 
 type Null struct{}
 
+var _ Node = Null{}
+
 func (Null) String() string {
 	return "null"
 }
@@ -358,11 +321,11 @@ func (Null) LiteralValue() any {
 }
 
 type PathExpression struct {
-	Steps []Accessor
+	Steps []Node
 }
 
-func (e *PathExpression) Prepend(step Accessor) {
-	e.Steps = append([]Accessor{step}, e.Steps...)
+func (e *PathExpression) Prepend(step Node) {
+	e.Steps = append([]Node{step}, e.Steps...)
 }
 
 // IsIdentity returns true if the entire pathExpression was just ".".
@@ -384,11 +347,11 @@ func (PathExpression) NodeName() string {
 }
 
 type EvaluatedPathExpression struct {
-	Steps []EvaluatedAccessor
+	Steps []EvaluatedPathStep
 }
 
-func (e *EvaluatedPathExpression) Prepend(step EvaluatedAccessor) {
-	e.Steps = append([]EvaluatedAccessor{step}, e.Steps...)
+func (e *EvaluatedPathExpression) Prepend(step EvaluatedPathStep) {
+	e.Steps = append([]EvaluatedPathStep{step}, e.Steps...)
 }
 
 // IsIdentity returns true if the entire EvaluatedPathExpression was just ".".
@@ -409,54 +372,54 @@ func (EvaluatedPathExpression) NodeName() string {
 	return "EvaluatedPathExpression"
 }
 
-type Accessor struct {
-	Expression Expression
-}
+// type Accessor struct {
+// 	Expression Node
+// }
 
-func (a Accessor) String() string {
-	e := a.Expression
+// func (a Accessor) String() string {
+// 	e := a.Expression
 
-	switch {
-	case e.SymbolNode != nil:
-		return "[" + e.SymbolNode.String() + "]"
-	case e.TupleNode != nil:
-		return "[" + e.TupleNode.String() + "]"
-	case e.NumberNode != nil:
-		return "[" + e.NumberNode.String() + "]"
-	case e.IdentifierNode != nil:
-		return "." + e.IdentifierNode.String()
-	case e.StringNode != nil:
-		return "[" + e.StringNode.String() + "]"
-	case e.BoolNode != nil:
-		return "[" + e.BoolNode.String() + "]"
-	case e.NullNode != nil:
-		return "[" + e.NullNode.String() + "]"
-	default:
-		return "?<unknown accessor expression>"
-	}
-}
+// 	switch {
+// 	case e.SymbolNode != nil:
+// 		return "[" + e.SymbolNode.String() + "]"
+// 	case e.TupleNode != nil:
+// 		return "[" + e.TupleNode.String() + "]"
+// 	case e.NumberNode != nil:
+// 		return "[" + e.NumberNode.String() + "]"
+// 	case e.IdentifierNode != nil:
+// 		return "." + e.IdentifierNode.String()
+// 	case e.StringNode != nil:
+// 		return "[" + e.StringNode.String() + "]"
+// 	case e.BoolNode != nil:
+// 		return "[" + e.BoolNode.String() + "]"
+// 	case e.NullNode != nil:
+// 		return "[" + e.NullNode.String() + "]"
+// 	default:
+// 		return "?<unknown accessor expression>"
+// 	}
+// }
 
-func (a Accessor) NodeName() string {
-	return "Accessor(" + a.Expression.NodeName() + ")"
-}
+// func (a Accessor) NodeName() string {
+// 	return "Accessor(" + a.Expression.NodeName() + ")"
+// }
 
-type EvaluatedAccessor struct {
+type EvaluatedPathStep struct {
 	StringValue  *string
 	IntegerValue *int64
 }
 
-func (a EvaluatedAccessor) String() string {
+func (a EvaluatedPathStep) String() string {
 	switch {
 	case a.StringValue != nil:
 		return fmt.Sprintf("[%q]", *a.StringValue)
 	case a.IntegerValue != nil:
 		return fmt.Sprintf("[%d]", *a.IntegerValue)
 	default:
-		return "<unknown evaluatedAccessor>"
+		return "<unknown evaluatedPathStep>"
 	}
 }
 
-func (a EvaluatedAccessor) NodeName() string {
+func (a EvaluatedPathStep) NodeName() string {
 	name := ""
 
 	switch {
@@ -468,5 +431,5 @@ func (a EvaluatedAccessor) NodeName() string {
 		name = "?"
 	}
 
-	return "EvaluatedAccessor(" + name + ")"
+	return "EvaluatedPathStep(" + name + ")"
 }

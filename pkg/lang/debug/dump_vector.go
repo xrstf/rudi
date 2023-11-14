@@ -14,7 +14,7 @@ func dumpVector(vec *ast.VectorNode, out io.Writer, depth int) error {
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, expr := range vec.Expressions {
-		if err := dumpExpression(&expr, &buf, 0); err != nil {
+		if err := dumpNode(expr, &buf, 0); err != nil {
 			return err
 		}
 	}
@@ -32,7 +32,7 @@ func dumpVectorSingleline(vec *ast.VectorNode, out io.Writer, depth int) error {
 	}
 
 	for i, expr := range vec.Expressions {
-		if err := dumpExpression(&expr, out, depth); err != nil {
+		if err := dumpNode(expr, out, depth); err != nil {
 			return err
 		}
 
@@ -58,7 +58,7 @@ func dumpVectorMultiline(vec *ast.VectorNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpExpression(&expr, out, depth+1); err != nil {
+		if err := dumpNode(expr, out, depth+1); err != nil {
 			return err
 		}
 	}

@@ -24,17 +24,19 @@ func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any,
 	)
 
 	for _, pair := range obj.Data {
+		switch asserted := pair.Key.(type) {
 		// as a convenience feature, we allow unquoted object keys, which are parsed as bare identifiers
-		if pair.Key.IdentifierNode != nil {
-			key = ast.String(string(*pair.Key.IdentifierNode))
-		} else if pair.Key.ObjectNode != nil {
-			return ctx, nil, fmt.Errorf("cannot handle object keys of type %T", pair.Key.ObjectNode)
-		} else if pair.Key.VectorNode != nil {
-			return ctx, nil, fmt.Errorf("cannot handle object keys of type %T", pair.Key.VectorNode)
-		} else {
+		case ast.Identifier:
+			key = ast.String(string(asserted))
+		// do not even evaluate vectors and objects, as they can never be valid object keys
+		case ast.ObjectNode:
+			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.NodeName())
+		case ast.VectorNode:
+			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.NodeName())
+		default:
 			// Just like with arrays, use a growing context during the object evaluation,
 			// in case someone wants to define a variable here... for some reason.
-			innerCtx, key, err = evalExpression(innerCtx, &pair.Key)
+			innerCtx, key, err = evalNode(innerCtx, pair.Key)
 			if err != nil {
 				return ctx, nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
 			}
@@ -45,7 +47,7 @@ func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any,
 			return ctx, nil, fmt.Errorf("object key must be stringish, but got %T", key)
 		}
 
-		innerCtx, value, err = evalExpression(innerCtx, &pair.Value)
+		innerCtx, value, err = evalNode(innerCtx, pair.Value)
 		if err != nil {
 			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}

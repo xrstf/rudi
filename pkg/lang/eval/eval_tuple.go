@@ -17,12 +17,12 @@ func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
 		return ctx, nil, errors.New("invalid tuple: tuple cannot be empty")
 	}
 
-	funcExpr := tup.Expressions[0]
-	if funcExpr.IdentifierNode == nil {
+	funcExpr, ok := tup.Expressions[0].(ast.Identifier)
+	if !ok {
 		return ctx, nil, errors.New("invalid tuple: first expression must be an identifier")
 	}
 
-	funcName := string(*funcExpr.IdentifierNode)
+	funcName := string(funcExpr)
 	argExprs := tup.Expressions[1:]
 
 	// wrap all args to allow the builtin package to use code from this
@@ -30,7 +30,7 @@ func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
 	funcArgs := make([]builtin.Argument, len(argExprs))
 	for i := range argExprs {
 		funcArgs[i] = &argument{
-			expression: &argExprs[i],
+			expression: argExprs[i],
 		}
 	}
 
@@ -49,7 +49,7 @@ func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
 }
 
 type argument struct {
-	expression *ast.Expression
+	expression ast.Node
 }
 
 var _ builtin.Argument = &argument{}
@@ -59,9 +59,9 @@ func (a *argument) String() string {
 }
 
 func (a *argument) Eval(ctx types.Context) (types.Context, any, error) {
-	return evalExpression(ctx, a.expression)
+	return evalNode(ctx, a.expression)
 }
 
-func (a *argument) Expression() *ast.Expression {
+func (a *argument) Node() ast.Node {
 	return a.expression
 }

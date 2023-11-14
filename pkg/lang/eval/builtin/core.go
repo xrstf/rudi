@@ -76,9 +76,14 @@ func hasFunction(ctx types.Context, args []Argument) (any, error) {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	arg := args[0].Expression()
-	if arg.SymbolNode == nil || arg.SymbolNode.PathExpression == nil {
-		return nil, fmt.Errorf("argument #0 is not a path expression, but %T", arg) // TODO: this generates just "Expression", make it nicer
+	arg := args[0].Node()
+	symbol, ok := arg.(ast.Symbol)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a path expression, but %s", arg.NodeName())
+	}
+
+	if symbol.PathExpression == nil {
+		return nil, errors.New("argument #0 has no path expression")
 	}
 
 	_, value, err := args[0].Eval(ctx)
@@ -113,17 +118,18 @@ func setFunction(ctx types.Context, args []Argument) (types.Context, any, error)
 		return ctx, nil, fmt.Errorf("expected 2 arguments, got %d", size)
 	}
 
-	varNameExpr := args[0].Expression()
+	varNameNode := args[0].Node()
+	symbol, ok := varNameNode.(ast.Symbol)
+	if !ok {
+		return ctx, nil, fmt.Errorf("argument #0 is not symbol, but %s", varNameNode.NodeName())
+	}
+
+	// catch symbols that are technically invalid
+	if symbol.Variable == nil && symbol.PathExpression == nil {
+		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", varNameNode.NodeName())
+	}
+
 	varName := ""
-
-	if varNameExpr.SymbolNode == nil {
-		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %T", varNameExpr)
-	}
-
-	symNode := varNameExpr.SymbolNode
-	if symNode.Variable == nil && symNode.PathExpression == nil {
-		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %T", varNameExpr)
-	}
 
 	// discard any context changes within the newValue expression
 	_, newValue, err := args[1].Eval(ctx)
@@ -132,13 +138,13 @@ func setFunction(ctx types.Context, args []Argument) (types.Context, any, error)
 	}
 
 	// set a variable, which will result in a new context
-	if symNode.Variable != nil {
+	if symbol.Variable != nil {
 		// forbid weird definitions like (set $var.foo (expr)) for now
-		if symNode.PathExpression != nil {
+		if symbol.PathExpression != nil {
 			return ctx, nil, errors.New("argument #0: cannot use path expression when setting variable values")
 		}
 
-		varName = string(*symNode.Variable)
+		varName = string(*symbol.Variable)
 
 		// make the variable's value the return value, so `(def $foo 12)` = 12
 		return ctx.WithVariable(varName, newValue), newValue, nil
@@ -146,12 +152,12 @@ func setFunction(ctx types.Context, args []Argument) (types.Context, any, error)
 
 	// set new value at path expression
 	doc := ctx.GetDocument()
-	setValueAtPath(ctx, doc.Get(), symNode.PathExpression.Steps, newValue)
+	setValueAtPath(ctx, doc.Get(), symbol.PathExpression.Steps, newValue)
 
 	return ctx, nil, errors.New("setting a document path expression is not yet implemented")
 }
 
-func setValueAtPath(ctx types.Context, document any, steps []ast.Accessor, newValue any) (any, error) {
+func setValueAtPath(ctx types.Context, document any, steps []ast.Node, newValue any) (any, error) {
 	if len(steps) == 0 {
 		return nil, nil
 	}

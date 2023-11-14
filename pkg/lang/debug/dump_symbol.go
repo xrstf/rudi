@@ -56,7 +56,7 @@ func dumpPathExpression(path *ast.PathExpression, out io.Writer, depth int) erro
 	}
 
 	for i, step := range path.Steps {
-		err := dumpExpression(&step.Expression, out, depth)
+		err := dumpNode(step, out, depth)
 		if err != nil {
 			return err
 		}
