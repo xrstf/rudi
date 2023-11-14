@@ -4,48 +4,38 @@
 package builtin
 
 import (
-	"log"
-	"strings"
 	"testing"
-
-	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/eval"
-	"go.xrstf.de/otto/pkg/lang/eval/types"
-	"go.xrstf.de/otto/pkg/lang/parser"
 )
 
-func runExpression(t *testing.T, expr string, document any) (any, error) {
-	prog := strings.NewReader(expr)
+type mathTestcase struct {
+	expr     string
+	expected any
+	invalid  bool
+}
 
-	got, err := parser.ParseReader("test.go", prog)
+func (tc *mathTestcase) Test(t *testing.T) {
+	t.Helper()
+
+	result, err := runExpression(t, tc.expr, nil)
 	if err != nil {
-		t.Fatalf("Failed to parse %s: %v", expr, err)
+		if !tc.invalid {
+			t.Fatalf("Failed to run %s: %v", tc.expr, err)
+		}
+
+		return
 	}
 
-	program, ok := got.(ast.Program)
-	if !ok {
-		t.Fatalf("Parsed result is not a ast.Program, but %T", got)
+	if tc.invalid {
+		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
 	}
 
-	doc, err := eval.NewDocument(document)
-	if err != nil {
-		log.Fatalf("Failed to create parser document: %v", err)
+	if result != tc.expected {
+		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
 	}
-
-	vars := eval.NewVariables().
-		Set("global", types.Must(types.WrapNative(document)))
-
-	progContext := eval.NewContext(doc, Functions, vars)
-
-	return eval.Run(progContext, program)
 }
 
 func TestSumFunction(t *testing.T) {
-	testcases := []struct {
-		expr     string
-		expected any
-		invalid  bool
-	}{
+	testcases := []mathTestcase{
 		{
 			expr:    `(+)`,
 			invalid: true,
@@ -89,23 +79,161 @@ func TestSumFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, func(t *testing.T) {
-			result, err := runExpression(t, testcase.expr, nil)
-			if err != nil {
-				if !testcase.invalid {
-					t.Fatalf("Failed to run %s: %v", testcase.expr, err)
-				}
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
 
-				return
-			}
+func TestMinusFunction(t *testing.T) {
+	testcases := []mathTestcase{
+		{
+			expr:    `(-)`,
+			invalid: true,
+		},
+		{
+			expr:    `(- 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(- 1 "foo")`,
+			invalid: true,
+		},
+		{
+			expr:    `(- 1 [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(- 1 {})`,
+			invalid: true,
+		},
+		{
+			expr:     `(- 1 2)`,
+			expected: int64(-1),
+		},
+		{
+			expr:     `(- 1 -2 5)`,
+			expected: int64(-2),
+		},
+		{
+			expr:     `(- 1 1.5)`,
+			expected: float64(-0.5),
+		},
+		{
+			expr:     `(- 1 1.5 (- 1 2))`,
+			expected: float64(0.5),
+		},
+		{
+			expr:     `(- 0 0.0 -5.6)`,
+			expected: float64(5.6),
+		},
+	}
 
-			if testcase.invalid {
-				t.Fatalf("Should not have been able to run %s, but got: %v", testcase.expr, result)
-			}
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
 
-			if result != testcase.expected {
-				t.Fatalf("Expected %v (%T), but got %v (%T)", testcase.expected, testcase.expected, result, result)
-			}
-		})
+func TestMultiplyFunction(t *testing.T) {
+	testcases := []mathTestcase{
+		{
+			expr:    `(*)`,
+			invalid: true,
+		},
+		{
+			expr:    `(* 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(* 1 "foo")`,
+			invalid: true,
+		},
+		{
+			expr:    `(* 1 [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(* 1 {})`,
+			invalid: true,
+		},
+		{
+			expr:     `(* 1 2)`,
+			expected: int64(2),
+		},
+		{
+			expr:     `(* 1 -2 5)`,
+			expected: int64(-10),
+		},
+		{
+			expr:     `(* 2 -1.5)`,
+			expected: float64(-3.0),
+		},
+		{
+			expr:     `(* 1 1.5 (* 1 2))`,
+			expected: float64(3.0),
+		},
+		{
+			expr:     `(* 0 0.0 -5.6)`,
+			expected: float64(0),
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestDivideFunction(t *testing.T) {
+	testcases := []mathTestcase{
+		{
+			expr:    `(/)`,
+			invalid: true,
+		},
+		{
+			expr:    `(/ 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(/ 1 "foo")`,
+			invalid: true,
+		},
+		{
+			expr:    `(/ 1 [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(/ 1 {})`,
+			invalid: true,
+		},
+		{
+			expr:     `(/ 1 2)`,
+			expected: float64(0.5),
+		},
+		{
+			expr:     `(/ 1 -2 5)`,
+			expected: float64(-0.1),
+		},
+		{
+			expr:     `(/ 2 -1.5)`,
+			expected: float64(-1.33333333333333333333),
+		},
+		{
+			expr:     `(/ 1 1.5 (/ 1 2))`,
+			expected: float64(1.33333333333333333333),
+		},
+		{
+			expr:    `(/ 0 0.0 -5.6)`,
+			invalid: true,
+		},
+		{
+			expr:    `(/ 1 0)`,
+			invalid: true,
+		},
+		{
+			expr:    `(/ 1 2 0.0)`,
+			invalid: true,
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
 	}
 }

@@ -150,7 +150,7 @@ func divideFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0 is not numeric: %w", err)
 	}
 
-	for i, arg := range args[1:] {
+	for i, arg := range values[1:] {
 		divisor, err := coalescing.ToFloat64(arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d is not numeric: %w", i+1, err)

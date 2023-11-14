@@ -1,3 +1,5 @@
+GO_TEST_FLAGS ?=
+
 .PHONY: generate
 generate:
 	pigeon pkg/lang/grammar/otto.peg > pkg/lang/parser/generated.go
@@ -13,7 +15,7 @@ build:
 
 .PHONY: run-tests
 run-tests:
-	go test ./...
+	go test $(GO_TEST_FLAGS) ./...
 
 .PHONY: test
 test:
