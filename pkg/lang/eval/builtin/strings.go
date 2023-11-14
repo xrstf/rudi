@@ -8,17 +8,18 @@ import (
 	"strings"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 // (concat GLUE:String ELEMENTS:(Vector/String)+)
-func concatFunction(ctx types.Context, args []Argument) (any, error) {
+func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
 
-	_, glue, err := args[0].Eval(ctx)
+	_, glue, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
@@ -59,7 +60,7 @@ func concatFunction(ctx types.Context, args []Argument) (any, error) {
 }
 
 // (split SEP:String SOURCE:String)
-func splitFunction(ctx types.Context, args []Argument) (any, error) {
+func splitFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 2 {
 		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
 	}

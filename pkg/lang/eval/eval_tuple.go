@@ -8,11 +8,10 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/eval/builtin"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
+func EvalTuple(ctx types.Context, tup ast.Tuple) (types.Context, any, error) {
 	if len(tup.Expressions) == 0 {
 		return ctx, nil, errors.New("invalid tuple: tuple cannot be empty")
 	}
@@ -23,45 +22,17 @@ func evalTuple(ctx types.Context, tup *ast.Tuple) (types.Context, any, error) {
 	}
 
 	funcName := string(funcExpr)
-	argExprs := tup.Expressions[1:]
 
-	// wrap all args to allow the builtin package to use code from this
-	// package without causing a circular dependency
-	funcArgs := make([]builtin.Argument, len(argExprs))
-	for i := range argExprs {
-		funcArgs[i] = &argument{
-			expression: argExprs[i],
-		}
-	}
-
-	function, ok := builtin.Functions[funcName]
+	function, ok := ctx.GetFunction(funcName)
 	if !ok {
 		return ctx, nil, fmt.Errorf("unknown function %s", funcName)
 	}
 
 	// call the function
-	newContext, result, err := function(ctx, funcArgs)
+	newContext, result, err := function(ctx, tup.Expressions[1:])
 	if err != nil {
 		return ctx, nil, fmt.Errorf("%s: %w", funcName, err)
 	}
 
 	return newContext, result, nil
-}
-
-type argument struct {
-	expression ast.Node
-}
-
-var _ builtin.Argument = &argument{}
-
-func (a *argument) String() string {
-	return a.expression.String()
-}
-
-func (a *argument) Eval(ctx types.Context) (types.Context, any, error) {
-	return evalNode(ctx, a.expression)
-}
-
-func (a *argument) Node() ast.Node {
-	return a.expression
 }

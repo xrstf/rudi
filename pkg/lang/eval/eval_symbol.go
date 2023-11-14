@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalSymbol(ctx types.Context, sym *ast.Symbol) (types.Context, any, error) {
+func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
 	switch {
 	case sym.Variable != nil:
 		varName := string(*sym.Variable)
@@ -107,7 +107,7 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 
 		// keep accumulating context changes, so you _could_ in theory do
 		// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
-		innerCtx, evaluated, err = evalNode(innerCtx, step)
+		innerCtx, evaluated, err = EvalExpression(innerCtx, step)
 		if err != nil {
 			return nil, fmt.Errorf("invalid accessor: %w", err)
 		}

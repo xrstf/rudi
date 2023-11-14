@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalNumber(ctx types.Context, n *ast.Number) (types.Context, any, error) {
-	return ctx, *n, nil
+func EvalNumber(ctx types.Context, n ast.Number) (types.Context, any, error) {
+	return ctx, n, nil
 }

@@ -10,27 +10,27 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalNode(ctx types.Context, node ast.Node) (types.Context, any, error) {
+func EvalExpression(ctx types.Context, node ast.Expression) (types.Context, any, error) {
 	switch asserted := node.(type) {
 	case ast.Null:
-		return evalNull(ctx, &asserted)
+		return EvalNull(ctx, asserted)
 	case ast.Bool:
-		return evalBool(ctx, &asserted)
+		return EvalBool(ctx, asserted)
 	case ast.String:
-		return evalString(ctx, &asserted)
+		return EvalString(ctx, asserted)
 	case ast.Number:
-		return evalNumber(ctx, &asserted)
+		return EvalNumber(ctx, asserted)
 	case ast.ObjectNode:
-		return evalObjectNode(ctx, &asserted)
+		return EvalObjectNode(ctx, asserted)
 	case ast.VectorNode:
-		return evalVectorNode(ctx, &asserted)
+		return EvalVectorNode(ctx, asserted)
 	case ast.Symbol:
-		return evalSymbol(ctx, &asserted)
+		return EvalSymbol(ctx, asserted)
 	case ast.Tuple:
-		return evalTuple(ctx, &asserted)
+		return EvalTuple(ctx, asserted)
 	case ast.Identifier:
-		return evalIdentifier(ctx, &asserted)
+		return EvalIdentifier(ctx, asserted)
 	}
 
-	return ctx, nil, fmt.Errorf("unknown node %T (%s)", node.NodeName(), node.String())
+	return ctx, nil, fmt.Errorf("unknown expression %s (%s)", node.ExpressionName(), node.String())
 }

@@ -8,19 +8,20 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 // (if COND:Expr YES:Expr NO:Expr?)
-func ifFunction(ctx types.Context, args []Argument) (any, error) {
+func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 || size > 3 {
 		return nil, fmt.Errorf("expected 2 or 3 arguments, got %d", size)
 	}
 
 	tupleCtx := ctx
 
-	tupleCtx, condition, err := args[0].Eval(tupleCtx)
+	tupleCtx, condition, err := eval.EvalExpression(tupleCtx, args[0])
 	if err != nil {
 		return nil, fmt.Errorf("condition: %w", err)
 	}
@@ -32,14 +33,14 @@ func ifFunction(ctx types.Context, args []Argument) (any, error) {
 
 	if success {
 		// discard context changes from the true path
-		_, result, err := args[1].Eval(tupleCtx)
+		_, result, err := eval.EvalExpression(tupleCtx, args[1])
 		return result, err
 	}
 
 	// optional else part
 	if len(args) > 2 {
 		// discard context changes from the false path
-		_, result, err := args[2].Eval(tupleCtx)
+		_, result, err := eval.EvalExpression(tupleCtx, args[2])
 		return result, err
 	}
 
@@ -47,7 +48,7 @@ func ifFunction(ctx types.Context, args []Argument) (any, error) {
 }
 
 // (do STEP:Expr+)
-func doFunction(ctx types.Context, args []Argument) (any, error) {
+func doFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 1 {
 		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
 	}
@@ -61,7 +62,7 @@ func doFunction(ctx types.Context, args []Argument) (any, error) {
 
 	// do not use evalArgs(), as we want to inherit the context between expressions
 	for i, arg := range args {
-		tupleCtx, result, err = arg.Eval(tupleCtx)
+		tupleCtx, result, err = eval.EvalExpression(tupleCtx, arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d: %w", i, err)
 		}
@@ -71,22 +72,21 @@ func doFunction(ctx types.Context, args []Argument) (any, error) {
 }
 
 // (has PATH:PathExpression)
-func hasFunction(ctx types.Context, args []Argument) (any, error) {
+func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 1 {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	arg := args[0].Node()
-	symbol, ok := arg.(ast.Symbol)
+	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a path expression, but %s", arg.NodeName())
+		return nil, fmt.Errorf("argument #0 is not a path expression, but %s", args[0].ExpressionName())
 	}
 
 	if symbol.PathExpression == nil {
 		return nil, errors.New("argument #0 has no path expression")
 	}
 
-	_, value, err := args[0].Eval(ctx)
+	_, value, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return false, nil
 	}
@@ -95,14 +95,14 @@ func hasFunction(ctx types.Context, args []Argument) (any, error) {
 }
 
 // (default TEST:Expression FALLBACK:any)
-func defaultFunction(ctx types.Context, args []Argument) (any, error) {
+func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 2 {
 		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
 	}
 
-	_, result, err := args[0].Eval(ctx)
+	_, result, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
-		_, result, err = args[1].Eval(ctx)
+		_, result, err = eval.EvalExpression(ctx, args[1])
 		if err != nil {
 			return nil, fmt.Errorf("argument #1: %w", err)
 		}
@@ -113,26 +113,25 @@ func defaultFunction(ctx types.Context, args []Argument) (any, error) {
 
 // (set VAR:Variable VALUE:any)
 // (set EXPR:PathExpression VALUE:any) <- TODO
-func setFunction(ctx types.Context, args []Argument) (types.Context, any, error) {
+func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, error) {
 	if size := len(args); size != 2 {
 		return ctx, nil, fmt.Errorf("expected 2 arguments, got %d", size)
 	}
 
-	varNameNode := args[0].Node()
-	symbol, ok := varNameNode.(ast.Symbol)
+	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
-		return ctx, nil, fmt.Errorf("argument #0 is not symbol, but %s", varNameNode.NodeName())
+		return ctx, nil, fmt.Errorf("argument #0 is not symbol, but %s", args[0].ExpressionName())
 	}
 
 	// catch symbols that are technically invalid
 	if symbol.Variable == nil && symbol.PathExpression == nil {
-		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", varNameNode.NodeName())
+		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
 	}
 
 	varName := ""
 
 	// discard any context changes within the newValue expression
-	_, newValue, err := args[1].Eval(ctx)
+	_, newValue, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
 		return ctx, nil, fmt.Errorf("argument #1: %w", err)
 	}
@@ -157,7 +156,7 @@ func setFunction(ctx types.Context, args []Argument) (types.Context, any, error)
 	return ctx, nil, errors.New("setting a document path expression is not yet implemented")
 }
 
-func setValueAtPath(ctx types.Context, document any, steps []ast.Node, newValue any) (any, error) {
+func setValueAtPath(ctx types.Context, document any, steps []ast.Expression, newValue any) (any, error) {
 	if len(steps) == 0 {
 		return nil, nil
 	}

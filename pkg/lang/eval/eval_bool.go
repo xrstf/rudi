@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalBool(ctx types.Context, b *ast.Bool) (types.Context, any, error) {
-	return ctx, *b, nil
+func EvalBool(ctx types.Context, b ast.Bool) (types.Context, any, error) {
+	return ctx, b, nil
 }

@@ -5,8 +5,8 @@ package eval
 
 import "go.xrstf.de/otto/pkg/lang/eval/types"
 
-func NewContext(doc types.Document, variables types.Variables) types.Context {
-	return types.NewContext(doc, variables)
+func NewContext(doc types.Document, funcs types.Functions, variables types.Variables) types.Context {
+	return types.NewContext(doc, funcs, variables)
 }
 
 func NewVariables() types.Variables {

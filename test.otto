@@ -1,1 +1,1 @@
-(concat .foo ["foo" "bar"] .muh.list)
+(concat .foo ["foo" "bar"] .muh.list[0])

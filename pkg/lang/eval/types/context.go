@@ -34,12 +34,14 @@ func (d *Document) Set(wrappedData any) {
 
 type Context struct {
 	document  Document
+	funcs     Functions
 	variables Variables
 }
 
-func NewContext(doc Document, variables Variables) Context {
+func NewContext(doc Document, funcs Functions, variables Variables) Context {
 	return Context{
 		document:  doc,
+		funcs:     funcs,
 		variables: variables,
 	}
 }
@@ -52,11 +54,34 @@ func (c Context) GetVariable(name string) (any, bool) {
 	return c.variables.Get(name)
 }
 
+func (c Context) GetFunction(name string) (Function, bool) {
+	return c.funcs.Get(name)
+}
+
 func (c Context) WithVariable(name string, val any) Context {
 	return Context{
 		document:  c.document,
 		variables: c.variables.With(name, val),
 	}
+}
+
+type Function func(ctx Context, args []ast.Expression) (Context, any, error)
+type Functions map[string]Function
+
+func NewFunctions() Functions {
+	return Functions{}
+}
+
+func (f Functions) Get(name string) (Function, bool) {
+	variable, exists := f[name]
+	return variable, exists
+}
+
+// Set sets/replaces the function in the current set (in-place).
+// The function returns the same Functions to allow fluent access.
+func (f Functions) Set(name string, fun Function) Functions {
+	f[name] = fun
+	return f
 }
 
 type Variables map[string]any

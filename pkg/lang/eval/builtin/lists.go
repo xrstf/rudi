@@ -8,15 +8,16 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func lenFunction(ctx types.Context, args []Argument) (any, error) {
+func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 1 {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	_, list, err := args[0].Eval(ctx)
+	_, list, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, err
 	}

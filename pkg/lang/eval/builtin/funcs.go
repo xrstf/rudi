@@ -7,19 +7,14 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-type Argument interface {
-	Eval(ctx types.Context) (types.Context, any, error)
-	String() string
-	Node() ast.Node
-}
-
-func evalArgs(ctx types.Context, args []Argument, argShift int) ([]any, error) {
+func evalArgs(ctx types.Context, args []ast.Expression, argShift int) ([]any, error) {
 	values := make([]any, len(args)-argShift)
 	for i, arg := range args[argShift:] {
-		_, evaluated, err := arg.Eval(ctx)
+		_, evaluated, err := eval.EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d: %w", i+argShift, err)
 		}
@@ -30,17 +25,16 @@ func evalArgs(ctx types.Context, args []Argument, argShift int) ([]any, error) {
 	return values, nil
 }
 
-type GenericFunc func(ctx types.Context, args []Argument) (types.Context, any, error)
-type StatelessFunc func(ctx types.Context, args []Argument) (any, error)
+type StatelessFunc func(ctx types.Context, args []ast.Expression) (any, error)
 
-func stateless(f StatelessFunc) GenericFunc {
-	return func(ctx types.Context, args []Argument) (types.Context, any, error) {
+func stateless(f StatelessFunc) types.Function {
+	return func(ctx types.Context, args []ast.Expression) (types.Context, any, error) {
 		result, err := f(ctx, args)
 		return ctx, result, err
 	}
 }
 
-var Functions = map[string]GenericFunc{
+var Functions = types.Functions{
 	// core
 	"if":      stateless(ifFunction),
 	"do":      stateless(doFunction),

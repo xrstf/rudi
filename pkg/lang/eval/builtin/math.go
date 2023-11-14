@@ -8,16 +8,17 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalNumericalExpressions(ctx types.Context, args []Argument) (values []any, int64only bool, err error) {
+func evalNumericalExpressions(ctx types.Context, args []ast.Expression) (values []any, int64only bool, err error) {
 	values = make([]any, len(args))
 	int64only = true
 
 	for i, arg := range args {
-		_, evaluated, err := arg.Eval(ctx)
+		_, evaluated, err := eval.EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, false, fmt.Errorf("argument #%d: %w", i, err)
 		}
@@ -32,7 +33,7 @@ func evalNumericalExpressions(ctx types.Context, args []Argument) (values []any,
 	return values, int64only, nil
 }
 
-func sumFunction(ctx types.Context, args []Argument) (any, error) {
+func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
@@ -64,7 +65,7 @@ func sumFunction(ctx types.Context, args []Argument) (any, error) {
 	return ast.Number{Value: sum}, nil
 }
 
-func minusFunction(ctx types.Context, args []Argument) (any, error) {
+func minusFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
@@ -101,7 +102,7 @@ func minusFunction(ctx types.Context, args []Argument) (any, error) {
 	return ast.Number{Value: difference}, nil
 }
 
-func multiplyFunction(ctx types.Context, args []Argument) (any, error) {
+func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
@@ -134,7 +135,7 @@ func multiplyFunction(ctx types.Context, args []Argument) (any, error) {
 	return ast.Number{Value: product}, nil
 }
 
-func divideFunction(ctx types.Context, args []Argument) (any, error) {
+func divideFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}

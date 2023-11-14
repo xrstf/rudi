@@ -124,8 +124,8 @@ func ToString(val any) (string, error) {
 
 func typeName(v any) string {
 	switch asserted := v.(type) {
-	case ast.Node:
-		return asserted.NodeName()
+	case ast.Expression:
+		return asserted.ExpressionName()
 	case map[string]interface{}:
 		return "object" // lowercase, to distinguish from Objects and ObjectNodes
 	case []interface{}:

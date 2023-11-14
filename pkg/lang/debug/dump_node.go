@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpNode(node ast.Node, out io.Writer, depth int) error {
+func dumpNode(node ast.Expression, out io.Writer, depth int) error {
 	switch asserted := node.(type) {
 	case ast.Null:
 		return dumpNull(&asserted, out)
@@ -32,5 +32,5 @@ func dumpNode(node ast.Node, out io.Writer, depth int) error {
 		return dumpIdentifier(&asserted, out)
 	}
 
-	return fmt.Errorf("unknown node %s (%s)", node.NodeName(), node.String())
+	return fmt.Errorf("unknown node %s (%s)", node.ExpressionName(), node.String())
 }

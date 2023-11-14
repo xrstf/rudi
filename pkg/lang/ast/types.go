@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-type Node interface {
+type Expression interface {
 	String() string
-	NodeName() string
+	ExpressionName() string
 }
 
 type Program struct {
 	Statements []Statement
 }
 
-var _ Node = Program{}
+var _ Expression = Program{}
 
 func (p Program) String() string {
 	statements := make([]string, len(p.Statements))
@@ -28,7 +28,7 @@ func (p Program) String() string {
 	return strings.Join(statements, "\n")
 }
 
-func (Program) NodeName() string {
+func (Program) ExpressionName() string {
 	return "Program"
 }
 
@@ -36,13 +36,13 @@ type Statement struct {
 	Tuple Tuple
 }
 
-var _ Node = Statement{}
+var _ Expression = Statement{}
 
 func (s Statement) String() string {
 	return s.Tuple.String()
 }
 
-func (Statement) NodeName() string {
+func (Statement) ExpressionName() string {
 	return "Statement"
 }
 
@@ -51,7 +51,7 @@ type Symbol struct {
 	Variable       *Variable
 }
 
-var _ Node = Symbol{}
+var _ Expression = Symbol{}
 
 func (s Symbol) String() string {
 	path := ""
@@ -74,7 +74,7 @@ func (s Symbol) String() string {
 	}
 }
 
-func (s Symbol) NodeName() string {
+func (s Symbol) ExpressionName() string {
 	name := ""
 
 	switch {
@@ -90,10 +90,10 @@ func (s Symbol) NodeName() string {
 }
 
 type Tuple struct {
-	Expressions []Node
+	Expressions []Expression
 }
 
-var _ Node = Tuple{}
+var _ Expression = Tuple{}
 
 func (t Tuple) String() string {
 	exprs := make([]string, len(t.Expressions))
@@ -104,7 +104,7 @@ func (t Tuple) String() string {
 	return "(" + strings.Join(exprs, " ") + ")"
 }
 
-func (Tuple) NodeName() string {
+func (Tuple) ExpressionName() string {
 	return "Tuple"
 }
 
@@ -113,7 +113,7 @@ type Vector struct {
 	Data []any
 }
 
-func (Vector) NodeName() string {
+func (Vector) ExpressionName() string {
 	return "Vector"
 }
 
@@ -124,10 +124,10 @@ func (v Vector) LiteralValue() any {
 // VectorNode represents the parsed code for constructing an vector.
 // When an VectorNode is evaluated, it turns into an Vector.
 type VectorNode struct {
-	Expressions []Node
+	Expressions []Expression
 }
 
-var _ Node = VectorNode{}
+var _ Expression = VectorNode{}
 
 func (v VectorNode) String() string {
 	exprs := make([]string, len(v.Expressions))
@@ -137,7 +137,7 @@ func (v VectorNode) String() string {
 	return "[" + strings.Join(exprs, " ") + "]"
 }
 
-func (VectorNode) NodeName() string {
+func (VectorNode) ExpressionName() string {
 	return "Vector"
 }
 
@@ -146,7 +146,7 @@ type Object struct {
 	Data map[string]any
 }
 
-func (Object) NodeName() string {
+func (Object) ExpressionName() string {
 	return "Object"
 }
 
@@ -160,7 +160,7 @@ type ObjectNode struct {
 	Data []KeyValuePair
 }
 
-var _ Node = ObjectNode{}
+var _ Expression = ObjectNode{}
 
 func (o ObjectNode) String() string {
 	pairs := make([]string, len(o.Data))
@@ -170,56 +170,56 @@ func (o ObjectNode) String() string {
 	return "{" + strings.Join(pairs, " ") + "}"
 }
 
-func (ObjectNode) NodeName() string {
+func (ObjectNode) ExpressionName() string {
 	return "Object"
 }
 
 type KeyValuePair struct {
-	Key   Node
-	Value Node
+	Key   Expression
+	Value Expression
 }
 
 func (kv KeyValuePair) String() string {
 	return kv.Key.String() + " " + kv.Value.String()
 }
 
-func (KeyValuePair) NodeName() string {
+func (KeyValuePair) ExpressionName() string {
 	return "KeyValuePair"
 }
 
 type Variable string
 
-var _ Node = Variable("")
+var _ Expression = Variable("")
 
 func (v Variable) String() string {
 	return "$" + string(v)
 }
 
-func (Variable) NodeName() string {
+func (Variable) ExpressionName() string {
 	return "Variable"
 }
 
 type Identifier string
 
-var _ Node = Identifier("")
+var _ Expression = Identifier("")
 
 func (i Identifier) String() string {
 	return string(i)
 }
 
-func (Identifier) NodeName() string {
+func (Identifier) ExpressionName() string {
 	return "Identifier"
 }
 
 type String string
 
-var _ Node = String("")
+var _ Expression = String("")
 
 func (s String) String() string {
 	return fmt.Sprintf("%q", string(s))
 }
 
-func (String) NodeName() string {
+func (String) ExpressionName() string {
 	return "String"
 }
 
@@ -231,7 +231,7 @@ type Number struct {
 	Value any
 }
 
-var _ Node = Number{}
+var _ Expression = Number{}
 
 func (n Number) ToInteger() (int64, bool) {
 	switch asserted := n.Value.(type) {
@@ -276,7 +276,7 @@ func (n Number) String() string {
 	return fmt.Sprintf("%d", n.Value)
 }
 
-func (Number) NodeName() string {
+func (Number) ExpressionName() string {
 	return "Number"
 }
 
@@ -286,7 +286,7 @@ func (n Number) LiteralValue() any {
 
 type Bool bool
 
-var _ Node = Bool(false)
+var _ Expression = Bool(false)
 
 func (b Bool) String() string {
 	if b {
@@ -296,7 +296,7 @@ func (b Bool) String() string {
 	}
 }
 
-func (Bool) NodeName() string {
+func (Bool) ExpressionName() string {
 	return "Bool"
 }
 
@@ -306,13 +306,13 @@ func (b Bool) LiteralValue() any {
 
 type Null struct{}
 
-var _ Node = Null{}
+var _ Expression = Null{}
 
 func (Null) String() string {
 	return "null"
 }
 
-func (Null) NodeName() string {
+func (Null) ExpressionName() string {
 	return "Null"
 }
 
@@ -321,11 +321,11 @@ func (Null) LiteralValue() any {
 }
 
 type PathExpression struct {
-	Steps []Node
+	Steps []Expression
 }
 
-func (e *PathExpression) Prepend(step Node) {
-	e.Steps = append([]Node{step}, e.Steps...)
+func (e *PathExpression) Prepend(step Expression) {
+	e.Steps = append([]Expression{step}, e.Steps...)
 }
 
 // IsIdentity returns true if the entire pathExpression was just ".".
@@ -359,7 +359,7 @@ func (e PathExpression) String() string {
 	return result
 }
 
-func (PathExpression) NodeName() string {
+func (PathExpression) ExpressionName() string {
 	return "PathExpression"
 }
 
@@ -385,7 +385,7 @@ func (e EvaluatedPathExpression) String() string {
 	return result
 }
 
-func (EvaluatedPathExpression) NodeName() string {
+func (EvaluatedPathExpression) ExpressionName() string {
 	return "EvaluatedPathExpression"
 }
 
@@ -405,7 +405,7 @@ func (a EvaluatedPathStep) String() string {
 	}
 }
 
-func (a EvaluatedPathStep) NodeName() string {
+func (a EvaluatedPathStep) ExpressionName() string {
 	name := ""
 
 	switch {

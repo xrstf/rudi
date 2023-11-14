@@ -11,7 +11,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any, error) {
+func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, error) {
 	innerCtx := ctx
 	result := ast.Object{
 		Data: map[string]any{},
@@ -30,13 +30,13 @@ func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any,
 			key = ast.String(string(asserted))
 		// do not even evaluate vectors and objects, as they can never be valid object keys
 		case ast.ObjectNode:
-			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.NodeName())
+			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.ExpressionName())
 		case ast.VectorNode:
-			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.NodeName())
+			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.ExpressionName())
 		default:
 			// Just like with arrays, use a growing context during the object evaluation,
 			// in case someone wants to define a variable here... for some reason.
-			innerCtx, key, err = evalNode(innerCtx, pair.Key)
+			innerCtx, key, err = EvalExpression(innerCtx, pair.Key)
 			if err != nil {
 				return ctx, nil, fmt.Errorf("failed to evaluate object key %s: %w", pair.Key.String(), err)
 			}
@@ -47,7 +47,7 @@ func evalObjectNode(ctx types.Context, obj *ast.ObjectNode) (types.Context, any,
 			return ctx, nil, fmt.Errorf("object key must be stringish, but got %T", key)
 		}
 
-		innerCtx, value, err = evalNode(innerCtx, pair.Value)
+		innerCtx, value, err = EvalExpression(innerCtx, pair.Value)
 		if err != nil {
 			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}

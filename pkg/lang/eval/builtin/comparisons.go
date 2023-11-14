@@ -8,21 +8,22 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func eqFunction(ctx types.Context, args []Argument) (any, error) {
+func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if len(args) != 2 {
 		return nil, errors.New("(eq LEFT RIGHT)")
 	}
 
-	_, leftData, err := args[0].Eval(ctx)
+	_, leftData, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	_, rightData, err := args[1].Eval(ctx)
+	_, rightData, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}

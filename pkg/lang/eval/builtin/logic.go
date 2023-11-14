@@ -7,11 +7,12 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func andFunction(ctx types.Context, args []Argument) (any, error) {
+func andFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 1 {
 		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
 	}
@@ -34,7 +35,7 @@ func andFunction(ctx types.Context, args []Argument) (any, error) {
 	return ast.Bool(result), nil
 }
 
-func orFunction(ctx types.Context, args []Argument) (any, error) {
+func orFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 1 {
 		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
 	}
@@ -57,12 +58,12 @@ func orFunction(ctx types.Context, args []Argument) (any, error) {
 	return ast.Bool(result), nil
 }
 
-func notFunction(ctx types.Context, args []Argument) (any, error) {
+func notFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 1 {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	_, evaluated, err := args[0].Eval(ctx)
+	_, evaluated, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, err
 	}

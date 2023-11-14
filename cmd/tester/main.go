@@ -15,6 +15,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 	"go.xrstf.de/otto/pkg/lang/debug"
 	"go.xrstf.de/otto/pkg/lang/eval"
+	"go.xrstf.de/otto/pkg/lang/eval/builtin"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 	"go.xrstf.de/otto/pkg/lang/parser"
 )
@@ -73,9 +74,9 @@ func main() {
 	vars := eval.NewVariables().
 		Set("global", types.Must(types.WrapNative(document)))
 
-	progContext := eval.NewContext(doc, vars)
+	progContext := eval.NewContext(doc, builtin.Functions, vars)
 
-	fmt.Println(eval.Run(progContext, &program))
+	fmt.Println(eval.Run(progContext, program))
 	fmt.Println("-----------------------------------------------------")
 }
 

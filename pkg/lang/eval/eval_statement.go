@@ -10,8 +10,8 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalStatement(ctx types.Context, stmt *ast.Statement) (types.Context, any, error) {
-	newContext, result, err := evalTuple(ctx, &stmt.Tuple)
+func EvalStatement(ctx types.Context, stmt ast.Statement) (types.Context, any, error) {
+	newContext, result, err := EvalTuple(ctx, stmt.Tuple)
 	if err != nil {
 		return ctx, nil, err
 	}

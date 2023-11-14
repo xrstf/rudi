@@ -1,6 +1,6 @@
 .PHONY: generate
 generate:
-	pigeon grammar/otto.peg > pkg/lang/parser/generated.go
+	pigeon pkg/lang/grammar/otto.peg > pkg/lang/parser/generated.go
 
 .PHONY: clean
 clean:
