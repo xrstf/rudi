@@ -9,7 +9,6 @@ import (
 
 	"go.xrstf.de/otto/pkg/lang/ast"
 	"go.xrstf.de/otto/pkg/lang/eval"
-	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
@@ -24,9 +23,9 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	glueString, err := coalescing.ToString(glue)
-	if err != nil {
-		return nil, fmt.Errorf("glue is not stringish: %w", err)
+	glueString, ok := glue.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("glue is not string, but %T", glue)
 	}
 
 	values, err := evalArgs(ctx, args, 1)
@@ -35,28 +34,29 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	parts := []string{}
-	for i, list := range values {
-		vector, ok := list.(ast.Vector)
+	for i, value := range values {
+		vector, ok := value.(ast.Vector)
 		if !ok {
-			part, err := coalescing.ToString(list)
-			if err != nil {
-				return nil, fmt.Errorf("argument #%d is neither vector nor stringish: %w", i+1, err)
+			part, ok := value.(ast.String)
+			if !ok {
+				return nil, fmt.Errorf("argument #%d is neither vector nor string, but %T", i+1, value)
 			}
 
-			parts = append(parts, part)
+			parts = append(parts, string(part))
 			continue
 		}
 
 		for j, item := range vector.Data {
-			part, err := coalescing.ToString(item)
-			if err != nil {
-				return nil, fmt.Errorf("argument #%d.%d is not stringish: %w", i+1, j, err)
+			part, ok := item.(ast.String)
+			if !ok {
+				return nil, fmt.Errorf("argument #%d.%d is not a string, but %T", i+1, j, item)
 			}
-			parts = append(parts, part)
+
+			parts = append(parts, string(part))
 		}
 	}
 
-	return ast.String(strings.Join(parts, glueString)), nil
+	return ast.String(strings.Join(parts, string(glueString))), nil
 }
 
 // (split SEP:String SOURCE:String)
@@ -70,17 +70,17 @@ func splitFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	sep, err := coalescing.ToString(values[0])
-	if err != nil {
-		return nil, fmt.Errorf("separator is not stringish: %w", err)
+	sep, ok := values[0].(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("separator is not a string, but %T", values[0])
 	}
 
-	source, err := coalescing.ToString(values[1])
-	if err != nil {
-		return nil, fmt.Errorf("source is not stringish: %w", err)
+	source, ok := values[1].(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("source is not a string, but %T", values[1])
 	}
 
-	parts := strings.Split(source, sep)
+	parts := strings.Split(string(source), string(sep))
 	result := make([]any, len(parts))
 	for i, part := range parts {
 		result[i] = ast.String(part)

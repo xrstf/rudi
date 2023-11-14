@@ -67,6 +67,14 @@ func TestConcatFunction(t *testing.T) {
 			invalid: true,
 		},
 		{
+			expr:    `(concat "-" "foo" 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(concat true "foo" "bar")`,
+			invalid: true,
+		},
+		{
 			expr:     `(concat "g" "foo")`,
 			expected: "foo",
 		},
@@ -85,14 +93,6 @@ func TestConcatFunction(t *testing.T) {
 		{
 			expr:     `(concat "-" ["foo" "bar"] "test" ["suffix"])`,
 			expected: "foo-bar-test-suffix",
-		},
-		{
-			expr:     `(concat "-" "foo" 1)`,
-			expected: "foo-1",
-		},
-		{
-			expr:     `(concat true "foo" "bar")`,
-			expected: "footruebar",
 		},
 	}
 

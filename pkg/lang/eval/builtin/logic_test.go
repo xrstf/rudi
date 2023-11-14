@@ -41,6 +41,42 @@ func TestAndFunction(t *testing.T) {
 			invalid: true,
 		},
 		{
+			expr:    `(and 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(and 1.1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(and null)`,
+			invalid: true,
+		},
+		{
+			expr:    `(and "")`,
+			invalid: true,
+		},
+		{
+			expr:    `(and "nonempty")`,
+			invalid: true,
+		},
+		{
+			expr:    `(and {})`,
+			invalid: true,
+		},
+		{
+			expr:    `(and {foo "bar"})`,
+			invalid: true,
+		},
+		{
+			expr:    `(and [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(and ["bar"])`,
+			invalid: true,
+		},
+		{
 			expr:     `(and true)`,
 			expected: true,
 		},
@@ -57,27 +93,7 @@ func TestAndFunction(t *testing.T) {
 			expected: true,
 		},
 		{
-			expr:     `(and true 1 "nonempty" 3.1)`,
-			expected: true,
-		},
-		{
-			expr:     `(and 0)`,
-			expected: false,
-		},
-		{
-			expr:     `(and 0.0)`,
-			expected: false,
-		},
-		{
-			expr:     `(and "")`,
-			expected: false,
-		},
-		{
-			expr:     `(and null)`,
-			expected: false,
-		},
-		{
-			expr:     `(and (or true false) true)`,
+			expr:     `(and (eq 1 1) true)`,
 			expected: true,
 		},
 	}
@@ -91,6 +107,42 @@ func TestOrFunction(t *testing.T) {
 	testcases := []logicTestcase{
 		{
 			expr:    `(or)`,
+			invalid: true,
+		},
+		{
+			expr:    `(or 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(or 1.1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(or null)`,
+			invalid: true,
+		},
+		{
+			expr:    `(or "")`,
+			invalid: true,
+		},
+		{
+			expr:    `(or "nonempty")`,
+			invalid: true,
+		},
+		{
+			expr:    `(or {})`,
+			invalid: true,
+		},
+		{
+			expr:    `(or {foo "bar"})`,
+			invalid: true,
+		},
+		{
+			expr:    `(or [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(or ["bar"])`,
 			invalid: true,
 		},
 		{
@@ -110,35 +162,7 @@ func TestOrFunction(t *testing.T) {
 			expected: true,
 		},
 		{
-			expr:     `(or 1)`,
-			expected: true,
-		},
-		{
-			expr:     `(or "nonempty")`,
-			expected: true,
-		},
-		{
-			expr:     `(or 3.1)`,
-			expected: true,
-		},
-		{
-			expr:     `(or 0)`,
-			expected: false,
-		},
-		{
-			expr:     `(or 0.0)`,
-			expected: false,
-		},
-		{
-			expr:     `(or "")`,
-			expected: false,
-		},
-		{
-			expr:     `(or null)`,
-			expected: false,
-		},
-		{
-			expr:     `(or (or true false) true)`,
+			expr:     `(or (eq 1 1) true)`,
 			expected: true,
 		},
 	}
@@ -152,6 +176,46 @@ func TestNotFunction(t *testing.T) {
 	testcases := []logicTestcase{
 		{
 			expr:    `(not)`,
+			invalid: true,
+		},
+		{
+			expr:    `(not true true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(not 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(not 1.1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(not null)`,
+			invalid: true,
+		},
+		{
+			expr:    `(not "")`,
+			invalid: true,
+		},
+		{
+			expr:    `(not "nonempty")`,
+			invalid: true,
+		},
+		{
+			expr:    `(not {})`,
+			invalid: true,
+		},
+		{
+			expr:    `(not {foo "bar"})`,
+			invalid: true,
+		},
+		{
+			expr:    `(not [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(not ["bar"])`,
 			invalid: true,
 		},
 		{

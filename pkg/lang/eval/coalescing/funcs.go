@@ -6,6 +6,7 @@ package coalescing
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
@@ -23,13 +24,17 @@ func ToBool(val any) (bool, error) {
 	case float64:
 		return v != 0, nil
 	case string:
-		return len(v) > 0, nil
-	case nil:
-		return false, nil
+		if lower := strings.ToLower(v); lower == "" || lower == "false" || lower == "0" {
+			return false, nil
+		}
+
+		return true, nil
 	case []any:
 		return len(v) > 0, nil
 	case map[string]any:
 		return len(v) > 0, nil
+	case nil:
+		return false, nil
 	default:
 		lit, ok := val.(literal)
 		if !ok {
@@ -52,6 +57,12 @@ func ToFloat64(val any) (float64, error) {
 		return float64(v), nil
 	case float64:
 		return v, nil
+	case string:
+		parsed, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return 0, fmt.Errorf("cannot parse %q as float: %w", v, err)
+		}
+		return parsed, nil
 	case nil:
 		return 0, nil
 	default:
@@ -61,24 +72,6 @@ func ToFloat64(val any) (float64, error) {
 		}
 
 		return ToFloat64(lit.LiteralValue())
-	}
-}
-
-func Int64Compatible(val any) bool {
-	switch val.(type) {
-	case bool:
-		return true
-	case int64:
-		return true
-	case nil:
-		return true
-	default:
-		lit, ok := val.(literal)
-		if !ok {
-			return false
-		}
-
-		return Int64Compatible(lit.LiteralValue())
 	}
 }
 
@@ -92,6 +85,12 @@ func ToInt64(val any) (int64, error) {
 		}
 	case int64:
 		return v, nil
+	case string:
+		parsed, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("cannot parse %q as int: %w", v, err)
+		}
+		return parsed, nil
 	case nil:
 		return 0, nil
 	default:
@@ -111,7 +110,7 @@ func ToString(val any) (string, error) {
 	case int64:
 		return strconv.FormatInt(v, 10), nil
 	case float64:
-		return fmt.Sprintf("%f", v), nil
+		return formatFloat(v), nil
 	case nil:
 		return "null", nil
 	case string:
@@ -126,6 +125,15 @@ func ToString(val any) (string, error) {
 	}
 }
 
+func formatFloat(f float64) string {
+	formatted := fmt.Sprintf("%f", f)
+	for strings.HasSuffix(formatted, "0") {
+		formatted = strings.TrimSuffix(formatted, "0")
+	}
+
+	return strings.TrimSuffix(formatted, ".")
+}
+
 func typeName(v any) string {
 	switch asserted := v.(type) {
 	case ast.Expression:
@@ -136,5 +144,31 @@ func typeName(v any) string {
 		return "vector"
 	default:
 		return fmt.Sprintf("%T", v)
+	}
+}
+
+func IsEmpty(val any) (bool, error) {
+	switch v := val.(type) {
+	case bool:
+		return v == false, nil
+	case int64:
+		return v == 0, nil
+	case float64:
+		return v == 0, nil
+	case nil:
+		return true, nil
+	case string:
+		return len(v) == 0, nil
+	case []any:
+		return len(v) == 0, nil
+	case map[string]any:
+		return len(v) == 0, nil
+	default:
+		lit, ok := val.(literal)
+		if !ok {
+			return false, fmt.Errorf("cannot termine emptiness of %s", typeName(val))
+		}
+
+		return IsEmpty(lit.LiteralValue())
 	}
 }

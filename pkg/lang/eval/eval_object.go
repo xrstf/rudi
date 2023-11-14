@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
@@ -42,9 +41,9 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 			}
 		}
 
-		keyString, err := coalescing.ToString(key)
-		if err != nil {
-			return ctx, nil, fmt.Errorf("object key must be stringish, but got %T", key)
+		keyString, ok := key.(ast.String)
+		if !ok {
+			return ctx, nil, fmt.Errorf("object key must be string, but got %T", key)
 		}
 
 		innerCtx, value, err = EvalExpression(innerCtx, pair.Value)
@@ -52,7 +51,7 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}
 
-		result.Data[keyString] = value
+		result.Data[string(keyString)] = value
 	}
 
 	return ctx, result, nil

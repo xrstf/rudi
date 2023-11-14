@@ -9,12 +9,11 @@ import (
 
 	"go.xrstf.de/otto/pkg/lang/ast"
 	"go.xrstf.de/otto/pkg/lang/eval"
-	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func evalNumericalExpressions(ctx types.Context, args []ast.Expression) (values []any, int64only bool, err error) {
-	values = make([]any, len(args))
+func evalNumericalExpressions(ctx types.Context, args []ast.Expression) (values []ast.Number, int64only bool, err error) {
+	values = make([]ast.Number, len(args))
 	int64only = true
 
 	for i, arg := range args {
@@ -23,9 +22,14 @@ func evalNumericalExpressions(ctx types.Context, args []ast.Expression) (values 
 			return nil, false, fmt.Errorf("argument #%d: %w", i, err)
 		}
 
-		values[i] = evaluated
+		num, ok := evaluated.(ast.Number)
+		if !ok {
+			return nil, false, fmt.Errorf("argument #%d: not a number, but %T", i, evaluated)
+		}
 
-		if !coalescing.Int64Compatible(evaluated) {
+		values[i] = num
+
+		if _, isInt := num.ToInteger(); !isInt {
 			int64only = false
 		}
 	}
@@ -45,8 +49,8 @@ func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	if int64sOnly {
 		sum := int64(0)
-		for _, arg := range values {
-			val, _ := coalescing.ToInt64(arg)
+		for _, num := range values {
+			val, _ := num.ToInteger()
 			sum += val
 		}
 
@@ -54,12 +58,8 @@ func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	sum := float64(0)
-	for i, arg := range values {
-		val, err := coalescing.ToFloat64(arg)
-		if err != nil {
-			return nil, fmt.Errorf("arg %d is not numeric: %w", i, err)
-		}
-		sum += val
+	for _, num := range values {
+		sum += num.ToFloat()
 	}
 
 	return ast.Number{Value: sum}, nil
@@ -76,27 +76,18 @@ func minusFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	if int64sOnly {
-		difference, _ := coalescing.ToInt64(values[0])
-
-		for _, arg := range values[1:] {
-			val, _ := coalescing.ToInt64(arg)
+		difference, _ := values[0].ToInteger()
+		for _, num := range values[1:] {
+			val, _ := num.ToInteger()
 			difference -= val
 		}
 
 		return ast.Number{Value: difference}, nil
 	}
 
-	difference, err := coalescing.ToFloat64(values[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0 is not numeric: %w", err)
-	}
-
-	for i, arg := range values[1:] {
-		val, err := coalescing.ToFloat64(arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d is not numeric: %w", i+1, err)
-		}
-		difference -= val
+	difference := values[0].ToFloat()
+	for _, num := range values[1:] {
+		difference -= num.ToFloat()
 	}
 
 	return ast.Number{Value: difference}, nil
@@ -114,9 +105,8 @@ func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	if int64sOnly {
 		product := int64(1)
-
-		for _, arg := range values {
-			factor, _ := coalescing.ToInt64(arg)
+		for _, num := range values {
+			factor, _ := num.ToInteger()
 			product *= factor
 		}
 
@@ -124,12 +114,8 @@ func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	product := float64(1)
-	for i, arg := range values {
-		factor, err := coalescing.ToFloat64(arg)
-		if err != nil {
-			return nil, fmt.Errorf("arg %d is not numeric: %w", i, err)
-		}
-		product *= factor
+	for _, num := range values {
+		product *= num.ToFloat()
 	}
 
 	return ast.Number{Value: product}, nil
@@ -145,16 +131,10 @@ func divideFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	result, err := coalescing.ToFloat64(values[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0 is not numeric: %w", err)
-	}
+	result := values[0].ToFloat()
 
-	for i, arg := range values[1:] {
-		divisor, err := coalescing.ToFloat64(arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d is not numeric: %w", i+1, err)
-		}
+	for _, num := range values[1:] {
+		divisor := num.ToFloat()
 		if divisor == 0 {
 			return nil, errors.New("division by zero")
 		}

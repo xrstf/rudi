@@ -8,7 +8,6 @@ import (
 
 	"go.xrstf.de/otto/pkg/lang/ast"
 	"go.xrstf.de/otto/pkg/lang/eval"
-	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
@@ -24,12 +23,12 @@ func andFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	result := true
 	for i, arg := range evaluated {
-		part, err := coalescing.ToBool(arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d not boolish: %w", i, err)
+		part, ok := arg.(ast.Bool)
+		if !ok {
+			return nil, fmt.Errorf("argument #%d not bool, but %T", i, arg)
 		}
 
-		result = result && part
+		result = result && bool(part)
 	}
 
 	return ast.Bool(result), nil
@@ -47,12 +46,12 @@ func orFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	result := false
 	for i, arg := range evaluated {
-		part, err := coalescing.ToBool(arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d not boolish: %w", i, err)
+		part, ok := arg.(ast.Bool)
+		if !ok {
+			return nil, fmt.Errorf("argument #%d not bool, but %T", i, arg)
 		}
 
-		result = result || part
+		result = result || bool(part)
 	}
 
 	return ast.Bool(result), nil
@@ -68,9 +67,9 @@ func notFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	arg, err := coalescing.ToBool(evaluated)
-	if err != nil {
-		return nil, fmt.Errorf("argument is not boolish: %w", err)
+	arg, ok := evaluated.(ast.Bool)
+	if !ok {
+		return nil, fmt.Errorf("argument is not bool, but %T", evaluated)
 	}
 
 	return ast.Bool(!arg), nil

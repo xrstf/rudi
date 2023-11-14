@@ -98,11 +98,11 @@ func TestDoFunction(t *testing.T) {
 
 		// test that the runtime context doesn't leak
 		{
-			expr:     `(set $var "outer") (do (set $var "inner")) (concat $var [1 2])`,
+			expr:     `(set $var "outer") (do (set $var "inner")) (concat $var ["1" "2"])`,
 			expected: "1outer2",
 		},
 		{
-			expr:    `(do (set $var "inner")) (concat $var [1 2])`,
+			expr:    `(do (set $var "inner")) (concat $var ["1" "2"])`,
 			invalid: true,
 		},
 	}

@@ -42,6 +42,7 @@ var Functions = types.Functions{
 	"default": stateless(defaultFunction),
 	"try":     stateless(tryFunction),
 	"set":     setFunction,
+	"empty?":  stateless(isEmptyFunction),
 
 	// math
 	"+": stateless(sumFunction),

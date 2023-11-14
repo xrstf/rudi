@@ -45,6 +45,10 @@ func TestSumFunction(t *testing.T) {
 			invalid: true,
 		},
 		{
+			expr:    `(+ 1 "1")`,
+			invalid: true,
+		},
+		{
 			expr:    `(+ 1 "foo")`,
 			invalid: true,
 		},

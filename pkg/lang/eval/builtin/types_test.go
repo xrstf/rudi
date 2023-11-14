@@ -58,7 +58,11 @@ func TestToStringFunction(t *testing.T) {
 		},
 		{
 			expr:     `(to-string 1.5)`,
-			expected: "1.500000",
+			expected: "1.5",
+		},
+		{
+			expr:     `(to-string 1e3)`,
+			expected: "1000",
 		},
 		{
 			expr:     `(to-string true)`,

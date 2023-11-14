@@ -26,9 +26,9 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("condition: %w", err)
 	}
 
-	success, err := coalescing.ToBool(condition)
-	if err != nil {
-		return nil, fmt.Errorf("condition is not boolish: %w", err)
+	success, ok := condition.(ast.Bool)
+	if !ok {
+		return nil, fmt.Errorf("condition is not bool, but %T", err)
 	}
 
 	if success {
@@ -105,12 +105,12 @@ func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	nonEmpty, err := coalescing.ToBool(result)
+	isEmpty, err := coalescing.IsEmpty(result)
 	if err != nil {
-		return nil, fmt.Errorf("argument #0 is not boolish: %w", err)
+		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	if nonEmpty {
+	if !isEmpty {
 		return result, nil
 	}
 
@@ -236,4 +236,35 @@ func setValueAtPath(ctx types.Context, document any, steps []ast.Expression, new
 
 	// 	step = value
 	// }
+}
+
+// (empty? VALUE:any)
+func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 1 {
+		return nil, fmt.Errorf("expected 1 or 2 arguments, got %d", size)
+	}
+
+	_, result, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	switch asserted := result.(type) {
+	case ast.Bool:
+		return bool(asserted) == false, nil
+	case ast.Number:
+		return asserted.ToFloat() == 0, nil
+	case ast.String:
+		return len(string(asserted)) == 0, nil
+	case ast.Null:
+		return true, nil
+	case ast.Vector:
+		return len(asserted.Data) == 0, nil
+	case ast.Object:
+		return len(asserted.Data) == 0, nil
+	case ast.Identifier:
+		return nil, fmt.Errorf("unexpected identifier %s", asserted)
+	default:
+		return nil, fmt.Errorf("unexpected argument %v (%T)", result, result)
+	}
 }
