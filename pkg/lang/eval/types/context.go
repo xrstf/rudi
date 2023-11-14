@@ -61,6 +61,7 @@ func (c Context) GetFunction(name string) (Function, bool) {
 func (c Context) WithVariable(name string, val any) Context {
 	return Context{
 		document:  c.document,
+		funcs:     c.funcs,
 		variables: c.variables.With(name, val),
 	}
 }

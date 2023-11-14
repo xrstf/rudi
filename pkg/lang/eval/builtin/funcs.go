@@ -40,6 +40,7 @@ var Functions = types.Functions{
 	"do":      stateless(doFunction),
 	"has":     stateless(hasFunction),
 	"default": stateless(defaultFunction),
+	"try":     stateless(tryFunction),
 	"set":     setFunction,
 
 	// math

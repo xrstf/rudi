@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/equality"
 	"go.xrstf.de/otto/pkg/lang/eval"
-	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
@@ -28,15 +28,10 @@ func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
-	switch leftAsserted := leftData.(type) {
-	case ast.String:
-		rightAsserted, err := coalescing.ToString(rightData)
-		if err != nil {
-			return nil, fmt.Errorf("cannot compare %T with %T", leftData, rightData)
-		}
-
-		return ast.Bool(string(leftAsserted) == rightAsserted), nil
+	equal, err := equality.StrictEqual(leftData, rightData)
+	if err != nil {
+		return nil, fmt.Errorf("cannot compare %T with %T: %w", leftData, rightData, err)
 	}
 
-	return ast.Bool(false), fmt.Errorf("do not know how to compare %T with anything", leftData)
+	return ast.Bool(equal), nil
 }

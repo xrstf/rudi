@@ -26,6 +26,10 @@ func ToBool(val any) (bool, error) {
 		return len(v) > 0, nil
 	case nil:
 		return false, nil
+	case []any:
+		return len(v) > 0, nil
+	case map[string]any:
+		return len(v) > 0, nil
 	default:
 		lit, ok := val.(literal)
 		if !ok {

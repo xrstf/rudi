@@ -102,6 +102,38 @@ func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	_, result, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	nonEmpty, err := coalescing.ToBool(result)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0 is not boolish: %w", err)
+	}
+
+	if nonEmpty {
+		return result, nil
+	}
+
+	_, result, err = eval.EvalExpression(ctx, args[1])
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
+	return result, nil
+}
+
+// (try TEST:Expression FALLBACK:any?)
+func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size < 1 || size > 2 {
+		return nil, fmt.Errorf("expected 1 or 2 arguments, got %d", size)
+	}
+
+	_, result, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		if len(args) == 1 {
+			return nil, nil
+		}
+
 		_, result, err = eval.EvalExpression(ctx, args[1])
 		if err != nil {
 			return nil, fmt.Errorf("argument #1: %w", err)
