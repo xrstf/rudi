@@ -23,15 +23,15 @@ func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	if str, ok := list.(ast.String); ok {
-		return ast.Number{Value: len(str)}, nil
+		return ast.Number{Value: int64(len(str))}, nil
 	}
 
 	if vector, ok := list.(ast.Vector); ok {
-		return ast.Number{Value: len(vector.Data)}, nil
+		return ast.Number{Value: int64(len(vector.Data))}, nil
 	}
 
 	if obj, ok := list.(ast.Object); ok {
-		return ast.Number{Value: len(obj.Data)}, nil
+		return ast.Number{Value: int64(len(obj.Data))}, nil
 	}
 
 	return nil, errors.New("argument is neither a string, vector nor object")

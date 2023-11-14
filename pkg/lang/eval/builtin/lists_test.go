@@ -9,7 +9,7 @@ import (
 
 type listsTestcase struct {
 	expr     string
-	expected any
+	expected int64
 	invalid  bool
 }
 
