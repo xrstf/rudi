@@ -71,7 +71,7 @@ func doFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return result, nil
 }
 
-// (has PATH:PathExpression)
+// (has? PATH:PathExpression)
 func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 1 {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)

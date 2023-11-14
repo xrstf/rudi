@@ -38,7 +38,7 @@ var Functions = types.Functions{
 	// core
 	"if":      stateless(ifFunction),
 	"do":      stateless(doFunction),
-	"has":     stateless(hasFunction),
+	"has?":    stateless(hasFunction),
 	"default": stateless(defaultFunction),
 	"try":     stateless(tryFunction),
 	"set":     setFunction,
