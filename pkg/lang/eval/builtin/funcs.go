@@ -50,11 +50,18 @@ var Functions = types.Functions{
 	"/": stateless(divideFunction),
 
 	// strings
-	"concat": stateless(concatFunction),
-	"split":  stateless(splitFunction),
+	// "len": stateless(lenFunction) is defined for lists, but works for strings as well
+	"concat":      stateless(concatFunction),
+	"split":       stateless(splitFunction),
+	"trim-prefix": stateless(trimPrefixFunction),
+	"trim-suffix": stateless(trimSuffixFunction),
+	"to-lower":    stateless(toLowerFunction),
+	"to-upper":    stateless(toUpperFunction),
 
 	// lists
-	"len": stateless(lenFunction),
+	"len":     stateless(lenFunction),
+	"append":  stateless(appendFunction),
+	"prepend": stateless(prependFunction),
 
 	// logic
 	"and": stateless(andFunction),
@@ -65,8 +72,18 @@ var Functions = types.Functions{
 	"eq": stateless(eqFunction),
 
 	// types
+	"type-of":   stateless(typeOfFunction),
 	"to-string": stateless(toStringFunction),
 	"to-int":    stateless(toIntFunction),
 	"to-float":  stateless(toFloatFunction),
 	"to-bool":   stateless(toBoolFunction),
+
+	// hashes
+	"sha1":   stateless(sha1Function),
+	"sha256": stateless(sha256Function),
+	"sha512": stateless(sha512Function),
+
+	// encoding
+	"to-base64":   stateless(toBase64Function),
+	"from-base64": stateless(fromBase64Function),
 }

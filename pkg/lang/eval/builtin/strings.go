@@ -88,3 +88,107 @@ func splitFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	return ast.Vector{Data: result}, nil
 }
+
+// (trim-suffix SUFFIX:String SOURCE:String)
+func trimSuffixFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 2 {
+		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
+	}
+
+	_, suffix, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	suffixStr, ok := suffix.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a string, but %T", suffix)
+	}
+
+	_, source, err := eval.EvalExpression(ctx, args[1])
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
+	sourceStr, ok := source.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument #1 is not a string, but %T", source)
+	}
+
+	result := strings.TrimSuffix(string(sourceStr), string(suffixStr))
+
+	return ast.String(result), nil
+}
+
+// (trim-prefix PREFIX:String SOURCE:String)
+func trimPrefixFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 2 {
+		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
+	}
+
+	_, prefix, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	prefixStr, ok := prefix.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a string, but %T", prefix)
+	}
+
+	_, source, err := eval.EvalExpression(ctx, args[1])
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
+	sourceStr, ok := source.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument #1 is not a string, but %T", source)
+	}
+
+	result := strings.TrimPrefix(string(sourceStr), string(prefixStr))
+
+	return ast.String(result), nil
+}
+
+// (to-lower SOURCE:String)
+func toLowerFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 1 {
+		return nil, fmt.Errorf("expected 1 argument, got %d", size)
+	}
+
+	_, prefix, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	str, ok := prefix.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument is not a string, but %T", prefix)
+	}
+
+	result := strings.ToLower(string(str))
+
+	return ast.String(result), nil
+}
+
+// (to-upper SOURCE:String)
+func toUpperFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 1 {
+		return nil, fmt.Errorf("expected 1 argument, got %d", size)
+	}
+
+	_, prefix, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	str, ok := prefix.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument is not a string, but %T", prefix)
+	}
+
+	result := strings.ToUpper(string(str))
+
+	return ast.String(result), nil
+}
