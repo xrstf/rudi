@@ -11,6 +11,10 @@ import (
 )
 
 func dumpVector(vec *ast.VectorNode, out io.Writer, depth int) error {
+	if depth == doNotIndent {
+		return dumpVectorSingleline(vec, out, depth)
+	}
+
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, expr := range vec.Expressions {

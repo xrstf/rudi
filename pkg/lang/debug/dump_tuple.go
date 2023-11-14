@@ -11,6 +11,10 @@ import (
 )
 
 func dumpTuple(tup *ast.Tuple, out io.Writer, depth int) error {
+	if depth == doNotIndent {
+		return dumpTupleSingleline(tup, out, depth)
+	}
+
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, expr := range tup.Expressions {

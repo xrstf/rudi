@@ -10,11 +10,5 @@ import (
 )
 
 func dumpStatement(stmt *ast.Statement, out io.Writer, depth int) error {
-	if err := dumpTuple(&stmt.Tuple, out, depth); err != nil {
-		return err
-	}
-
-	out.Write([]byte("\n"))
-
-	return nil
+	return dumpTuple(&stmt.Tuple, out, depth)
 }

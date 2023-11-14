@@ -11,8 +11,14 @@ import (
 
 var Indent = "  "
 
+const doNotIndent = -1
+
 func Dump(p *ast.Program, out io.Writer) error {
 	return dumpProgram(p, out, 0)
+}
+
+func DumpSingleline(p *ast.Program, out io.Writer) error {
+	return dumpProgram(p, out, -1)
 }
 
 func writeString(out io.Writer, str string) error {

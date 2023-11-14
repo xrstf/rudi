@@ -11,6 +11,10 @@ build:
 	mkdir -p _build
 	go build -v -o _build/ ./cmd/tester
 
+.PHONY: run-tests
+run-tests:
+	go test -v ./...
+
 .PHONY: test
 test:
 	_build/tester test.otto

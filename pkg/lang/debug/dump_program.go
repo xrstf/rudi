@@ -15,6 +15,15 @@ func dumpProgram(p *ast.Program, out io.Writer, depth int) error {
 		if err := dumpStatement(&stmt, out, depth); err != nil {
 			return fmt.Errorf("failed to dump statement %s: %w", stmt.String(), err)
 		}
+
+		separator := "\n"
+		if depth == doNotIndent {
+			separator = " "
+		}
+
+		if err := writeString(out, separator); err != nil {
+			return err
+		}
 	}
 
 	return nil
