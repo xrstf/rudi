@@ -10,6 +10,11 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
+// evaluated vectors are technically considered expressions
+func EvalVector(ctx types.Context, vec ast.Vector) (types.Context, any, error) {
+	return ctx, vec, nil
+}
+
 func EvalVectorNode(ctx types.Context, vec ast.VectorNode) (types.Context, any, error) {
 	innerCtx := ctx
 	result := ast.Vector{

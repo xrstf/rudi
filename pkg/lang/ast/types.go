@@ -113,6 +113,16 @@ type Vector struct {
 	Data []any
 }
 
+var _ Expression = Vector{}
+
+func (v Vector) String() string {
+	exprs := make([]string, len(v.Data))
+	for i, expr := range v.Data {
+		exprs[i] = fmt.Sprintf("%s", expr)
+	}
+	return "[" + strings.Join(exprs, " ") + "]"
+}
+
 func (Vector) ExpressionName() string {
 	return "Vector"
 }
@@ -144,6 +154,16 @@ func (VectorNode) ExpressionName() string {
 // Object is an evaluated object.
 type Object struct {
 	Data map[string]any
+}
+
+var _ Expression = Object{}
+
+func (o Object) String() string {
+	exprs := make([]string, 0)
+	for key, value := range o.Data {
+		exprs = append(exprs, fmt.Sprintf("%q: %v", key, value))
+	}
+	return "{" + strings.Join(exprs, ", ") + "}"
 }
 
 func (Object) ExpressionName() string {

@@ -269,3 +269,76 @@ func TestToBoolFunction(t *testing.T) {
 		t.Run(testcase.expr, testcase.Test)
 	}
 }
+
+func TestTypeOfFunction(t *testing.T) {
+	testcases := []typesTestcase{
+		{
+			expr:    `(type-of)`,
+			invalid: true,
+		},
+		{
+			expr:    `(type-of "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:     `(type-of 1)`,
+			expected: "number",
+		},
+		{
+			expr:     `(type-of 0)`,
+			expected: "number",
+		},
+		{
+			expr:     `(type-of (+ 1 3))`,
+			expected: "number",
+		},
+		{
+			expr:     `(type-of 1.5)`,
+			expected: "number",
+		},
+		{
+			expr:     `(type-of 0.0)`,
+			expected: "number",
+		},
+		{
+			expr:     `(type-of "3")`,
+			expected: "string",
+		},
+		{
+			expr:     `(type-of true)`,
+			expected: "bool",
+		},
+		{
+			expr:     `(type-of false)`,
+			expected: "bool",
+		},
+		{
+			expr:     `(type-of null)`,
+			expected: "null",
+		},
+		{
+			expr:     `(type-of [])`,
+			expected: "vector",
+		},
+		{
+			expr:     `(type-of (append [] "test"))`,
+			expected: "vector",
+		},
+		{
+			expr:     `(type-of [0])`,
+			expected: "vector",
+		},
+		{
+			expr:     `(type-of {})`,
+			expected: "object",
+		},
+		{
+			expr:     `(type-of {foo "bar"})`,
+			expected: "object",
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
