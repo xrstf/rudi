@@ -61,6 +61,23 @@ var Functions = types.Functions{
 	"eq?":   stateless(eqFunction),
 	"like?": stateless(likeFunction),
 
+	"lt?": stateless(makeNumberComparatorFunc(
+		func(a, b int64) (any, error) { return a < b, nil },
+		func(a, b float64) (any, error) { return a < b, nil },
+	)),
+	"lte?": stateless(makeNumberComparatorFunc(
+		func(a, b int64) (any, error) { return a <= b, nil },
+		func(a, b float64) (any, error) { return a <= b, nil },
+	)),
+	"gt?": stateless(makeNumberComparatorFunc(
+		func(a, b int64) (any, error) { return a > b, nil },
+		func(a, b float64) (any, error) { return a > b, nil },
+	)),
+	"gte?": stateless(makeNumberComparatorFunc(
+		func(a, b int64) (any, error) { return a >= b, nil },
+		func(a, b float64) (any, error) { return a >= b, nil },
+	)),
+
 	// types
 	"type-of":   stateless(typeOfFunction),
 	"to-string": stateless(toStringFunction),

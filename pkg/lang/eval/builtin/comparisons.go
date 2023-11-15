@@ -4,6 +4,7 @@
 package builtin
 
 import (
+	"errors"
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
@@ -76,4 +77,36 @@ func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	return ast.Bool(equal), nil
+}
+
+type intProcessor func(left, right int64) (any, error)
+type floatProcessor func(left, right float64) (any, error)
+
+func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor) StatelessFunc {
+	return func(ctx types.Context, args []ast.Expression) (any, error) {
+		if size := len(args); size != 2 {
+			return nil, fmt.Errorf("expected 2 argument(s), got %d", size)
+		}
+
+		numbers, _, err := evalNumericalExpressions(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+
+		leftInt, leftOk := numbers[0].ToInteger()
+		rightInt, rightOk := numbers[1].ToInteger()
+
+		if leftOk != rightOk {
+			return nil, errors.New("cannot compare floats to integers")
+		}
+
+		if leftOk && rightOk {
+			return inter(leftInt, rightInt)
+		}
+
+		leftFloat := numbers[0].ToFloat()
+		rightFloat := numbers[1].ToFloat()
+
+		return floater(leftFloat, rightFloat)
+	}
 }
