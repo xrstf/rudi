@@ -93,4 +93,7 @@ var Functions = types.Functions{
 	// encoding
 	"to-base64":   stateless(toBase64Function),
 	"from-base64": stateless(fromBase64Function),
+
+	// dates & time
+	"now": stateless(nowFunction),
 }
