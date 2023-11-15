@@ -57,9 +57,7 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	result := ast.Vector{}
-	copy(result.Data, vector.Data)
-
+	result := vector.Clone()
 	result.Data = append(result.Data, evaluated...)
 
 	return result, nil
@@ -85,10 +83,17 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	result := ast.Vector{}
-	copy(result.Data, vector.Data)
+	wrapped, err := types.WrapNative(evaluated)
+	if err != nil {
+		panic("failed to wrap a []any, this should never happen")
+	}
 
-	result.Data = append(result.Data, evaluated...)
+	evaluatedVector, ok := wrapped.(ast.Vector)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a vector, but %T", list)
+	}
 
-	return result, nil
+	evaluatedVector.Data = append(evaluatedVector.Data, vector.Data...)
+
+	return evaluatedVector, nil
 }

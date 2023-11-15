@@ -135,6 +135,15 @@ func (v Vector) LiteralValue() any {
 	return v.Data
 }
 
+func (v Vector) Clone() Vector {
+	result := Vector{
+		Data: make([]any, len(v.Data)),
+	}
+	copy(result.Data, v.Data)
+
+	return result
+}
+
 // VectorNode represents the parsed code for constructing an vector.
 // When an VectorNode is evaluated, it turns into an Vector.
 type VectorNode struct {

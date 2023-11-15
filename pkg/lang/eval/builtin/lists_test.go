@@ -5,11 +5,13 @@ package builtin
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type listsTestcase struct {
 	expr     string
-	expected int64
+	expected any
 	invalid  bool
 }
 
@@ -29,8 +31,8 @@ func (tc *listsTestcase) Test(t *testing.T) {
 		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
 	}
 
-	if result != tc.expected {
-		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+	if !cmp.Equal(result, tc.expected) {
+		t.Fatalf("Did not receive expected output:\n%s", cmp.Diff(tc.expected, result))
 	}
 }
 
@@ -58,27 +60,129 @@ func TestLenFunction(t *testing.T) {
 		},
 		{
 			expr:     `(len "")`,
-			expected: 0,
+			expected: int64(0),
 		},
 		{
 			expr:     `(len " foo ")`,
-			expected: 5,
+			expected: int64(5),
 		},
 		{
 			expr:     `(len [])`,
-			expected: 0,
+			expected: int64(0),
 		},
 		{
 			expr:     `(len [1 2 3])`,
-			expected: 3,
+			expected: int64(3),
 		},
 		{
 			expr:     `(len {})`,
-			expected: 0,
+			expected: int64(0),
 		},
 		{
 			expr:     `(len {foo "bar" hello "world"})`,
-			expected: 2,
+			expected: int64(2),
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestAppendFunction(t *testing.T) {
+	testcases := []listsTestcase{
+		{
+			expr:    `(append)`,
+			invalid: true,
+		},
+		{
+			expr:    `(append [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(append true 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(append 1 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(append null 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(append {} 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(append {} 1)`,
+			invalid: true,
+		},
+		{
+			expr:     `(append [] 1)`,
+			expected: []any{int64(1)},
+		},
+		{
+			expr:     `(append [1 2] 3 "foo")`,
+			expected: []any{int64(1), int64(2), int64(3), "foo"},
+		},
+		{
+			expr:     `(append [] [])`,
+			expected: []any{[]any{}},
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestPrependFunction(t *testing.T) {
+	testcases := []listsTestcase{
+		{
+			expr:    `(prepend)`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend true 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend 1 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend null 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend {} 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend {} 1)`,
+			invalid: true,
+		},
+		{
+			expr:     `(prepend [] 1)`,
+			expected: []any{int64(1)},
+		},
+		{
+			expr:     `(prepend [1] 2)`,
+			expected: []any{int64(2), int64(1)},
+		},
+		{
+			expr:     `(prepend [1 2] 3 "foo")`,
+			expected: []any{int64(3), "foo", int64(1), int64(2)},
+		},
+		{
+			expr:     `(prepend [] [])`,
+			expected: []any{[]any{}},
 		},
 	}
 
