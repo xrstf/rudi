@@ -71,7 +71,7 @@ func doFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return result, nil
 }
 
-// (has? PATH:PathExpression)
+// (has? SYM:SymbolWithPathExpression)
 func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 1 {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
@@ -79,7 +79,7 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a path expression, but %s", args[0])
+		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
 	}
 
 	if symbol.PathExpression == nil {

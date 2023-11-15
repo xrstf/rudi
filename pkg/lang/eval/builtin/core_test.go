@@ -10,13 +10,14 @@ import (
 type coreTestcase struct {
 	expr     string
 	expected any
+	document any
 	invalid  bool
 }
 
 func (tc *coreTestcase) Test(t *testing.T) {
 	t.Helper()
 
-	result, err := runExpression(t, tc.expr, nil)
+	result, err := runExpression(t, tc.expr, tc.document)
 	if err != nil {
 		if !tc.invalid {
 			t.Fatalf("Failed to run %s: %v", tc.expr, err)
@@ -186,6 +187,71 @@ func TestTryFunction(t *testing.T) {
 		{
 			expr:     `(try (eq 3 "foo") "fallback")`,
 			expected: "fallback",
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestIsEmptyFunction(t *testing.T) {
+	testcases := []coreTestcase{
+		{
+			expr:    `(empty?)`,
+			invalid: true,
+		},
+		{
+			expr:    `(empty? "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:    `(empty? ident)`,
+			invalid: true,
+		},
+		{
+			expr:     `(empty? null)`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? true)`,
+			expected: false,
+		},
+		{
+			expr:     `(empty? false)`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? 0)`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? 0.0)`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? (+ 0 0.0))`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? (+ 1 0.0))`,
+			expected: false,
+		},
+		{
+			expr:     `(empty? [])`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? [""])`,
+			expected: false,
+		},
+		{
+			expr:     `(empty? {})`,
+			expected: true,
+		},
+		{
+			expr:     `(empty? {foo "bar"})`,
+			expected: false,
 		},
 	}
 
