@@ -28,7 +28,7 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	success, ok := condition.(ast.Bool)
 	if !ok {
-		return nil, fmt.Errorf("condition is not bool, but %T", err)
+		return nil, fmt.Errorf("condition is not bool, but %T", condition)
 	}
 
 	if success {
@@ -79,7 +79,7 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a path expression, but %s", args[0].ExpressionName())
+		return nil, fmt.Errorf("argument #0 is not a path expression, but %s", args[0])
 	}
 
 	if symbol.PathExpression == nil {
@@ -152,7 +152,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 
 	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
-		return ctx, nil, fmt.Errorf("argument #0 is not symbol, but %s", args[0].ExpressionName())
+		return ctx, nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
 	}
 
 	// catch symbols that are technically invalid
@@ -280,7 +280,7 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	namingVector, ok := args[1].(ast.VectorNode)
 	if !ok {
-		return nil, fmt.Errorf("argument #1 must be a vector, got %T", args[1])
+		return nil, fmt.Errorf("argument #1 is not a vector, but %T", args[1])
 	}
 
 	size := len(namingVector.Expressions)

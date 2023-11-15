@@ -24,7 +24,7 @@ func evalNumericalExpressions(ctx types.Context, args []ast.Expression) (values 
 
 		num, ok := evaluated.(ast.Number)
 		if !ok {
-			return nil, false, fmt.Errorf("argument #%d: not a number, but %T", i, evaluated)
+			return nil, false, fmt.Errorf("argument #%d is not a number, but %T", i, evaluated)
 		}
 
 		values[i] = num

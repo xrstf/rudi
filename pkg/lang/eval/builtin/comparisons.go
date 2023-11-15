@@ -4,7 +4,6 @@
 package builtin
 
 import (
-	"errors"
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
@@ -14,8 +13,8 @@ import (
 )
 
 func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if len(args) != 2 {
-		return nil, errors.New("(eq LEFT RIGHT)")
+	if size := len(args); size != 2 {
+		return nil, fmt.Errorf("expected exactly 2 arguments, got %d", size)
 	}
 
 	_, leftData, err := eval.EvalExpression(ctx, args[0])

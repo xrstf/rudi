@@ -10,8 +10,8 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func EvalExpression(ctx types.Context, node ast.Expression) (types.Context, any, error) {
-	switch asserted := node.(type) {
+func EvalExpression(ctx types.Context, expr ast.Expression) (types.Context, any, error) {
+	switch asserted := expr.(type) {
 	case ast.Null:
 		return EvalNull(ctx, asserted)
 	case ast.Bool:
@@ -32,5 +32,5 @@ func EvalExpression(ctx types.Context, node ast.Expression) (types.Context, any,
 		return EvalIdentifier(ctx, asserted)
 	}
 
-	return ctx, nil, fmt.Errorf("unknown expression %s (%s)", node.ExpressionName(), node.String())
+	return ctx, nil, fmt.Errorf("unknown expression %s (%T)", expr.String(), expr)
 }

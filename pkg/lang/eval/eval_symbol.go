@@ -135,7 +135,7 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.Eva
 			rawValue := valueAsVector.Data[*step.IntegerValue]
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
-				return nil, fmt.Errorf("cannot wrap %v (%T): %w", rawValue, rawValue, err)
+				return nil, err
 			}
 
 			continue
@@ -149,7 +149,7 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.Eva
 			rawValue := valueAsObject.Data[*step.StringValue]
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
-				return nil, fmt.Errorf("cannot wrap %v (%T): %w", rawValue, rawValue, err)
+				return nil, err
 			}
 
 			continue

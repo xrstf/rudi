@@ -25,7 +25,7 @@ func andFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	for i, arg := range evaluated {
 		part, ok := arg.(ast.Bool)
 		if !ok {
-			return nil, fmt.Errorf("argument #%d not bool, but %T", i, arg)
+			return nil, fmt.Errorf("argument #%d is not a bool, but %T", i, arg)
 		}
 
 		result = result && bool(part)
@@ -48,7 +48,7 @@ func orFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	for i, arg := range evaluated {
 		part, ok := arg.(ast.Bool)
 		if !ok {
-			return nil, fmt.Errorf("argument #%d not bool, but %T", i, arg)
+			return nil, fmt.Errorf("argument #%d is not a bool, but %T", i, arg)
 		}
 
 		result = result || bool(part)
