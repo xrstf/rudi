@@ -276,7 +276,16 @@ func TestHasFunction(t *testing.T) {
 		},
 	}
 
-	testArrDocument := []any{1, 2, map[string]any{"foo": "bar"}}
+	testVecDocument := []any{1, 2, map[string]any{"foo": "bar"}}
+
+	testVariables := types.Variables{
+		// value does not matter here, but this testcase is still meant
+		// to ensure the missing path is detected, not detect an uknown variable
+		"myvar":  42,
+		"obj":    testObjDocument,
+		"vec":    testVecDocument,
+		"astVec": ast.Vector{Data: []any{ast.String("foo")}},
+	}
 
 	testcases := []coreTestcase{
 		{
@@ -402,17 +411,17 @@ func TestHasFunction(t *testing.T) {
 		{
 			expr:     `(has? .[1])`,
 			expected: true,
-			document: testArrDocument,
+			document: testVecDocument,
 		},
 		{
 			expr:     `(has? .key)`,
 			expected: false,
-			document: testArrDocument,
+			document: testVecDocument,
 		},
 		{
 			expr:     `(has? .[2].foo)`,
 			expected: true,
-			document: testArrDocument,
+			document: testVecDocument,
 		},
 
 		// global document is a scalar
@@ -441,6 +450,49 @@ func TestHasFunction(t *testing.T) {
 			expr:     `(has? .)`,
 			expected: true,
 			document: ast.String("foo"),
+		},
+
+		// follow a path expression on a variable
+
+		{
+			expr:    `(has? $myvar)`,
+			invalid: true,
+		},
+		{
+			// missing path expression (TODO: should this be valid?)
+			expr:      `(has? $myvar)`,
+			invalid:   true,
+			variables: testVariables,
+		},
+		{
+			expr:      `(has? $myvar.foo)`,
+			expected:  false,
+			variables: testVariables,
+		},
+		{
+			expr:      `(has? $myvar[0])`,
+			expected:  false,
+			variables: testVariables,
+		},
+		{
+			expr:      `(has? $obj.aString)`,
+			expected:  true,
+			variables: testVariables,
+		},
+		{
+			expr:      `(has? $obj.aList[1])`,
+			expected:  true,
+			variables: testVariables,
+		},
+		{
+			expr:      `(has? $vec[1])`,
+			expected:  true,
+			variables: testVariables,
+		},
+		{
+			expr:      `(has? $astVec[0])`,
+			expected:  true,
+			variables: testVariables,
 		},
 	}
 

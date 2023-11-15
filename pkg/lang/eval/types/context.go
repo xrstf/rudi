@@ -191,8 +191,14 @@ func UnwrapType(val any) (any, error) {
 		return asserted.Value, nil
 	case *ast.Number:
 		return asserted.Value, nil
+	case int:
+		return int64(asserted), nil
+	case int32:
+		return int64(asserted), nil
 	case int64:
 		return asserted, nil
+	case float32:
+		return float64(asserted), nil
 	case float64:
 		return asserted, nil
 	case ast.Vector:

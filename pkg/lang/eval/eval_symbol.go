@@ -122,20 +122,23 @@ func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 }
 
 func traverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
-	var err error
-
 	for _, step := range path.Steps {
-		if valueAsVector, ok := value.(ast.Vector); ok {
+		unwrappedValue, err := types.UnwrapType(value)
+		if err != nil {
+			return nil, fmt.Errorf("cannot descend with %s into %T", step.String(), value)
+		}
+
+		if valueAsVector, ok := unwrappedValue.([]any); ok {
 			if step.IntegerValue == nil {
 				return nil, fmt.Errorf("cannot use %v as an array index", step.String())
 			}
 
 			index := int(*step.IntegerValue)
-			if index >= len(valueAsVector.Data) {
+			if index >= len(valueAsVector) {
 				return nil, fmt.Errorf("index %d out of bounds", index)
 			}
 
-			rawValue := valueAsVector.Data[index]
+			rawValue := valueAsVector[index]
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
 				return nil, err
@@ -144,12 +147,12 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path ast.Eval
 			continue
 		}
 
-		if valueAsObject, ok := value.(ast.Object); ok {
+		if valueAsObject, ok := unwrappedValue.(map[string]any); ok {
 			if step.StringValue == nil {
 				return nil, fmt.Errorf("cannot use %v as an object key", step.String())
 			}
 
-			rawValue, exists := valueAsObject.Data[*step.StringValue]
+			rawValue, exists := valueAsObject[*step.StringValue]
 			if !exists {
 				return nil, fmt.Errorf("no such key: %q", *step.StringValue)
 			}
