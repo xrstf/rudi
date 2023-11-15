@@ -190,3 +190,64 @@ func TestPrependFunction(t *testing.T) {
 		t.Run(testcase.expr, testcase.Test)
 	}
 }
+
+func TestReverseFunction(t *testing.T) {
+	testcases := []listsTestcase{
+		{
+			expr:    `(reverse)`,
+			invalid: true,
+		},
+		{
+			expr:    `(reverse "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:    `(reverse 1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(reverse true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(reverse null)`,
+			invalid: true,
+		},
+		{
+			expr:    `(reverse {})`,
+			invalid: true,
+		},
+		{
+			expr:     `(reverse "")`,
+			expected: "",
+		},
+		{
+			expr:     `(reverse (concat "" "f" "oo"))`,
+			expected: "oof",
+		},
+		{
+			expr:     `(reverse "abcd")`,
+			expected: "dcba",
+		},
+		{
+			expr:     `(reverse (reverse "abcd"))`,
+			expected: "abcd",
+		},
+		{
+			expr:     `(reverse [])`,
+			expected: []any{},
+		},
+		{
+			expr:     `(reverse [1])`,
+			expected: []any{int64(1)},
+		},
+		{
+			expr:     `(reverse [1 2 3])`,
+			expected: []any{int64(3), int64(2), int64(1)},
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}

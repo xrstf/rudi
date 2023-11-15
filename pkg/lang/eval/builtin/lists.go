@@ -97,3 +97,37 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	return evaluatedVector, nil
 }
+
+func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 1 {
+		return nil, fmt.Errorf("expected 1 argument, got %d", size)
+	}
+
+	_, list, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	strVal, ok := list.(ast.String)
+	if ok {
+		// thank you https://stackoverflow.com/a/10030772
+		result := []rune(strVal)
+		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+			result[i], result[j] = result[j], result[i]
+		}
+
+		return ast.String(result), nil
+	}
+
+	vector, ok := list.(ast.Vector)
+	if ok {
+		result := vector.Clone()
+		for i, j := 0, len(result.Data)-1; i < j; i, j = i+1, j-1 {
+			result.Data[i], result.Data[j] = result.Data[j], result.Data[i]
+		}
+
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("argument is neither a vector nor a string, but %T", list)
+}

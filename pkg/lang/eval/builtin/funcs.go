@@ -4,26 +4,9 @@
 package builtin
 
 import (
-	"fmt"
-
 	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
-
-func evalArgs(ctx types.Context, args []ast.Expression, argShift int) ([]any, error) {
-	values := make([]any, len(args)-argShift)
-	for i, arg := range args[argShift:] {
-		_, evaluated, err := eval.EvalExpression(ctx, arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d: %w", i+argShift, err)
-		}
-
-		values[i] = evaluated
-	}
-
-	return values, nil
-}
 
 type StatelessFunc func(ctx types.Context, args []ast.Expression) (any, error)
 
@@ -53,6 +36,7 @@ var Functions = types.Functions{
 
 	// strings
 	// "len": stateless(lenFunction) is defined for lists, but works for strings as well
+	// "reverse" also works for strings
 	"concat":      stateless(concatFunction),
 	"split":       stateless(fromStringFunc(splitFunction, 2)),
 	"has-prefix?": stateless(fromStringFunc(hasPrefixFunction, 2)),
@@ -66,6 +50,7 @@ var Functions = types.Functions{
 	"len":     stateless(lenFunction),
 	"append":  stateless(appendFunction),
 	"prepend": stateless(prependFunction),
+	"reverse": stateless(reverseFunction),
 
 	// logic
 	"and": stateless(andFunction),
