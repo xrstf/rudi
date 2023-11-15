@@ -268,3 +268,109 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("unexpected argument %v (%T)", result, result)
 	}
 }
+
+// (range VECTOR [item] expr+)
+// (range VECTOR [i item] expr+)
+func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size < 3 {
+		return nil, fmt.Errorf("expected 3+ arguments, got %d", size)
+	}
+
+	// decode desired loop variable namings, as that's cheap to do
+
+	namingVector, ok := args[1].(ast.VectorNode)
+	if !ok {
+		return nil, fmt.Errorf("argument #1 must be a vector, got %T", args[1])
+	}
+
+	size := len(namingVector.Expressions)
+	if size < 1 || size > 2 {
+		return nil, fmt.Errorf("expected 1 or 2 identifiers in the naming vector, got %d", size)
+	}
+
+	var (
+		loopIndexName string
+		loopVarName   string
+	)
+
+	if size == 1 {
+		varNameIdent, ok := namingVector.Expressions[0].(ast.Identifier)
+		if !ok {
+			return nil, fmt.Errorf("loop variable name must be an identifer, got %T", namingVector.Expressions[0])
+		}
+
+		loopVarName = string(varNameIdent)
+	} else {
+		indexIdent, ok := namingVector.Expressions[0].(ast.Identifier)
+		if !ok {
+			return nil, fmt.Errorf("loop index name must be an identifer, got %T", namingVector.Expressions[0])
+		}
+
+		varNameIdent, ok := namingVector.Expressions[1].(ast.Identifier)
+		if !ok {
+			return nil, fmt.Errorf("loop variable name must be an identifer, got %T", namingVector.Expressions[0])
+		}
+
+		loopIndexName = string(indexIdent)
+		loopVarName = string(varNameIdent)
+	}
+
+	// evaluate source list
+	var (
+		source any
+		err    error
+	)
+
+	innerCtx := ctx
+
+	innerCtx, source, err = eval.EvalExpression(innerCtx, args[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate source: %w", err)
+	}
+
+	var result any
+
+	// list over vector elements
+
+	if sourceVector, ok := source.(ast.Vector); ok {
+		for i, item := range sourceVector.Data {
+			// do not use separate contexts for each loop iteration, as the loop might build up a counter
+			innerCtx = innerCtx.WithVariable(loopVarName, item)
+			if loopIndexName != "" {
+				innerCtx = innerCtx.WithVariable(loopIndexName, ast.Number{Value: int64(i)})
+			}
+
+			for _, expr := range args[2:] {
+				innerCtx, result, err = eval.EvalExpression(innerCtx, expr)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		return result, nil
+	}
+
+	// list over object elements
+
+	if sourceObject, ok := source.(ast.Object); ok {
+		for key, value := range sourceObject.Data {
+			// do not use separate contexts for each loop iteration, as the loop might build up a counter
+			innerCtx = innerCtx.WithVariable(loopVarName, value)
+			if loopIndexName != "" {
+				innerCtx = innerCtx.WithVariable(loopIndexName, ast.String(key))
+			}
+
+			for _, expr := range args[2:] {
+				innerCtx, result, err = eval.EvalExpression(innerCtx, expr)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("cannot range over %T", source)
+}

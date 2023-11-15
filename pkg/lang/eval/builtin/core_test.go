@@ -193,3 +193,110 @@ func TestTryFunction(t *testing.T) {
 		t.Run(testcase.expr, testcase.Test)
 	}
 }
+
+func TestRangeFunction(t *testing.T) {
+	testcases := []coreTestcase{
+		{
+			// missing everything
+			expr:    `(range)`,
+			invalid: true,
+		},
+		{
+			// missing naming vector
+			expr:    `(range [1 2 3])`,
+			invalid: true,
+		},
+		{
+			// missing naming vector
+			expr:    `(range [1 2 3] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// naming vector must be 1 or 2 elements long
+			expr:    `(range [1 2 3] [] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// naming vector must be 1 or 2 elements long
+			expr:    `(range [1 2 3] [a b c] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// do not allow numbers in the naming vector
+			expr:    `(range [1 2 3] [1 2] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// do not allow strings in naming vector
+			expr:    `(range [1 2 3] ["foo" "bar"] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// cannot range over non-vectors/objects
+			expr:    `(range "invalid" [a] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// cannot range over non-vectors/objects
+			expr:    `(range 5 [a] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// single simple expression
+			expr:     `(range [1 2 3] [a] (+ 1 2))`,
+			expected: int64(3),
+		},
+		{
+			// multiple expressions that use a common context
+			expr:     `(range [1 2 3] [a] (set $foo $a) (+ $foo 3))`,
+			expected: int64(6),
+		},
+		{
+			// count iterations
+			expr:     `(range [1 2 3] [loop-var] (set $counter (+ (default (try $counter) 0) 1)))`,
+			expected: int64(3),
+		},
+		{
+			// value is bound to desired variable
+			expr:     `(range [1 2 3] [a] $a)`,
+			expected: int64(3),
+		},
+		{
+			// support loop index variable
+			expr:     `(range [1 2 3] [idx var] $idx)`,
+			expected: int64(2),
+		},
+		{
+			// support loop index variable
+			expr:     `(range [1 2 3] [idx var] $var)`,
+			expected: int64(3),
+		},
+		{
+			// variables do not leak outside the range
+			expr:    `(range [1 2 3] [idx var] $idx) (+ $var 0)`,
+			invalid: true,
+		},
+		{
+			// variables do not leak outside the range
+			expr:    `(range [1 2 3] [idx var] $idx) (+ $idx 0)`,
+			invalid: true,
+		},
+		{
+			// support ranging over objects
+			expr:     `(range {} [key value] $key)`,
+			expected: nil,
+		},
+		{
+			expr:     `(range {foo "bar"} [key value] $key)`,
+			expected: "foo",
+		},
+		{
+			expr:     `(range {foo "bar"} [key value] $value)`,
+			expected: "bar",
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
