@@ -86,7 +86,21 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, errors.New("argument #0 has no path expression")
 	}
 
-	_, value, err := eval.EvalExpression(ctx, args[0])
+	if symbol.Variable != nil {
+		varName := string(*symbol.Variable)
+
+		if _, ok = ctx.GetVariable(varName); !ok {
+			return nil, fmt.Errorf("unknown variable %s", varName)
+		}
+	}
+
+	// do a syntax check by pre-computing the path
+	evaluatedPath, err := eval.EvalPathExpression(ctx, symbol.PathExpression)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+	}
+
+	_, value, err := eval.EvalSymbolWithPath(ctx, symbol, *evaluatedPath)
 	if err != nil {
 		return false, nil
 	}

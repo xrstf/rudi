@@ -53,6 +53,10 @@ type Symbol struct {
 
 var _ Expression = Symbol{}
 
+func (s Symbol) IsDot() bool {
+	return s.Variable == nil && s.PathExpression != nil && s.PathExpression.IsIdentity()
+}
+
 func (s Symbol) String() string {
 	path := ""
 	if s.PathExpression != nil {

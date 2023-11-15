@@ -5,19 +5,23 @@ package builtin
 
 import (
 	"testing"
+
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 type coreTestcase struct {
-	expr     string
-	expected any
-	document any
-	invalid  bool
+	expr      string
+	expected  any
+	document  any
+	variables types.Variables
+	invalid   bool
 }
 
 func (tc *coreTestcase) Test(t *testing.T) {
 	t.Helper()
 
-	result, err := runExpression(t, tc.expr, tc.document)
+	result, err := runExpression(t, tc.expr, tc.document, tc.variables)
 	if err != nil {
 		if !tc.invalid {
 			t.Fatalf("Failed to run %s: %v", tc.expr, err)
@@ -252,6 +256,191 @@ func TestIsEmptyFunction(t *testing.T) {
 		{
 			expr:     `(empty? {foo "bar"})`,
 			expected: false,
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestHasFunction(t *testing.T) {
+	testObjDocument := map[string]any{
+		"aString": "foo",
+		"aList":   []any{"first", 2, "third"},
+		"aBool":   true,
+		"anObject": map[string]any{
+			"key1": true,
+			"key2": nil,
+			"key3": []any{9, map[string]any{"foo": "bar"}, 7},
+		},
+	}
+
+	testArrDocument := []any{1, 2, map[string]any{"foo": "bar"}}
+
+	testcases := []coreTestcase{
+		{
+			expr:    `(has?)`,
+			invalid: true,
+		},
+		{
+			expr:    `(has? "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:    `(has? true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(has? (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			expr:    `(has? "string")`,
+			invalid: true,
+		},
+		{
+			expr:    `(has? .[5.6])`,
+			invalid: true,
+		},
+
+		// access the global document
+
+		{
+			expr:     `(has? .)`,
+			expected: true,
+			document: nil, // the . always matches, no matter what the document is
+		},
+		{
+			expr:     `(has? .)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .nonexistingKey)`,
+			expected: false,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .[0])`,
+			expected: false,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .aString)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .["aString"])`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .[(concat "" "a" "String")])`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .aBool)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .aList)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .aList[0])`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .aList[99])`,
+			expected: false,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .aList.invalidObjKey)`,
+			expected: false,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .anObject)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .anObject[99])`,
+			expected: false,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .anObject.key1)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .anObject.key99)`,
+			expected: false,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .anObject.key3[1].foo)`,
+			expected: true,
+			document: testObjDocument,
+		},
+		{
+			expr:     `(has? .anObject.key3[1].bar)`,
+			expected: false,
+			document: testObjDocument,
+		},
+
+		// global document is an array
+
+		{
+			expr:     `(has? .[1])`,
+			expected: true,
+			document: testArrDocument,
+		},
+		{
+			expr:     `(has? .key)`,
+			expected: false,
+			document: testArrDocument,
+		},
+		{
+			expr:     `(has? .[2].foo)`,
+			expected: true,
+			document: testArrDocument,
+		},
+
+		// global document is a scalar
+
+		{
+			expr:     `(has? .)`,
+			expected: true,
+			document: "testdata",
+		},
+		{
+			expr:     `(has? .)`,
+			expected: true,
+			document: nil,
+		},
+		{
+			expr:     `(has? .foo)`,
+			expected: false,
+			document: "testdata",
+		},
+		{
+			expr:     `(has? .)`,
+			expected: true,
+			document: 64,
+		},
+		{
+			expr:     `(has? .)`,
+			expected: true,
+			document: ast.String("foo"),
 		},
 	}
 

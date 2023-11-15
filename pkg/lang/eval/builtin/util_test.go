@@ -14,7 +14,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/parser"
 )
 
-func runExpression(t *testing.T, expr string, document any) (any, error) {
+func runExpression(t *testing.T, expr string, document any, variables types.Variables) (any, error) {
 	prog := strings.NewReader(expr)
 
 	got, err := parser.ParseReader("test.go", prog)
@@ -32,10 +32,7 @@ func runExpression(t *testing.T, expr string, document any) (any, error) {
 		log.Fatalf("Failed to create parser document: %v", err)
 	}
 
-	vars := eval.NewVariables().
-		Set("global", types.Must(types.WrapNative(document)))
-
-	progContext := eval.NewContext(doc, Functions, vars)
+	progContext := eval.NewContext(doc, Functions, variables)
 
 	return eval.Run(progContext, program)
 }

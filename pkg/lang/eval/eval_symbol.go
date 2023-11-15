@@ -11,43 +11,55 @@ import (
 )
 
 func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
-	switch {
-	case sym.Variable != nil:
-		varName := string(*sym.Variable)
+	rootDoc := ctx.GetDocument()
+	rootValue := rootDoc.Get()
 
-		value, ok := ctx.GetVariable(varName)
-		if !ok {
-			return ctx, nil, fmt.Errorf("unknown variable %s (%T)", varName, varName)
-		}
-
-		// descend into the variable value
-		if expr := sym.PathExpression; expr != nil {
-			deeper, pathErr, traverseErr := traversePathExpression(ctx, value, expr)
-			if pathErr != nil {
-				return ctx, nil, fmt.Errorf("invalid path expression %s: %w", expr.String(), pathErr)
-			}
-			if traverseErr != nil {
-				return ctx, nil, fmt.Errorf("path %s not found: %w", expr.String(), traverseErr)
-			}
-			value = deeper
-		}
-
-		return ctx, value, nil
-
-	case sym.PathExpression != nil:
-		rootDoc := ctx.GetDocument()
-		value, pathErr, traverseErr := traversePathExpression(ctx, rootDoc.Get(), sym.PathExpression)
-		if pathErr != nil {
-			return ctx, nil, fmt.Errorf("invalid path expression %s: %w", sym.PathExpression.String(), pathErr)
-		}
-		if traverseErr != nil {
-			return ctx, nil, fmt.Errorf("path %s not found: %w", sym.PathExpression.String(), traverseErr)
-		}
-
-		return ctx, value, nil
+	if sym.IsDot() {
+		return ctx, rootValue, nil
 	}
 
-	return ctx, nil, fmt.Errorf("unknown symbol %T (%s)", sym, sym.String())
+	pathExpr := ast.EvaluatedPathExpression{}
+
+	if sym.PathExpression != nil {
+		evaluated, err := EvalPathExpression(ctx, sym.PathExpression)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("invalid path expression: %w", err)
+		}
+		pathExpr = *evaluated
+	}
+
+	return EvalSymbolWithPath(ctx, sym, pathExpr)
+}
+
+func EvalSymbolWithPath(ctx types.Context, sym ast.Symbol, path ast.EvaluatedPathExpression) (types.Context, any, error) {
+	rootDoc := ctx.GetDocument()
+	rootValue := rootDoc.Get()
+
+	if sym.IsDot() {
+		return ctx, rootValue, nil
+	}
+
+	if sym.Variable != nil {
+		var ok bool
+
+		varName := string(*sym.Variable)
+
+		rootValue, ok = ctx.GetVariable(varName)
+		if !ok {
+			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
+		}
+
+		if len(path.Steps) == 0 {
+			return ctx, rootValue, nil
+		}
+	}
+
+	deeper, err := traverseEvaluatedPathExpression(ctx, rootValue, path)
+	if err != nil {
+		return ctx, nil, fmt.Errorf("cannot evaluate %s: %w", sym.String(), err)
+	}
+
+	return ctx, deeper, nil
 }
 
 func ptrTo[T any](s T) *T {
@@ -72,21 +84,7 @@ func convertToAccessor(evaluated any) (*ast.EvaluatedPathStep, error) {
 	}
 }
 
-func traversePathExpression(ctx types.Context, value any, path *ast.PathExpression) (result any, pathErr error, traverseErr error) {
-	evaluatedPath, err := evalPathExpression(ctx, path)
-	if err != nil {
-		return nil, err, nil
-	}
-
-	result, err = traverseEvaluatedPathExpression(ctx, value, evaluatedPath)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return result, nil, nil
-}
-
-func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpression, error) {
+func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpression, error) {
 	innerCtx := ctx
 	result := &ast.EvaluatedPathExpression{
 		Steps: []ast.EvaluatedPathStep{},
@@ -123,7 +121,7 @@ func evalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 	return result, nil
 }
 
-func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.EvaluatedPathExpression) (any, error) {
+func traverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
 	var err error
 
 	for _, step := range path.Steps {
@@ -132,7 +130,12 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.Eva
 				return nil, fmt.Errorf("cannot use %v as an array index", step.String())
 			}
 
-			rawValue := valueAsVector.Data[*step.IntegerValue]
+			index := int(*step.IntegerValue)
+			if index >= len(valueAsVector.Data) {
+				return nil, fmt.Errorf("index %d out of bounds", index)
+			}
+
+			rawValue := valueAsVector.Data[index]
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
 				return nil, err
@@ -146,7 +149,11 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path *ast.Eva
 				return nil, fmt.Errorf("cannot use %v as an object key", step.String())
 			}
 
-			rawValue := valueAsObject.Data[*step.StringValue]
+			rawValue, exists := valueAsObject.Data[*step.StringValue]
+			if !exists {
+				return nil, fmt.Errorf("no such key: %q", *step.StringValue)
+			}
+
 			value, err = types.WrapNative(rawValue)
 			if err != nil {
 				return nil, err

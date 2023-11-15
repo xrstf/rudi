@@ -18,7 +18,7 @@ type stringsTestcase struct {
 func (tc *stringsTestcase) Test(t *testing.T) {
 	t.Helper()
 
-	result, err := runExpression(t, tc.expr, nil)
+	result, err := runExpression(t, tc.expr, nil, nil)
 	if err != nil {
 		if !tc.invalid {
 			t.Fatalf("Failed to run %s: %v", tc.expr, err)

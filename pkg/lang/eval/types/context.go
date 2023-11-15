@@ -39,6 +39,14 @@ type Context struct {
 }
 
 func NewContext(doc Document, funcs Functions, variables Variables) Context {
+	if funcs == nil {
+		funcs = NewFunctions()
+	}
+
+	if variables == nil {
+		variables = NewVariables()
+	}
+
 	return Context{
 		document:  doc,
 		funcs:     funcs,

@@ -9,6 +9,10 @@ func NewContext(doc types.Document, funcs types.Functions, variables types.Varia
 	return types.NewContext(doc, funcs, variables)
 }
 
+func NewFunctions() types.Functions {
+	return types.NewFunctions()
+}
+
 func NewVariables() types.Variables {
 	return types.NewVariables()
 }
