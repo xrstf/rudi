@@ -4,6 +4,7 @@
 package builtin
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -35,6 +36,38 @@ func (tc *comparisonsTestcase) Test(t *testing.T) {
 	}
 }
 
+type flippedTestcases struct {
+	left     string
+	right    string
+	document any
+	expected any
+	invalid  bool
+}
+
+func genFlippedExpressions(fun string, testcases []flippedTestcases) []comparisonsTestcase {
+	result := []comparisonsTestcase{}
+
+	for _, tc := range testcases {
+		result = append(
+			result,
+			comparisonsTestcase{
+				expr:     fmt.Sprintf(`(%s %s %s)`, fun, tc.left, tc.right),
+				invalid:  tc.invalid,
+				expected: tc.expected,
+				document: tc.document,
+			},
+			comparisonsTestcase{
+				expr:     fmt.Sprintf(`(%s %s %s)`, fun, tc.right, tc.left),
+				invalid:  tc.invalid,
+				expected: tc.expected,
+				document: tc.document,
+			},
+		)
+	}
+
+	return result
+}
+
 func TestEqFunction(t *testing.T) {
 	testDoc := map[string]any{
 		"int":    int(4),
@@ -48,121 +81,287 @@ func TestEqFunction(t *testing.T) {
 		},
 	}
 
-	testcases := []comparisonsTestcase{
+	syntax := []comparisonsTestcase{
 		{
-			expr:    `(eq)`,
+			expr:    `(eq?)`,
 			invalid: true,
 		},
 		{
-			expr:    `(eq true)`,
+			expr:    `(eq? true)`,
 			invalid: true,
 		},
 		{
-			expr:     `(eq true true)`,
-			expected: true,
-		},
-		{
-			expr:     `(eq false true)`,
-			expected: false,
-		},
-		{
-			expr:     `(eq .bool true)`,
-			expected: true,
-			document: testDoc,
-		},
-		{
-			expr:     `(eq 1 1)`,
-			expected: true,
-		},
-		{
-			expr:     `(eq 1 2)`,
-			expected: false,
-		},
-		{
-			expr:     `(eq .int 4)`,
-			expected: true,
-			document: testDoc,
-		},
-		{
-			expr:    `(eq 1 "foo")`,
+			expr:    `(eq? "too" "many" "args")`,
 			invalid: true,
-		},
-		{
-			expr:    `(eq 1 true)`,
-			invalid: true,
-		},
-		{
-			expr:     `(eq "foo" "foo")`,
-			expected: true,
-		},
-		{
-			expr:     `(eq .string "foo")`,
-			expected: true,
-			document: testDoc,
-		},
-		{
-			expr:     `(eq "foo" "bar")`,
-			expected: false,
-		},
-		{
-			expr:     `(eq "foo" "Foo")`,
-			expected: false,
-		},
-		{
-			expr:     `(eq "foo" " foo")`,
-			expected: false,
-		},
-		{
-			expr:     `(eq [] [])`,
-			expected: true,
-		},
-		{
-			expr:     `(eq [1] [])`,
-			expected: false,
-		},
-		{
-			expr:     `(eq [] [1])`,
-			expected: false,
-		},
-		{
-			expr:     `(eq [1] [1])`,
-			expected: true,
-		},
-		{
-			expr:     `(eq [1 [2] {foo "bar"}] [1 [2] {foo "bar"}])`,
-			expected: true,
-		},
-		{
-			expr:     `(eq [1 [2] {foo "bar"}] [1 [2] {foo "baz"}])`,
-			expected: false,
-		},
-		{
-			expr:     `(eq {} {})`,
-			expected: true,
-		},
-		{
-			expr:     `(eq {foo "bar"} {foo "bar"})`,
-			expected: true,
-		},
-		{
-			expr:     `(eq {foo "bar"} {foo "baz"})`,
-			expected: false,
-		},
-		{
-			expr:     `(eq {foo "bar"} {})`,
-			expected: false,
-		},
-		{
-			expr:     `(eq {} {foo "bar"})`,
-			expected: false,
-		},
-		{
-			expr:     `(eq {foo "bar" l [1 2]} {foo "bar" l [1 2]})`,
-			expected: true,
 		},
 	}
 
-	for _, testcase := range testcases {
+	flipped := genFlippedExpressions("eq?", []flippedTestcases{
+		{
+			left:     `true`,
+			right:    `true`,
+			expected: true,
+		},
+		{
+			left:     `true`,
+			right:    `false`,
+			expected: false,
+		},
+		{
+			left:     `true`,
+			right:    `.bool`,
+			expected: true,
+			document: testDoc,
+		},
+		{
+			left:     `1`,
+			right:    `1`,
+			expected: true,
+		},
+		{
+			left:     `1`,
+			right:    `2`,
+			expected: false,
+		},
+		{
+			left:     `.int`,
+			right:    `4`,
+			expected: true,
+			document: testDoc,
+		},
+		{
+			left:     `1`,
+			right:    `1.0`,
+			expected: false,
+		},
+		{
+			left:    `1`,
+			right:   `"foo"`,
+			invalid: true,
+		},
+		{
+			left:    `1`,
+			right:   `true`,
+			invalid: true,
+		},
+		{
+			left:     `"foo"`,
+			right:    `"foo"`,
+			expected: true,
+		},
+		{
+			left:     `.string`,
+			right:    `"foo"`,
+			expected: true,
+			document: testDoc,
+		},
+		{
+			left:     `"foo"`,
+			right:    `"bar"`,
+			expected: false,
+		},
+		{
+			left:     `"foo"`,
+			right:    `"Foo"`,
+			expected: false,
+		},
+		{
+			left:     `"foo"`,
+			right:    `" foo"`,
+			expected: false,
+		},
+		{
+			left:     `[]`,
+			right:    `[]`,
+			expected: true,
+		},
+		{
+			left:     `[]`,
+			right:    `[1]`,
+			expected: false,
+		},
+		{
+			left:     `[1]`,
+			right:    `[1]`,
+			expected: true,
+		},
+		{
+			left:     `[1 [2] {foo "bar"}]`,
+			right:    `[1 [2] {foo "bar"}]`,
+			expected: true,
+		},
+		{
+			left:     `[1 [2] {foo "bar"}]`,
+			right:    `[1 [2] {foo "baz"}]`,
+			expected: false,
+		},
+		{
+			left:     `{}`,
+			right:    `{}`,
+			expected: true,
+		},
+		{
+			left:     `{}`,
+			right:    `{foo "bar"}`,
+			expected: false,
+		},
+		{
+			left:     `{foo "bar"}`,
+			right:    `{foo "bar"}`,
+			expected: true,
+		},
+		{
+			left:     `{foo "bar"}`,
+			right:    `{foo "baz"}`,
+			expected: false,
+		},
+		{
+			left:     `{foo "bar" l [1 2]}`,
+			right:    `{foo "bar" l [1 2]}`,
+			expected: true,
+		},
+	})
+
+	for _, testcase := range append(syntax, flipped...) {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestLikeFunction(t *testing.T) {
+	syntax := []comparisonsTestcase{
+		{
+			expr:    `(like?)`,
+			invalid: true,
+		},
+		{
+			expr:    `(like? true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(like? "too" "many" "args")`,
+			invalid: true,
+		},
+	}
+
+	testcases := genFlippedExpressions("like?", []flippedTestcases{
+		{
+			left:     `1`,
+			right:    `1`,
+			expected: true,
+		},
+		{
+			left:     `1`,
+			right:    `"1"`,
+			expected: true,
+		},
+		{
+			left:     `1`,
+			right:    `1.0`,
+			expected: true,
+		},
+		{
+			left:     `1`,
+			right:    `"1.0"`,
+			expected: true,
+		},
+		{
+			left:     `1`,
+			right:    `"2.0"`,
+			expected: false,
+		},
+		{
+			left:     `1`,
+			right:    `true`,
+			expected: true,
+		},
+		{
+			left:     `1`,
+			right:    `2`,
+			expected: false,
+		},
+		{
+			left:     `false`,
+			right:    `null`,
+			expected: true,
+		},
+		{
+			left:     `false`,
+			right:    `"null"`,
+			expected: false,
+		},
+		{
+			left:     `0`,
+			right:    `null`,
+			expected: true,
+		},
+		{
+			left:     `0.0`,
+			right:    `null`,
+			expected: true,
+		},
+		{
+			left:     `""`,
+			right:    `null`,
+			expected: true,
+		},
+		{
+			left:     `false`,
+			right:    `0`,
+			expected: true,
+		},
+		{
+			left:     `false`,
+			right:    `""`,
+			expected: true,
+		},
+		{
+			left:     `false`,
+			right:    `[]`,
+			expected: true,
+		},
+		{
+			left:     `false`,
+			right:    `{}`,
+			expected: true,
+		},
+		{
+			left:     `false`,
+			right:    `"false"`,
+			expected: true,
+		},
+		{
+			left:     `true`,
+			right:    `{foo "bar"}`,
+			expected: true,
+		},
+		{
+			left:     `"foo"`,
+			right:    `"bar"`,
+			expected: false,
+		},
+		{
+			left:     `true`,
+			right:    `[""]`,
+			expected: true,
+		},
+		{
+			left:     `{}`,
+			right:    `[]`,
+			expected: true,
+		},
+		{
+			left:     `{}`,
+			right:    `[1]`,
+			expected: false,
+		},
+		{
+			left:     `{foo "bar"}`,
+			right:    `[]`,
+			expected: false,
+		},
+	})
+
+	for _, testcase := range append(syntax, testcases...) {
 		t.Run(testcase.expr, testcase.Test)
 	}
 }

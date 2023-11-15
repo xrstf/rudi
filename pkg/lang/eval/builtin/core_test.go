@@ -58,15 +58,15 @@ func TestIfFunction(t *testing.T) {
 			expected: int64(3),
 		},
 		{
-			expr:     `(if (eq 1 1) 3)`,
+			expr:     `(if (eq? 1 1) 3)`,
 			expected: int64(3),
 		},
 		{
-			expr:     `(if (eq 1 2) 3)`,
+			expr:     `(if (eq? 1 2) 3)`,
 			expected: nil,
 		},
 		{
-			expr:     `(if (eq 1 2) "yes" "else")`,
+			expr:     `(if (eq? 1 2) "yes" "else")`,
 			expected: "else",
 		},
 		{
@@ -146,7 +146,7 @@ func TestDefaultFunction(t *testing.T) {
 		// errors are not swallowed
 
 		{
-			expr:    `(default (eq 3 "foo") 3)`,
+			expr:    `(default (eq? 3 "foo") 3)`,
 			invalid: true,
 		},
 	}
@@ -185,11 +185,11 @@ func TestTryFunction(t *testing.T) {
 		// swallow errors
 
 		{
-			expr:     `(try (eq 3 "foo"))`,
+			expr:     `(try (eq? 3 "foo"))`,
 			expected: nil,
 		},
 		{
-			expr:     `(try (eq 3 "foo") "fallback")`,
+			expr:     `(try (eq? 3 "foo") "fallback")`,
 			expected: "fallback",
 		},
 	}

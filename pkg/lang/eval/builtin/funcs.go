@@ -58,7 +58,8 @@ var Functions = types.Functions{
 	"not": stateless(notFunction),
 
 	// comparisons
-	"eq": stateless(eqFunction),
+	"eq?":   stateless(eqFunction),
+	"like?": stateless(likeFunction),
 
 	// types
 	"type-of":   stateless(typeOfFunction),

@@ -93,7 +93,7 @@ func TestAndFunction(t *testing.T) {
 			expected: true,
 		},
 		{
-			expr:     `(and (eq 1 1) true)`,
+			expr:     `(and (eq? 1 1) true)`,
 			expected: true,
 		},
 	}
@@ -162,7 +162,7 @@ func TestOrFunction(t *testing.T) {
 			expected: true,
 		},
 		{
-			expr:     `(or (eq 1 1) true)`,
+			expr:     `(or (eq? 1 1) true)`,
 			expected: true,
 		},
 	}

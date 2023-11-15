@@ -7,91 +7,276 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/coalescing"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 // equality, but with using coalescing, so 1 == "1"
-func EqualEnough(left, right any) (bool, error) {
+func EqualEnough(left, right ast.Literal) (bool, error) {
+	// if either of the sides is a null, convert the other to null
+	matched, equal, err := nullishEqualEnough(left, right)
+	if matched {
+		return equal, err
+	}
+
+	// if either of the sides is a bool, convert the other to bool
+	matched, equal, err = boolishEqualEnough(left, right)
+	if matched {
+		return equal, err
+	}
+
+	// if either of the sides is a number, convert the other to a number
+	matched, equal, err = numberishEqualEnough(left, right)
+	if matched {
+		return equal, err
+	}
+
+	// if either of the sides is a string, convert the other to a string
+	matched, equal, err = stringishEqualEnough(left, right)
+	if matched {
+		return equal, err
+	}
+
+	// now both sides can basically just be vectors or objects
+
 	switch leftAsserted := left.(type) {
-	case ast.Null:
-		return nullEqualEnough(leftAsserted, right)
-	case ast.Bool:
-		return boolEqualEnough(leftAsserted, right)
-	case ast.String:
-		return stringEqualEnough(leftAsserted, right)
-	case ast.Number:
-		return numberEqualEnough(leftAsserted, right)
+	case ast.Vector:
+		return vectorishEqualEnough(leftAsserted, right)
+	case ast.Object:
+		return objectishEqualEnough(leftAsserted, right)
 	default:
-		return false, fmt.Errorf("cannot compare with %T", left)
+		return false, fmt.Errorf("cannot compare with %T with %T", left, right)
 	}
 }
 
-func boolEqualEnough(left ast.Bool, right any) (bool, error) {
-	switch asserted := right.(type) {
-	case ast.Bool:
-		return left == asserted, nil
-	case bool:
-		return bool(left) == asserted, nil
-	default:
-		return false, ErrIncompatibleTypes
+func nullishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, equal bool, err error) {
+	_, leftOk := left.(ast.Null)
+	_, rightOk := right.(ast.Null)
+
+	if !leftOk && !rightOk {
+		return false, false, nil
 	}
+
+	matched = true
+
+	if leftOk && rightOk {
+		return matched, true, nil
+	}
+
+	var b ast.Literal
+
+	if leftOk {
+		b = right
+	} else {
+		b = left
+	}
+
+	bValue, err := coalescing.ToBool(b)
+	if err != nil {
+		return matched, false, ErrIncompatibleTypes
+	}
+
+	return matched, !bValue, nil
 }
 
-func nullEqualEnough(left ast.Null, right any) (bool, error) {
-	switch right.(type) {
-	case ast.Null:
-		return true, nil
-	case nil:
-		return true, nil
-	default:
-		return false, ErrIncompatibleTypes
+func boolishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, equal bool, err error) {
+	leftBool, leftOk := left.(ast.Bool)
+	rightBool, rightOk := right.(ast.Bool)
+
+	if !leftOk && !rightOk {
+		return false, false, nil
 	}
+
+	matched = true
+
+	if leftOk && rightOk {
+		return matched, leftBool.Equal(rightBool), nil
+	}
+
+	var (
+		a bool
+		b ast.Literal
+	)
+
+	if leftOk {
+		a = bool(leftBool)
+		b = right
+	} else {
+		a = bool(rightBool)
+		b = left
+	}
+
+	bValue, err := coalescing.ToBool(b)
+	if err != nil {
+		return matched, false, ErrIncompatibleTypes
+	}
+
+	return matched, a == bValue, nil
 }
 
-func stringEqualEnough(left ast.String, right any) (bool, error) {
-	switch asserted := right.(type) {
-	case ast.String:
-		return left == asserted, nil
-	case string:
-		return string(left) == asserted, nil
-	default:
-		return false, ErrIncompatibleTypes
+func numberishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, equal bool, err error) {
+	leftNumber, leftOk := left.(ast.Number)
+	rightNumber, rightOk := right.(ast.Number)
+
+	if !leftOk && !rightOk {
+		return false, false, nil
 	}
+
+	matched = true
+
+	if leftOk && rightOk {
+		return matched, leftNumber.ToFloat() == rightNumber.ToFloat(), nil
+	}
+
+	var (
+		a ast.Number
+		b ast.Literal
+	)
+
+	if leftOk {
+		a = leftNumber
+		b = right
+	} else {
+		a = rightNumber
+		b = left
+	}
+
+	bValue, err := coalescing.ToFloat64(b)
+	if err != nil {
+		return matched, false, ErrIncompatibleTypes
+	}
+
+	return matched, a.ToFloat() == bValue, nil
 }
 
-func numberEqualEnough(left ast.Number, right any) (bool, error) {
-	leftIntValue, ok := left.ToInteger()
+func stringishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, equal bool, err error) {
+	leftString, leftOk := left.(ast.String)
+	rightString, rightOk := right.(ast.String)
+
+	if !leftOk && !rightOk {
+		return false, false, nil
+	}
+
+	matched = true
+
+	if leftOk && rightOk {
+		return matched, leftString.Equal(rightString), nil
+	}
+
+	var (
+		a string
+		b ast.Literal
+	)
+
+	if leftOk {
+		a = string(leftString)
+		b = right
+	} else {
+		a = string(rightString)
+		b = left
+	}
+
+	bValue, err := coalescing.ToString(b)
+	if err != nil {
+		return matched, false, ErrIncompatibleTypes
+	}
+
+	return matched, a == bValue, nil
+}
+
+func vectorishEqualEnough(left ast.Vector, right any) (bool, error) {
+	// extra: [] == {}
+	rightObject, ok := right.(ast.Object)
 	if ok {
-		switch asserted := right.(type) {
-		case ast.Number:
-			rightIntValue, ok := asserted.ToInteger()
-			if ok {
-				return leftIntValue == rightIntValue, nil
-			}
+		return len(left.Data) == 0 && len(rightObject.Data) == 0, nil
+	}
 
+	rightValue, ok := right.(ast.Vector)
+	if !ok {
+		return false, ErrIncompatibleTypes
+	}
+
+	if len(left.Data) != len(rightValue.Data) {
+		return false, nil
+	}
+
+	for i, leftItem := range left.Data {
+		rightItem := rightValue.Data[i]
+
+		leftWrapped, err := types.WrapNative(leftItem)
+		if err != nil {
 			return false, ErrIncompatibleTypes
-		case int64:
-			return leftIntValue == asserted, nil
-		case float64:
+		}
+
+		rightWrapped, err := types.WrapNative(rightItem)
+		if err != nil {
 			return false, ErrIncompatibleTypes
-		default:
-			return false, ErrIncompatibleTypes
+		}
+
+		// wrapping always returns literals, so type assertions are safe here
+		equal, err := EqualEnough(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		if err != nil {
+			return false, err
+		}
+
+		if !equal {
+			return false, nil
 		}
 	}
 
-	leftFloatValue := left.ToFloat()
+	return true, nil
+}
 
-	switch asserted := right.(type) {
-	case ast.Number:
-		if asserted.IsFloat() {
-			return leftFloatValue == asserted.ToFloat(), nil
-		}
+func objectishEqualEnough(left ast.Object, right any) (bool, error) {
+	// extra: [] == {}
+	rightVector, ok := right.(ast.Vector)
+	if ok {
+		return len(left.Data) == 0 && len(rightVector.Data) == 0, nil
+	}
 
-		return false, ErrIncompatibleTypes
-	case int64:
-		return false, ErrIncompatibleTypes
-	case float64:
-		return leftFloatValue == asserted, nil
-	default:
+	rightValue, ok := right.(ast.Object)
+	if !ok {
 		return false, ErrIncompatibleTypes
 	}
+
+	if len(left.Data) != len(rightValue.Data) {
+		return false, nil
+	}
+
+	keysSeen := map[string]struct{}{}
+
+	for key, leftItem := range left.Data {
+		rightItem, exists := rightValue.Data[key]
+		if !exists {
+			return false, nil
+		}
+
+		keysSeen[key] = struct{}{}
+
+		leftWrapped, err := types.WrapNative(leftItem)
+		if err != nil {
+			return false, ErrIncompatibleTypes
+		}
+
+		rightWrapped, err := types.WrapNative(rightItem)
+		if err != nil {
+			return false, ErrIncompatibleTypes
+		}
+
+		// wrapping always returns literals, so type assertions are safe here
+		equal, err := EqualEnough(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		if err != nil {
+			return false, err
+		}
+
+		if !equal {
+			return false, nil
+		}
+	}
+
+	for key := range rightValue.Data {
+		delete(keysSeen, key)
+	}
+
+	return len(keysSeen) == 0, nil
 }
