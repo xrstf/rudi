@@ -153,3 +153,85 @@ func TestSplitFunction(t *testing.T) {
 		t.Run(testcase.expr, testcase.Test)
 	}
 }
+
+func TestToUpperFunction(t *testing.T) {
+	testcases := []stringsTestcase{
+		{
+			expr:    `(to-upper)`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-upper "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-upper true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-upper [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-upper {})`,
+			invalid: true,
+		},
+		{
+			expr:     `(to-upper "")`,
+			expected: "",
+		},
+		{
+			expr:     `(to-upper " TeSt ")`,
+			expected: " TEST ",
+		},
+		{
+			expr:     `(to-upper " test ")`,
+			expected: " TEST ",
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestToLowerFunction(t *testing.T) {
+	testcases := []stringsTestcase{
+		{
+			expr:    `(to-lower)`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-lower "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-lower true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-lower [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(to-lower {})`,
+			invalid: true,
+		},
+		{
+			expr:     `(to-lower "")`,
+			expected: "",
+		},
+		{
+			expr:     `(to-lower " TeSt ")`,
+			expected: " test ",
+		},
+		{
+			expr:     `(to-lower " TEST ")`,
+			expected: " test ",
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
