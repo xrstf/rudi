@@ -13,6 +13,12 @@ type Expression interface {
 	ExpressionName() string
 }
 
+type Literal interface {
+	Expression
+
+	LiteralValue() any
+}
+
 type Program struct {
 	Statements []Statement
 }
@@ -118,6 +124,7 @@ type Vector struct {
 }
 
 var _ Expression = Vector{}
+var _ Literal = Vector{}
 
 func (v Vector) String() string {
 	exprs := make([]string, len(v.Data))
@@ -170,6 +177,7 @@ type Object struct {
 }
 
 var _ Expression = Object{}
+var _ Literal = Object{}
 
 func (o Object) String() string {
 	exprs := make([]string, 0)
@@ -247,6 +255,11 @@ func (Identifier) ExpressionName() string {
 type String string
 
 var _ Expression = String("")
+var _ Literal = String("")
+
+func (s String) Equal(other String) bool {
+	return string(s) == string(other)
+}
 
 func (s String) String() string {
 	return fmt.Sprintf("%q", string(s))
@@ -265,6 +278,23 @@ type Number struct {
 }
 
 var _ Expression = Number{}
+var _ Literal = Number{}
+
+func (n Number) Equal(other Number) bool {
+	selfInt, selfOk := n.ToInteger()
+	otherInt, otherOk := other.ToInteger()
+
+	// not the same type
+	if selfOk != otherOk {
+		return false
+	}
+
+	if selfOk {
+		return otherInt == selfInt
+	}
+
+	return n.ToFloat() == other.ToFloat()
+}
 
 func (n Number) ToInteger() (int64, bool) {
 	switch asserted := n.Value.(type) {
@@ -320,6 +350,11 @@ func (n Number) LiteralValue() any {
 type Bool bool
 
 var _ Expression = Bool(false)
+var _ Literal = Bool(false)
+
+func (b Bool) Equal(other Bool) bool {
+	return bool(b) == bool(other)
+}
 
 func (b Bool) String() string {
 	if b {
@@ -340,6 +375,11 @@ func (b Bool) LiteralValue() any {
 type Null struct{}
 
 var _ Expression = Null{}
+var _ Literal = Null{}
+
+func (Null) Equal(other Null) bool {
+	return true
+}
 
 func (Null) String() string {
 	return "null"

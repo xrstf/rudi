@@ -8,11 +8,12 @@ import (
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
 var ErrIncompatibleTypes = errors.New("types are incompatible")
 
-func StrictEqual(left, right any) (bool, error) {
+func StrictEqual(left, right ast.Literal) (bool, error) {
 	switch leftAsserted := left.(type) {
 	case ast.Null:
 		return nullStrictEquals(leftAsserted, right)
@@ -22,78 +23,132 @@ func StrictEqual(left, right any) (bool, error) {
 		return stringStrictEquals(leftAsserted, right)
 	case ast.Number:
 		return numberStrictEquals(leftAsserted, right)
+	case ast.Vector:
+		return vectorStrictEquals(leftAsserted, right)
+	case ast.Object:
+		return objectStrictEquals(leftAsserted, right)
 	default:
-		return false, fmt.Errorf("cannot compare with %T", left)
+		return false, fmt.Errorf("cannot compare with %T with %T", left, right)
 	}
 }
 
-func boolStrictEquals(left ast.Bool, right any) (bool, error) {
-	switch asserted := right.(type) {
-	case ast.Bool:
-		return left == asserted, nil
-	case bool:
-		return bool(left) == asserted, nil
-	default:
+func boolStrictEquals(left ast.Bool, right ast.Literal) (bool, error) {
+	rightValue, ok := right.(ast.Bool)
+	if !ok {
 		return false, ErrIncompatibleTypes
 	}
+
+	return left.Equal(rightValue), nil
 }
 
 func nullStrictEquals(left ast.Null, right any) (bool, error) {
-	switch right.(type) {
-	case ast.Null:
-		return true, nil
-	case nil:
-		return true, nil
-	default:
+	rightValue, ok := right.(ast.Null)
+	if !ok {
 		return false, ErrIncompatibleTypes
 	}
+
+	return left.Equal(rightValue), nil
 }
 
 func stringStrictEquals(left ast.String, right any) (bool, error) {
-	switch asserted := right.(type) {
-	case ast.String:
-		return left == asserted, nil
-	case string:
-		return string(left) == asserted, nil
-	default:
+	rightValue, ok := right.(ast.String)
+	if !ok {
 		return false, ErrIncompatibleTypes
 	}
+
+	return left.Equal(rightValue), nil
 }
 
 func numberStrictEquals(left ast.Number, right any) (bool, error) {
-	leftIntValue, ok := left.ToInteger()
-	if ok {
-		switch asserted := right.(type) {
-		case ast.Number:
-			rightIntValue, ok := asserted.ToInteger()
-			if ok {
-				return leftIntValue == rightIntValue, nil
-			}
+	rightValue, ok := right.(ast.Number)
+	if !ok {
+		return false, ErrIncompatibleTypes
+	}
 
+	return left.Equal(rightValue), nil
+}
+
+func vectorStrictEquals(left ast.Vector, right any) (bool, error) {
+	rightValue, ok := right.(ast.Vector)
+	if !ok {
+		return false, ErrIncompatibleTypes
+	}
+
+	if len(left.Data) != len(rightValue.Data) {
+		return false, nil
+	}
+
+	for i, leftItem := range left.Data {
+		rightItem := rightValue.Data[i]
+
+		leftWrapped, err := types.WrapNative(leftItem)
+		if err != nil {
 			return false, ErrIncompatibleTypes
-		case int64:
-			return leftIntValue == asserted, nil
-		case float64:
+		}
+
+		rightWrapped, err := types.WrapNative(rightItem)
+		if err != nil {
 			return false, ErrIncompatibleTypes
-		default:
-			return false, ErrIncompatibleTypes
+		}
+
+		// wrapping always returns literals, so type assertions are safe here
+		equal, err := StrictEqual(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		if err != nil {
+			return false, err
+		}
+
+		if !equal {
+			return false, nil
 		}
 	}
 
-	leftFloatValue := left.ToFloat()
+	return true, nil
+}
 
-	switch asserted := right.(type) {
-	case ast.Number:
-		if asserted.IsFloat() {
-			return leftFloatValue == asserted.ToFloat(), nil
-		}
-
-		return false, ErrIncompatibleTypes
-	case int64:
-		return false, ErrIncompatibleTypes
-	case float64:
-		return leftFloatValue == asserted, nil
-	default:
+func objectStrictEquals(left ast.Object, right any) (bool, error) {
+	rightValue, ok := right.(ast.Object)
+	if !ok {
 		return false, ErrIncompatibleTypes
 	}
+
+	if len(left.Data) != len(rightValue.Data) {
+		return false, nil
+	}
+
+	keysSeen := map[string]struct{}{}
+
+	for key, leftItem := range left.Data {
+		rightItem, exists := rightValue.Data[key]
+		if !exists {
+			return false, nil
+		}
+
+		keysSeen[key] = struct{}{}
+
+		leftWrapped, err := types.WrapNative(leftItem)
+		if err != nil {
+			return false, ErrIncompatibleTypes
+		}
+
+		rightWrapped, err := types.WrapNative(rightItem)
+		if err != nil {
+			return false, ErrIncompatibleTypes
+		}
+
+		// wrapping always returns literals, so type assertions are safe here
+		equal, err := StrictEqual(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		if err != nil {
+			return false, err
+		}
+
+		if !equal {
+			return false, nil
+		}
+	}
+
+	for key := range rightValue.Data {
+		delete(keysSeen, key)
+	}
+
+	return len(keysSeen) == 0, nil
 }

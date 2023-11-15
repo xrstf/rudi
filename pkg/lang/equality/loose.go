@@ -9,7 +9,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-// equality, but with using coalescing so 1 == "1"
+// equality, but with using coalescing, so 1 == "1"
 func EqualEnough(left, right any) (bool, error) {
 	switch leftAsserted := left.(type) {
 	case ast.Null:

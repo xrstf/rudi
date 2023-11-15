@@ -11,10 +11,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-type literal interface {
-	LiteralValue() any
-}
-
 func ToBool(val any) (bool, error) {
 	switch v := val.(type) {
 	case bool:
@@ -36,9 +32,9 @@ func ToBool(val any) (bool, error) {
 	case nil:
 		return false, nil
 	default:
-		lit, ok := val.(literal)
+		lit, ok := val.(ast.Literal)
 		if !ok {
-			return false, fmt.Errorf("cannot coalesce %s into bool", typeName(val))
+			return false, fmt.Errorf("cannot coalesce %T into bool", val)
 		}
 
 		return ToBool(lit.LiteralValue())
@@ -66,9 +62,9 @@ func ToFloat64(val any) (float64, error) {
 	case nil:
 		return 0, nil
 	default:
-		lit, ok := val.(literal)
+		lit, ok := val.(ast.Literal)
 		if !ok {
-			return 0, fmt.Errorf("cannot coalesce %s into float64", typeName(val))
+			return 0, fmt.Errorf("cannot coalesce %T into float64", val)
 		}
 
 		return ToFloat64(lit.LiteralValue())
@@ -94,9 +90,9 @@ func ToInt64(val any) (int64, error) {
 	case nil:
 		return 0, nil
 	default:
-		lit, ok := val.(literal)
+		lit, ok := val.(ast.Literal)
 		if !ok {
-			return 0, fmt.Errorf("cannot coalesce %s into int64", typeName(val))
+			return 0, fmt.Errorf("cannot coalesce %T into int64", val)
 		}
 
 		return ToInt64(lit.LiteralValue())
@@ -116,9 +112,9 @@ func ToString(val any) (string, error) {
 	case string:
 		return v, nil
 	default:
-		lit, ok := val.(literal)
+		lit, ok := val.(ast.Literal)
 		if !ok {
-			return "", fmt.Errorf("cannot coalesce %s into string", typeName(val))
+			return "", fmt.Errorf("cannot coalesce %T into string", val)
 		}
 
 		return ToString(lit.LiteralValue())
@@ -132,19 +128,6 @@ func formatFloat(f float64) string {
 	}
 
 	return strings.TrimSuffix(formatted, ".")
-}
-
-func typeName(v any) string {
-	switch asserted := v.(type) {
-	case ast.Expression:
-		return asserted.ExpressionName()
-	case map[string]interface{}:
-		return "object" // lowercase, to distinguish from Objects and ObjectNodes
-	case []interface{}:
-		return "vector"
-	default:
-		return fmt.Sprintf("%T", v)
-	}
 }
 
 func IsEmpty(val any) (bool, error) {
@@ -164,9 +147,9 @@ func IsEmpty(val any) (bool, error) {
 	case map[string]any:
 		return len(v) == 0, nil
 	default:
-		lit, ok := val.(literal)
+		lit, ok := val.(ast.Literal)
 		if !ok {
-			return false, fmt.Errorf("cannot termine emptiness of %s", typeName(val))
+			return false, fmt.Errorf("cannot termine emptiness oT %s", val)
 		}
 
 		return IsEmpty(lit.LiteralValue())

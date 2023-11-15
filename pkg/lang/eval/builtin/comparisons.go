@@ -22,14 +22,24 @@ func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
+	leftValue, ok := leftData.(ast.Literal)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a literal, but %T", leftData)
+	}
+
 	_, rightData, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
-	equal, err := equality.StrictEqual(leftData, rightData)
+	rightValue, ok := rightData.(ast.Literal)
+	if !ok {
+		return nil, fmt.Errorf("argument #1 is not a literal, but %T", rightData)
+	}
+
+	equal, err := equality.StrictEqual(leftValue, rightValue)
 	if err != nil {
-		return nil, fmt.Errorf("cannot compare %T with %T: %w", leftData, rightData, err)
+		return nil, err
 	}
 
 	return ast.Bool(equal), nil
