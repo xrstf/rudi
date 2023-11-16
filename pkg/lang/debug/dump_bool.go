@@ -10,6 +10,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpBool(b *ast.Bool, out io.Writer) error {
+func DumpBool(b *ast.Bool, out io.Writer) error {
 	return writeString(out, fmt.Sprintf("(bool %s)", b))
 }

@@ -10,14 +10,18 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpProgram(p *ast.Program, out io.Writer, depth int) error {
+func DumpProgram(p *ast.Program, out io.Writer, depth int) error {
+	if p.Expression != nil {
+		return DumpExpression(p.Expression, out, depth)
+	}
+
 	for _, stmt := range p.Statements {
-		if err := dumpStatement(&stmt, out, depth); err != nil {
+		if err := DumpStatement(&stmt, out, depth); err != nil {
 			return fmt.Errorf("failed to dump statement %s: %w", stmt.String(), err)
 		}
 
 		separator := "\n"
-		if depth == doNotIndent {
+		if depth == DoNotIndent {
 			separator = " "
 		}
 

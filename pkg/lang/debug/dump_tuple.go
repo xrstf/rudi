@@ -10,15 +10,15 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpTuple(tup *ast.Tuple, out io.Writer, depth int) error {
-	if depth == doNotIndent {
+func DumpTuple(tup *ast.Tuple, out io.Writer, depth int) error {
+	if depth == DoNotIndent {
 		return dumpTupleSingleline(tup, out, depth)
 	}
 
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, expr := range tup.Expressions {
-		if err := dumpNode(expr, &buf, 0); err != nil {
+		if err := DumpExpression(expr, &buf, 0); err != nil {
 			return err
 		}
 	}
@@ -36,7 +36,7 @@ func dumpTupleSingleline(tup *ast.Tuple, out io.Writer, depth int) error {
 	}
 
 	for i, expr := range tup.Expressions {
-		if err := dumpNode(expr, out, depth); err != nil {
+		if err := DumpExpression(expr, out, depth); err != nil {
 			return err
 		}
 
@@ -65,7 +65,7 @@ func dumpTupleMultiline(tup *ast.Tuple, out io.Writer, depth int) error {
 		return err
 	}
 
-	if err := dumpNode(tup.Expressions[0], out, depth+1); err != nil {
+	if err := DumpExpression(tup.Expressions[0], out, depth+1); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func dumpTupleMultiline(tup *ast.Tuple, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpNode(expr, out, depth+1); err != nil {
+		if err := DumpExpression(expr, out, depth+1); err != nil {
 			return err
 		}
 	}

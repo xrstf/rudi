@@ -10,6 +10,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpIdentifier(ident *ast.Identifier, out io.Writer) error {
+func DumpIdentifier(ident *ast.Identifier, out io.Writer) error {
 	return writeString(out, fmt.Sprintf("(identifier %s)", *ident))
 }

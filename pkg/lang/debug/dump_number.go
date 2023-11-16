@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpNumber(num *ast.Number, out io.Writer) error {
+func DumpNumber(num *ast.Number, out io.Writer) error {
 	return writeString(out, fmt.Sprintf("(number %s)", num))
 }
 

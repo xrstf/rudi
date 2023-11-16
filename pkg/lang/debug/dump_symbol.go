@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpSymbol(sym *ast.Symbol, out io.Writer, depth int) error {
+func DumpSymbol(sym *ast.Symbol, out io.Writer, depth int) error {
 	switch {
 	case sym.Variable != nil:
 		return dumpVariable(sym.Variable, sym.PathExpression, out, depth)
@@ -56,7 +56,7 @@ func dumpPathExpression(path *ast.PathExpression, out io.Writer, depth int) erro
 	}
 
 	for i, step := range path.Steps {
-		err := dumpNode(step, out, depth)
+		err := DumpExpression(step, out, depth)
 		if err != nil {
 			return err
 		}

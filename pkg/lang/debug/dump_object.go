@@ -10,19 +10,23 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpObject(obj *ast.ObjectNode, out io.Writer, depth int) error {
-	if depth == doNotIndent {
+func DumpObject(obj *ast.Object, out io.Writer, depth int) error {
+	return nil
+}
+
+func DumpObjectNode(obj *ast.ObjectNode, out io.Writer, depth int) error {
+	if depth == DoNotIndent {
 		return dumpObjectSingleline(obj, out, depth)
 	}
 
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
 	for _, pair := range obj.Data {
-		if err := dumpNode(pair.Key, &buf, 0); err != nil {
+		if err := DumpExpression(pair.Key, &buf, 0); err != nil {
 			return err
 		}
 
-		if err := dumpNode(pair.Value, &buf, 0); err != nil {
+		if err := DumpExpression(pair.Value, &buf, 0); err != nil {
 			return err
 		}
 	}
@@ -40,7 +44,7 @@ func dumpObjectSingleline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 	}
 
 	for i, pair := range obj.Data {
-		if err := dumpNode(pair.Key, out, depth); err != nil {
+		if err := DumpExpression(pair.Key, out, depth); err != nil {
 			return err
 		}
 
@@ -48,7 +52,7 @@ func dumpObjectSingleline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpNode(pair.Value, out, depth); err != nil {
+		if err := DumpExpression(pair.Value, out, depth); err != nil {
 			return err
 		}
 
@@ -74,7 +78,7 @@ func dumpObjectMultiline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpNode(pair.Key, out, depth+1); err != nil {
+		if err := DumpExpression(pair.Key, out, depth+1); err != nil {
 			return err
 		}
 
@@ -82,7 +86,7 @@ func dumpObjectMultiline(obj *ast.ObjectNode, out io.Writer, depth int) error {
 			return err
 		}
 
-		if err := dumpNode(pair.Value, out, depth+1); err != nil {
+		if err := DumpExpression(pair.Value, out, depth+1); err != nil {
 			return err
 		}
 	}

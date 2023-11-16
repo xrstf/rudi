@@ -9,6 +9,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpStatement(stmt *ast.Statement, out io.Writer, depth int) error {
-	return dumpTuple(&stmt.Tuple, out, depth)
+func DumpStatement(stmt *ast.Statement, out io.Writer, depth int) error {
+	return DumpTuple(&stmt.Tuple, out, depth)
 }

@@ -234,6 +234,90 @@ func TestParseProgram(t *testing.T) {
 			input:   `(add (bar)[1])`,
 			invalid: true,
 		},
+
+		/////////////////////////////////////////////////////
+		// can also use a single symbol as the top level element of a program
+
+		{
+			input:    `.`,
+			expected: `(symbol (path []))`,
+		},
+		{
+			input:    ` . `,
+			expected: `(symbol (path []))`,
+		},
+		{
+			input:   `..`,
+			invalid: true,
+		},
+		{
+			input:   `. .`,
+			invalid: true,
+		},
+		{
+			input:   `(+ 1 2) .bar`,
+			invalid: true,
+		},
+		{
+			input:   `.bar (+ 1 2)`,
+			invalid: true,
+		},
+		{
+			input:   `.bar.`,
+			invalid: true,
+		},
+		{
+			input:    `.bar`,
+			expected: `(symbol (path [(identifier bar)]))`,
+		},
+		{
+			input:   `.bar .bar`,
+			invalid: true,
+		},
+		{
+			input:    `.bar.foo`,
+			expected: `(symbol (path [(identifier bar) (identifier foo)]))`,
+		},
+		{
+			input:    `.bar[0]`,
+			expected: `(symbol (path [(identifier bar) (number 0)]))`,
+		},
+		{
+			input:    `.[0]`,
+			expected: `(symbol (path [(number 0)]))`,
+		},
+		{
+			input:    `$var`,
+			expected: `(symbol (var var))`,
+		},
+		{
+			input:    `$var[0]`,
+			expected: `(symbol (var var) (path [(number 0)]))`,
+		},
+		{
+			input:    `42`,
+			expected: `(number 42)`,
+		},
+		{
+			input:    `true`,
+			expected: `(bool true)`,
+		},
+		{
+			input:    `null`,
+			expected: `(null)`,
+		},
+		{
+			input:    `"foobar"`,
+			expected: `(string "foobar")`,
+		},
+		{
+			input:    `[1 2]`,
+			expected: `[(number 1) (number 2)]`,
+		},
+		{
+			input:    `{foo "bar"}`,
+			expected: `{(identifier foo) (string "bar")}`,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -250,7 +334,12 @@ func TestParseProgram(t *testing.T) {
 			}
 
 			if testcase.invalid {
-				t.Fatalf("Should not have been able to parse %s, but got: %v", testcase.input, got)
+				var output strings.Builder
+				if err := debug.DumpSingleline(got, &output); err != nil {
+					t.Errorf("Failed to dump unexpected AST for %s: %v", testcase.input, err)
+				}
+
+				t.Fatalf("Should not have been able to parse %s, but got: %v", testcase.input, strings.TrimSpace(output.String()))
 			}
 
 			program, ok := got.(ast.Program)
@@ -259,7 +348,7 @@ func TestParseProgram(t *testing.T) {
 			}
 
 			var output strings.Builder
-			if err := debug.DumpSingleline(&program, &output); err != nil {
+			if err := debug.DumpSingleline(program, &output); err != nil {
 				t.Fatalf("Failed to dump AST for %s: %v", testcase.input, err)
 			}
 

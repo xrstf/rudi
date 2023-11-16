@@ -9,6 +9,6 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func dumpNull(n *ast.Null, out io.Writer) error {
+func DumpNull(n *ast.Null, out io.Writer) error {
 	return writeString(out, "(null)")
 }

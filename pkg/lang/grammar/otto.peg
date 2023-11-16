@@ -7,7 +7,11 @@ package parser
 import "go.xrstf.de/otto/pkg/lang/ast"
 }
 
-Program <- stmts:(__ Statement)* __ EOF {
+Program <- __ expr:NonTupleExpression __ EOF {
+   return ast.Program{
+      Expression: expr.(ast.Expression),
+   }, nil
+} / stmts:(__ Statement)* __ EOF {
    p := ast.Program{}
 
    stmtsSl := toAnySlice(stmts)
@@ -31,30 +35,13 @@ Statement <- tup:Tuple {
 }
 
 Expression <- ComplexExpression / ScalarExpression
+NonTupleExpression <- Vector / Object / Number / String / Null / Bool / Symbol / Identifier
 
 // ComplexExpression are expressions that are 100% not scalars.
-ComplexExpression <- val:Vector {
-   return val, nil
-} / val:Object {
-   return val, nil
-}
+ComplexExpression <- Vector / Object
 
 // ScalarExpression are expressions that have a _chance_ to turn into a scalar.
-ScalarExpression <- val:Number {
-   return val, nil
-} / val:String {
-   return val, nil
-} / val:Null {
-   return val, nil
-} / val:Bool {
-   return val, nil
-} / val:Tuple {
-   return val, nil
-} / val:Symbol {
-   return val, nil
-} / val:Identifier {
-   return val, nil
-}
+ScalarExpression <- Number / String / Null / Bool / Tuple / Symbol / Identifier
 
 Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' {
    t := ast.Tuple{
