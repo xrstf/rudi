@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2023 Christoph Mewes
+# SPDX-License-Identifier: MIT
+
+builds:
+  - dir: cmd/otti
+    binary: otti
+    env:
+      # goreleaser does not work with CGO, it could also complicate
+      # usage by users in CI/CD systems like Terraform Cloud where
+      # they are unable to install libraries.
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X main.BuildTag={{.Version}} -X main.BuildCommit={{.Commit}} -X main.BuildDate={{.Date}}'
+    goos:
+      - darwin
+      - freebsd
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - '386'
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
+      - goos: freebsd
+        goarch: '386'
+      - goos: windows
+        goarch: '386'
+archives:
+  - format: tar.gz
+    name_template: 'otti_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    wrap_in_directory: true
+    strip_parent_binary_folder: true
+    format_overrides:
+      - goos: windows
+        format: zip
+checksum:
+  disable: true
