@@ -103,7 +103,7 @@ func processReplInput(opts *options, doc *types.Document, input string) (stop bo
 
 	evaluated, err := eval.Run(ctx, program)
 	if err != nil {
-		return false, fmt.Errorf("failed to evaluate: %w", err)
+		return false, err
 	}
 
 	encoder := json.NewEncoder(os.Stdout)
