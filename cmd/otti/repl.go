@@ -51,6 +51,9 @@ func replRun(opts *options, args []string) error {
 		return fmt.Errorf("failed to read %q: %w", args[0], err)
 	}
 
+	vars := eval.NewVariables()
+	ctx := eval.NewContext(document, builtin.Functions, vars)
+
 	fmt.Println("Welcome to Otti 🐘")
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
@@ -61,7 +64,7 @@ func replRun(opts *options, args []string) error {
 	for reader.Scan() {
 		input := cleanInput(reader.Text())
 
-		stop, err := processReplInput(opts, &document, input)
+		newCtx, stop, err := processReplInput(ctx, opts, &document, input)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
@@ -69,6 +72,8 @@ func replRun(opts *options, args []string) error {
 			break
 		}
 		printPrompt()
+
+		ctx = newCtx
 	}
 
 	fmt.Println()
@@ -76,38 +81,35 @@ func replRun(opts *options, args []string) error {
 	return nil
 }
 
-func processReplInput(opts *options, doc *types.Document, input string) (stop bool, err error) {
+func processReplInput(ctx types.Context, opts *options, doc *types.Document, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
-		return false, command()
+		return ctx, false, command()
 	}
 
 	if strings.EqualFold("exit", input) {
-		return true, nil
+		return ctx, true, nil
 	}
 
 	// parse input
 	got, err := parser.Parse("(repl)", []byte(input))
 	if err != nil {
-		return false, err
+		return ctx, false, err
 		// fmt.Println(caretError(err, string(content)))
 		// os.Exit(1)
 	}
 
 	program, ok := got.(ast.Program)
 	if !ok {
-		return false, fmt.Errorf("parsed input is not a ast.Program, but %T", got)
+		return ctx, false, fmt.Errorf("parsed input is not a ast.Program, but %T", got)
 	}
 
-	vars := eval.NewVariables()
-	ctx := eval.NewContext(*doc, builtin.Functions, vars)
-
-	evaluated, err := eval.Run(ctx, program)
+	newCtx, evaluated, err := eval.Run(ctx, program)
 	if err != nil {
-		return false, err
+		return ctx, false, err
 	}
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.Encode(evaluated)
 
-	return false, nil
+	return newCtx, false, nil
 }

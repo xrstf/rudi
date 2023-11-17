@@ -10,12 +10,12 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func EvalProgram(ctx types.Context, p ast.Program) (any, error) {
+func EvalProgram(ctx types.Context, p ast.Program) (types.Context, any, error) {
 	innerCtx := ctx
 
 	if p.Expression != nil {
 		_, result, err := EvalExpression(innerCtx, p.Expression)
-		return result, err
+		return ctx, result, err
 	}
 
 	var (
@@ -26,9 +26,9 @@ func EvalProgram(ctx types.Context, p ast.Program) (any, error) {
 	for _, stmt := range p.Statements {
 		innerCtx, result, err = EvalStatement(innerCtx, stmt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to eval statement %s: %w", stmt.String(), err)
+			return ctx, nil, fmt.Errorf("failed to eval statement %s: %w", stmt.String(), err)
 		}
 	}
 
-	return result, nil
+	return innerCtx, result, nil
 }

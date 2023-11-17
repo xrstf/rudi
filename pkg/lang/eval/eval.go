@@ -8,11 +8,16 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval/types"
 )
 
-func Run(ctx types.Context, p ast.Program) (any, error) {
-	result, err := EvalProgram(ctx, p)
+func Run(ctx types.Context, p ast.Program) (types.Context, any, error) {
+	newCtx, result, err := EvalProgram(ctx, p)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
-	return types.UnwrapType(result)
+	unwrapped, err := types.UnwrapType(result)
+	if err != nil {
+		return ctx, nil, err
+	}
+
+	return newCtx, unwrapped, nil
 }
