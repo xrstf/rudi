@@ -11,7 +11,7 @@ OUTPUT_DIR ?= _build
 GO_DEFINES ?= -X main.BuildTag=$(GIT_VERSION) -X main.BuildCommit=$(GIT_HEAD) -X main.BuildDate=$(NOW_GO_RFC339)
 GO_LDFLAGS += -w -extldflags '-static' $(GO_DEFINES)
 GO_BUILD_FLAGS ?= -v -ldflags '$(GO_LDFLAGS)'
-GO_TEST_FLAGS ?= -race
+GO_TEST_FLAGS ?=
 
 .PHONY: generate
 generate:

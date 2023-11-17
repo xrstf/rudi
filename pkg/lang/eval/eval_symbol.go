@@ -4,6 +4,7 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/lang/ast"
@@ -11,13 +12,7 @@ import (
 )
 
 func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
-	rootDoc := ctx.GetDocument()
-	rootValue := rootDoc.Get()
-
-	if sym.IsDot() {
-		return ctx, rootValue, nil
-	}
-
+	// pre-evaluate the path expression
 	pathExpr := ast.EvaluatedPathExpression{}
 
 	if sym.PathExpression != nil {
@@ -28,17 +23,29 @@ func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
 		pathExpr = *evaluated
 	}
 
-	return EvalSymbolWithPath(ctx, sym, pathExpr)
+	return EvalSymbolWithEvaluatedPath(ctx, sym, pathExpr)
 }
 
-func EvalSymbolWithPath(ctx types.Context, sym ast.Symbol, path ast.EvaluatedPathExpression) (types.Context, any, error) {
+func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.EvaluatedPathExpression) (types.Context, any, error) {
 	rootDoc := ctx.GetDocument()
 	rootValue := rootDoc.Get()
 
-	if sym.IsDot() {
-		return ctx, rootValue, nil
+	// santity check
+	if sym.Variable == nil && sym.PathExpression == nil {
+		return ctx, nil, errors.New("invalid symbol")
 	}
 
+	// . always returns the root document
+	if sym.IsDot() {
+		wrapped, err := types.WrapNative(rootValue)
+		if err != nil {
+			return ctx, nil, err
+		}
+
+		return ctx, wrapped, nil
+	}
+
+	// if this symbol is a variable, replace the root value with the variable's value
 	if sym.Variable != nil {
 		var ok bool
 
@@ -47,10 +54,6 @@ func EvalSymbolWithPath(ctx types.Context, sym ast.Symbol, path ast.EvaluatedPat
 		rootValue, ok = ctx.GetVariable(varName)
 		if !ok {
 			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
-		}
-
-		if len(path.Steps) == 0 {
-			return ctx, rootValue, nil
 		}
 	}
 
@@ -122,6 +125,10 @@ func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 }
 
 func traverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
+	if len(path.Steps) == 0 {
+		return types.WrapNative(value)
+	}
+
 	for _, step := range path.Steps {
 		unwrappedValue, err := types.UnwrapType(value)
 		if err != nil {

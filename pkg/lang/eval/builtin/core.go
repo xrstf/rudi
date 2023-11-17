@@ -100,7 +100,7 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
 	}
 
-	_, value, err := eval.EvalSymbolWithPath(ctx, symbol, *evaluatedPath)
+	_, value, err := eval.EvalSymbolWithEvaluatedPath(ctx, symbol, *evaluatedPath)
 	if err != nil {
 		return false, nil
 	}

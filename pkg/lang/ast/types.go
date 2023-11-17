@@ -83,6 +83,10 @@ func (s Symbol) IsDot() bool {
 }
 
 func (s Symbol) String() string {
+	if s.IsDot() {
+		return "."
+	}
+
 	path := ""
 	if s.PathExpression != nil {
 		path = s.PathExpression.String()
@@ -276,6 +280,10 @@ func (Variable) ExpressionName() string {
 type Identifier string
 
 var _ Expression = Identifier("")
+
+func (i Identifier) Equal(other Identifier) bool {
+	return string(i) == string(other)
+}
 
 func (i Identifier) String() string {
 	return string(i)
