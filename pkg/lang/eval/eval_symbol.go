@@ -108,9 +108,14 @@ func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 
 		// keep accumulating context changes, so you _could_ in theory do
 		// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
-		innerCtx, evaluated, err = EvalExpression(innerCtx, step)
-		if err != nil {
-			return nil, fmt.Errorf("invalid accessor: %w", err)
+		switch asserted := step.(type) {
+		case ast.Identifier:
+			evaluated = ast.String(string(asserted))
+		default:
+			innerCtx, evaluated, err = EvalExpression(innerCtx, step)
+			if err != nil {
+				return nil, fmt.Errorf("invalid accessor: %w", err)
+			}
 		}
 
 		evaledAccessor, err := convertToAccessor(evaluated)

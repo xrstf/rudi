@@ -13,6 +13,11 @@ import (
 func EvalProgram(ctx types.Context, p ast.Program) (any, error) {
 	innerCtx := ctx
 
+	if p.Expression != nil {
+		_, result, err := EvalExpression(innerCtx, p.Expression)
+		return result, err
+	}
+
 	var (
 		result any
 		err    error

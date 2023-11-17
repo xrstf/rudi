@@ -12,12 +12,10 @@ import (
 
 func TestEvalIdentifier(t *testing.T) {
 	testcases := []struct {
-		input    ast.Identifier
-		expected ast.Identifier
+		input ast.Identifier
 	}{
 		{
-			input:    ast.Identifier("foo"),
-			expected: ast.Identifier("foo"),
+			input: ast.Identifier("foo"),
 		},
 	}
 
@@ -31,17 +29,8 @@ func TestEvalIdentifier(t *testing.T) {
 			ctx := eval.NewContext(doc, nil, nil)
 
 			_, value, err := eval.EvalIdentifier(ctx, testcase.input)
-			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
-			}
-
-			returned, ok := value.(ast.Identifier)
-			if !ok {
-				t.Fatalf("EvalIdentifier returned unexpected type %T", value)
-			}
-
-			if !returned.Equal(testcase.expected) {
-				t.Fatal("Result does not match expectation.")
+			if err == nil {
+				t.Fatalf("Evaluating identifiers should result in an error, but got %v.", value)
 			}
 		})
 	}
