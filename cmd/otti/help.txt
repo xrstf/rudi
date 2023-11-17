@@ -1,0 +1,18 @@
+Welcome to the Otto interpreter :)
+----------------------------------
+
+You can enter one of
+
+ * a path expression, like `.foo` or `.foo[0].bar`
+   to access the global document.
+ * an expression like (+ .foo 42) to compute data by
+   functions; see https://github.com/xrstf/otti for a
+   list of all available functions and expressions.
+ * a scalar JSON value, like `3` or `[1 2 3]`, which
+   will simply return that exact value with no further
+   side effects. Not super useful usually.
+
+Additionally, the following commands can be used:
+
+help – Show this help text.
+exit – Exit Otti immediately.
