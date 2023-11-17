@@ -34,18 +34,23 @@ Statement <- tup:Tuple {
    return ast.Statement{Tuple: tup.(ast.Tuple)}, nil
 }
 
-Expression <- ComplexExpression / ScalarExpression
+Expression <- Vector / Object / ScalarExpression
 NonTupleExpression <- Vector / Object / Number / String / Null / Bool / Symbol / Identifier
 
-// ComplexExpression are expressions that are 100% not scalars.
-ComplexExpression <- Vector / Object
-
 // ScalarExpression are expressions that have a _chance_ to turn into a scalar.
-ScalarExpression <- Number / String / Null / Bool / Tuple / Symbol / Identifier
+ScalarExpression <- Number / String / Null / Bool / Tuple / Symbol / Identifier / ObjectWithPathExpression / VectorWithPathExpression
 
-Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' {
+//////////////////////////////////////////////////////////
+// tuples
+
+Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' path:AnyQualifiedPathExpression? {
    t := ast.Tuple{
       Expressions: []ast.Expression{expr.(ast.Expression)},
+   }
+
+   if path != nil {
+      asserted := path.(ast.PathExpression)
+      t.PathExpression = &asserted
    }
 
    exprsSl := toAnySlice(exprs)
@@ -61,9 +66,32 @@ Tuple <- '(' __ expr:Expression exprs:(___ Expression)* __ ')' {
    return t, nil
 }
 
+//////////////////////////////////////////////////////////
+// vectors
+
 VectorItemSeparator <- (__ ',' __) / ___
 
-Vector <- '[' __ expr:Expression exprs:( VectorItemSeparator Expression )* __ ']' {
+Vector <- vec:vector path:VectorQualifiedPathExpression? {
+   vector := vec.(ast.VectorNode)
+
+   if path != nil {
+      asserted := path.(ast.PathExpression)
+      vector.PathExpression = &asserted
+   }
+
+   return vector, nil
+}
+
+VectorWithPathExpression <- vec:vector path:VectorQualifiedPathExpression {
+   vector := vec.(ast.VectorNode)
+
+   pathExpr := path.(ast.PathExpression)
+   vector.PathExpression = &pathExpr
+
+   return vector, nil
+}
+
+vector <- '[' __ expr:Expression exprs:( VectorItemSeparator Expression )* __ ']' {
    vector := ast.VectorNode{
       Expressions: []ast.Expression{expr.(ast.Expression)},
    }
@@ -86,7 +114,30 @@ Vector <- '[' __ expr:Expression exprs:( VectorItemSeparator Expression )* __ ']
    return ast.VectorNode{}, nil
 }
 
-Object <- '{' pairs:(__ KeyValuePair)* __ '}' {
+//////////////////////////////////////////////////////////
+// objects
+
+Object <- obj:object path:ObjectQualifiedPathExpression? {
+   o := obj.(ast.ObjectNode)
+
+   if path != nil {
+      asserted := path.(ast.PathExpression)
+      o.PathExpression = &asserted
+   }
+
+   return o, nil
+}
+
+ObjectWithPathExpression <- obj:object path:ObjectQualifiedPathExpression {
+   o := obj.(ast.ObjectNode)
+
+   pathExpr := path.(ast.PathExpression)
+   o.PathExpression = &pathExpr
+
+   return o, nil
+}
+
+object <- '{' pairs:(__ KeyValuePair)* __ '}' {
    o := ast.ObjectNode{}
 
    pairsSl := toAnySlice(pairs)
@@ -143,7 +194,7 @@ $var.subkey[0].$othervar.subkey
 
 */
 
-Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression? {
+Symbol <- '.' acc:VectorAccessor expr:AnyQualifiedPathExpression? {
    arrAcc := acc.(ast.Expression)
 
    pathExpr := ast.PathExpression{}
@@ -154,7 +205,7 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression? {
    pathExpr.Prepend(arrAcc)
 
    return ast.Symbol{PathExpression: &pathExpr}, nil
-} / acc:ObjectAccessor expr:QualifiedPathExpression? {
+} / acc:ObjectAccessor expr:AnyQualifiedPathExpression? {
    objAcc := acc.(ast.Expression)
 
    pathExpr := ast.PathExpression{}
@@ -165,7 +216,7 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression? {
    pathExpr.Prepend(objAcc)
 
    return ast.Symbol{PathExpression: &pathExpr}, nil
-} / val:Variable expr:QualifiedPathExpression? {
+} / val:Variable expr:AnyQualifiedPathExpression? {
    variable := val.(ast.Variable)
 
    var pathExpr *ast.PathExpression
@@ -184,8 +235,8 @@ Symbol <- '.' acc:ArrayAccessor expr:QualifiedPathExpression? {
    }, nil
 }
 
-// QualifiedPathExpression follows any qualifier (currently only variables or another path expression)
-QualifiedPathExpression <- pathExpr:(Accessor)+ {
+// AnyQualifiedPathExpression follows any qualifier
+AnyQualifiedPathExpression <- pathExpr:(Accessor)+ {
    path := ast.PathExpression{}
    steps := toAnySlice(pathExpr)
 
@@ -196,13 +247,42 @@ QualifiedPathExpression <- pathExpr:(Accessor)+ {
    return path, nil
 }
 
-Accessor <- ObjectAccessor / ArrayAccessor
+// ObjectQualifiedPathExpression follows an object
+ObjectQualifiedPathExpression <- begin:ObjectAccessor pathExpr:(Accessor)* {
+   path := ast.PathExpression{
+      Steps: []ast.Expression{begin.(ast.Expression)},
+   }
+
+   steps := toAnySlice(pathExpr)
+
+   for i := range steps {
+      path.Steps = append(path.Steps, steps[i].(ast.Expression))
+   }
+
+   return path, nil
+}
+
+// VectorQualifiedPathExpression follows a vector
+VectorQualifiedPathExpression <- begin:VectorAccessor pathExpr:(Accessor)* {
+   path := ast.PathExpression{
+      Steps: []ast.Expression{begin.(ast.Expression)},
+   }
+   steps := toAnySlice(pathExpr)
+
+   for i := range steps {
+      path.Steps = append(path.Steps, steps[i].(ast.Expression))
+   }
+
+   return path, nil
+}
+
+Accessor <- ObjectAccessor / VectorAccessor
 
 ObjectAccessor <- '.' val:PathIdentifier {
    return val, nil
 }
 
-ArrayAccessor <- '[' expr:ScalarExpression ']' {
+VectorAccessor <- '[' expr:ScalarExpression ']' {
    return expr, nil
 }
 

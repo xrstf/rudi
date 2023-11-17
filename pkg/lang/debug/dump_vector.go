@@ -11,7 +11,7 @@ import (
 )
 
 func DumpVector(vec *ast.Vector, out io.Writer, depth int) error {
-	if depth == DoNotIndent {
+	if depth == DoNotIndent || len(vec.Data) == 0 {
 		return dumpVectorSingleline(vec, out, depth)
 	}
 
@@ -31,29 +31,27 @@ func DumpVector(vec *ast.Vector, out io.Writer, depth int) error {
 }
 
 func dumpVectorSingleline(vec *ast.Vector, out io.Writer, depth int) error {
-	if err := writeString(out, "["); err != nil {
+	if err := writeString(out, "(vector"); err != nil {
 		return err
 	}
 
-	for i, val := range vec.Data {
-		if err := dumpAny(val, out, depth); err != nil {
+	for _, val := range vec.Data {
+		if err := writeString(out, " "); err != nil {
 			return err
 		}
 
-		if i < len(vec.Data)-1 {
-			if err := writeString(out, " "); err != nil {
-				return err
-			}
+		if err := dumpAny(val, out, depth); err != nil {
+			return err
 		}
 	}
 
-	return writeString(out, "]")
+	return writeString(out, ")")
 }
 
 func dumpVectorMultiline(vec *ast.Vector, out io.Writer, depth int) error {
 	prefix := strings.Repeat(Indent, depth+1)
 
-	if err := writeString(out, "["); err != nil {
+	if err := writeString(out, "(vector"); err != nil {
 		return err
 	}
 
@@ -68,11 +66,11 @@ func dumpVectorMultiline(vec *ast.Vector, out io.Writer, depth int) error {
 	}
 
 	prefix = strings.Repeat(Indent, depth)
-	return writeString(out, "\n"+prefix+"]")
+	return writeString(out, "\n"+prefix+")")
 }
 
 func DumpVectorNode(vec *ast.VectorNode, out io.Writer, depth int) error {
-	if depth == DoNotIndent {
+	if depth == DoNotIndent || len(vec.Expressions) == 0 {
 		return dumpVectorNodeSingleline(vec, out, depth)
 	}
 
@@ -92,34 +90,36 @@ func DumpVectorNode(vec *ast.VectorNode, out io.Writer, depth int) error {
 }
 
 func dumpVectorNodeSingleline(vec *ast.VectorNode, out io.Writer, depth int) error {
-	if err := writeString(out, "["); err != nil {
-		return err
-	}
-
-	for i, expr := range vec.Expressions {
-		if err := DumpExpression(expr, out, depth); err != nil {
-			return err
-		}
-
-		if i < len(vec.Expressions)-1 {
-			if err := writeString(out, " "); err != nil {
-				return err
-			}
-		}
-	}
-
-	return writeString(out, "]")
-}
-
-func dumpVectorNodeMultiline(vec *ast.VectorNode, out io.Writer, depth int) error {
-	prefix := strings.Repeat(Indent, depth+1)
-
-	if err := writeString(out, "["); err != nil {
+	if err := writeString(out, "(vector"); err != nil {
 		return err
 	}
 
 	for _, expr := range vec.Expressions {
-		if err := writeString(out, "\n"+prefix); err != nil {
+		if err := writeString(out, " "); err != nil {
+			return err
+		}
+
+		if err := DumpExpression(expr, out, depth); err != nil {
+			return err
+		}
+	}
+
+	if err := writeString(out, ")"); err != nil {
+		return err
+	}
+
+	return dumpOptionalPathExpression(vec.PathExpression, out, depth)
+}
+
+func dumpVectorNodeMultiline(vec *ast.VectorNode, out io.Writer, depth int) error {
+	prefixInner := strings.Repeat(Indent, depth+1)
+
+	if err := writeString(out, "(vector"); err != nil {
+		return err
+	}
+
+	for _, expr := range vec.Expressions {
+		if err := writeString(out, "\n"+prefixInner); err != nil {
 			return err
 		}
 
@@ -128,6 +128,11 @@ func dumpVectorNodeMultiline(vec *ast.VectorNode, out io.Writer, depth int) erro
 		}
 	}
 
-	prefix = strings.Repeat(Indent, depth)
-	return writeString(out, "\n"+prefix+"]")
+	prefixOuter := strings.Repeat(Indent, depth)
+
+	if err := writeString(out, "\n"+prefixOuter+")"); err != nil {
+		return err
+	}
+
+	return dumpOptionalPathExpression(vec.PathExpression, out, depth)
 }

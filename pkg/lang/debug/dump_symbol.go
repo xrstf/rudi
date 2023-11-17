@@ -70,3 +70,15 @@ func dumpPathExpression(path *ast.PathExpression, out io.Writer, depth int) erro
 
 	return writeString(out, "])")
 }
+
+func dumpOptionalPathExpression(path *ast.PathExpression, out io.Writer, depth int) error {
+	if path == nil {
+		return nil
+	}
+
+	if err := writeString(out, "."); err != nil {
+		return err
+	}
+
+	return dumpPathExpression(path, out, depth)
+}

@@ -84,23 +84,23 @@ func TestParseProgram(t *testing.T) {
 
 		{
 			input:    `([])`,
-			expected: `(tuple [])`,
+			expected: `(tuple (vector))`,
 		},
 		{
 			input:    `([1])`,
-			expected: `(tuple [(number 1)])`,
+			expected: `(tuple (vector (number 1)))`,
 		},
 		{
 			input:    `([  1 2  ])`,
-			expected: `(tuple [(number 1) (number 2)])`,
+			expected: `(tuple (vector (number 1) (number 2)))`,
 		},
 		{
 			input:    `([  1, 2  ])`,
-			expected: `(tuple [(number 1) (number 2)])`,
+			expected: `(tuple (vector (number 1) (number 2)))`,
 		},
 		{
 			input:    `([  1, 2,3 ,4  ])`,
-			expected: `(tuple [(number 1) (number 2) (number 3) (number 4)])`,
+			expected: `(tuple (vector (number 1) (number 2) (number 3) (number 4)))`,
 		},
 
 		/////////////////////////////////////////////////////
@@ -108,7 +108,7 @@ func TestParseProgram(t *testing.T) {
 
 		{
 			input:    `({})`,
-			expected: `(tuple {})`,
+			expected: `(tuple (object))`,
 		},
 		{
 			input:   `({foo})`,
@@ -116,11 +116,11 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `({foo bar})`,
-			expected: `(tuple {(identifier foo) (identifier bar)})`,
+			expected: `(tuple (object (identifier foo) (identifier bar)))`,
 		},
 		{
 			input:    `({ foo bar (bar) 42 })`,
-			expected: `(tuple {(identifier foo) (identifier bar) (tuple (identifier bar)) (number 42)})`,
+			expected: `(tuple (object (identifier foo) (identifier bar) (tuple (identifier bar)) (number 42)))`,
 		},
 
 		/////////////////////////////////////////////////////
@@ -223,18 +223,6 @@ func TestParseProgram(t *testing.T) {
 			invalid: true,
 		},
 
-		// These would be nice, but the current grammar does not support it; use a temp variable
-		// instead; maybe add support for this later? :)
-
-		{
-			input:   `(add (bar).foo)`,
-			invalid: true,
-		},
-		{
-			input:   `(add (bar)[1])`,
-			invalid: true,
-		},
-
 		/////////////////////////////////////////////////////
 		// can also use a single symbol as the top level element of a program
 
@@ -312,11 +300,73 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `[1 2]`,
-			expected: `[(number 1) (number 2)]`,
+			expected: `(vector (number 1) (number 2))`,
 		},
 		{
 			input:    `{foo "bar"}`,
-			expected: `{(identifier foo) (string "bar")}`,
+			expected: `(object (identifier foo) (string "bar"))`,
+		},
+
+		/////////////////////////////////////////////////////
+		// path expressions should work on tuples, vectors and objects too;
+		// some of these examples look "obviously" wrong, but are still syntactically
+		// correct; things like (add 1 2).foo will blow up during evaluation.
+
+		{
+			input:    `(add 1 2).foo`,
+			expected: `(tuple (identifier add) (number 1) (number 2)).(path [(identifier foo)])`,
+		},
+		{
+			input:    `(add 1 2)[1]`,
+			expected: `(tuple (identifier add) (number 1) (number 2)).(path [(number 1)])`,
+		},
+		{
+			input:    `(add (bar).foo)`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(identifier foo)]))`,
+		},
+		{
+			input:    `(add (bar).foo[1])`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(identifier foo) (number 1)]))`,
+		},
+		{
+			input:    `(add (bar)[1])`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(number 1)]))`,
+		},
+		{
+			input:    `(add (bar)[1].sub)`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(number 1) (identifier sub)]))`,
+		},
+		{
+			input:    `(add [1 2 3][0].foo)`,
+			expected: `(tuple (identifier add) (vector (number 1) (number 2) (number 3)).(path [(number 0) (identifier foo)]))`,
+		},
+		{
+			input:   `(add [1 2 3].[0])`,
+			invalid: true,
+		},
+		{
+			input:   `(add [1 2 3].foo)`,
+			invalid: true,
+		},
+		{
+			input:    `(add {foo "bar"}.foo[1])`,
+			expected: `(tuple (identifier add) (object (identifier foo) (string "bar")).(path [(identifier foo) (number 1)]))`,
+		},
+		{
+			input:   `(add {foo "bar"}[1])`,
+			invalid: true,
+		},
+		{
+			input:    `(add {foo "bar"}.foo[{bla 1}.bla[0]])`,
+			expected: `(tuple (identifier add) (object (identifier foo) (string "bar")).(path [(identifier foo) (object (identifier bla) (number 1)).(path [(identifier bla) (number 0)])]))`,
+		},
+		{
+			input:    `(add {{foo "bar"}.foo "bar"})`,
+			expected: `(tuple (identifier add) (object (object (identifier foo) (string "bar")).(path [(identifier foo)]) (string "bar")))`,
+		},
+		{
+			input:    `(add {[0 "foo"][1] "bar"})`,
+			expected: `(tuple (identifier add) (object (vector (number 0) (string "foo")).(path [(number 1)]) (string "bar")))`,
 		},
 	}
 

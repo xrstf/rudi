@@ -72,8 +72,8 @@ func (Statement) ExpressionName() string {
 }
 
 type Symbol struct {
-	PathExpression *PathExpression // can be combined with Variable
 	Variable       *Variable
+	PathExpression *PathExpression
 }
 
 var _ Expression = Symbol{}
@@ -119,18 +119,24 @@ func (s Symbol) ExpressionName() string {
 }
 
 type Tuple struct {
-	Expressions []Expression
+	Expressions    []Expression
+	PathExpression *PathExpression
 }
 
 var _ Expression = Tuple{}
 
 func (t Tuple) String() string {
+	path := ""
+	if t.PathExpression != nil {
+		path = t.PathExpression.String()
+	}
+
 	exprs := make([]string, len(t.Expressions))
 	for i, expr := range t.Expressions {
 		exprs[i] = expr.String()
 	}
 
-	return "(" + strings.Join(exprs, " ") + ")"
+	return "(" + strings.Join(exprs, " ") + ")" + path
 }
 
 func (Tuple) ExpressionName() string {
@@ -173,17 +179,24 @@ func (v Vector) Clone() Vector {
 // VectorNode represents the parsed code for constructing an vector.
 // When an VectorNode is evaluated, it turns into an Vector.
 type VectorNode struct {
-	Expressions []Expression
+	Expressions    []Expression
+	PathExpression *PathExpression
 }
 
 var _ Expression = VectorNode{}
 
 func (v VectorNode) String() string {
+	path := ""
+	if v.PathExpression != nil {
+		path = v.PathExpression.String()
+	}
+
 	exprs := make([]string, len(v.Expressions))
 	for i, expr := range v.Expressions {
 		exprs[i] = expr.String()
 	}
-	return "[" + strings.Join(exprs, " ") + "]"
+
+	return "[" + strings.Join(exprs, " ") + "]" + path
 }
 
 func (VectorNode) ExpressionName() string {
@@ -217,7 +230,8 @@ func (o Object) LiteralValue() any {
 // ObjectNode represents the parsed code for constructing an object.
 // When an ObjectNode is evaluated, it turns into an Object.
 type ObjectNode struct {
-	Data []KeyValuePair
+	Data           []KeyValuePair
+	PathExpression *PathExpression
 }
 
 var _ Expression = ObjectNode{}
