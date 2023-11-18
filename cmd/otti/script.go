@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"go.xrstf.de/otto/pkg/lang/debug"
 	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/builtin"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
@@ -41,6 +42,15 @@ func runScript(opts *options, args []string) error {
 	program, err := parseScript(script)
 	if err != nil {
 		return fmt.Errorf("invalid script: %w", err)
+	}
+
+	// show AST and quit if desired
+	if opts.printAst {
+		if err := debug.Dump(program, os.Stdout); err != nil {
+			return fmt.Errorf("failed to dump AST: %w", err)
+		}
+
+		return nil
 	}
 
 	// load all remaining args as input files
