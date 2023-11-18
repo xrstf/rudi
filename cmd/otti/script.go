@@ -10,10 +10,8 @@ import (
 	"os"
 	"strings"
 
+	"go.xrstf.de/otto"
 	"go.xrstf.de/otto/pkg/debug"
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/builtin"
-	"go.xrstf.de/otto/pkg/eval/types"
 
 	"gopkg.in/yaml.v3"
 )
@@ -21,6 +19,8 @@ import (
 func runScript(opts *options, args []string) error {
 	// determine input script to evaluate
 	script := ""
+	scriptName := ""
+
 	if opts.scriptFile != "" {
 		content, err := os.ReadFile(opts.scriptFile)
 		if err != nil {
@@ -28,6 +28,7 @@ func runScript(opts *options, args []string) error {
 		}
 
 		script = strings.TrimSpace(string(content))
+		scriptName = opts.scriptFile
 	} else {
 		if len(args) == 0 {
 			return errors.New("no script provided either via argument or --script")
@@ -36,10 +37,11 @@ func runScript(opts *options, args []string) error {
 		// consume one arg for the script
 		script = args[0]
 		args = args[1:]
+		scriptName = "(stdin)"
 	}
 
 	// parse the script
-	program, err := parseScript(script)
+	program, err := otto.ParseScript(scriptName, script)
 	if err != nil {
 		return fmt.Errorf("invalid script: %w", err)
 	}
@@ -60,18 +62,13 @@ func runScript(opts *options, args []string) error {
 	}
 
 	// setup the evaluation context
-	document, err := types.NewDocument(files[0])
+	ctx, err := setupOttoContext(files)
 	if err != nil {
-		return fmt.Errorf("cannot use %s as document: %w", args[0], err)
+		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
-	vars := eval.NewVariables().
-		Set("files", files)
-
-	ctx := eval.NewContext(document, builtin.Functions, vars)
-
 	// evaluate the script
-	_, evaluated, err := eval.Run(ctx, program)
+	_, evaluated, err := otto.RunProgram(ctx, program)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

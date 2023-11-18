@@ -9,9 +9,7 @@ import (
 	"io"
 	"os"
 
-	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/parser"
-
+	"go.xrstf.de/otto"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,19 +57,25 @@ func loadFile(opts *options, filename string) (any, error) {
 	return doc, nil
 }
 
-func parseScript(script string) (ast.Program, error) {
-	got, err := parser.Parse("(repl)", []byte(script))
-	if err != nil {
-		return ast.Program{}, err
-		// fmt.Println(caretError(err, script))
-		// os.Exit(1)
+func setupOttoContext(files []any) (otto.Context, error) {
+	var (
+		document otto.Document
+		err      error
+	)
+
+	if len(files) > 0 {
+		document, err = otto.NewDocument(files[0])
+		if err != nil {
+			return otto.Context{}, fmt.Errorf("cannot use first input as document: %w", err)
+		}
+	} else {
+		document, _ = otto.NewDocument(nil)
 	}
 
-	program, ok := got.(ast.Program)
-	if !ok {
-		// this should never happen
-		return ast.Program{}, fmt.Errorf("parsed input is not a ast.Program, but %T", got)
-	}
+	vars := otto.NewVariables().
+		Set("files", files)
 
-	return program, nil
+	ctx := otto.NewContext(document, otto.NewBuiltInFunctions(), vars)
+
+	return ctx, nil
 }

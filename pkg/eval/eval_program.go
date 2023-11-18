@@ -4,13 +4,18 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 
 	"go.xrstf.de/otto/pkg/eval/types"
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func EvalProgram(ctx types.Context, p ast.Program) (types.Context, any, error) {
+func EvalProgram(ctx types.Context, p *ast.Program) (types.Context, any, error) {
+	if p == nil {
+		return ctx, nil, errors.New("program is nil")
+	}
+
 	innerCtx := ctx
 
 	var (

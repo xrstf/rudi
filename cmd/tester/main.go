@@ -76,7 +76,7 @@ func main() {
 
 	progContext := eval.NewContext(doc, builtin.Functions, vars)
 
-	fmt.Println(eval.Run(progContext, program))
+	fmt.Println(eval.Run(progContext, &program))
 	fmt.Println("-----------------------------------------------------")
 }
 

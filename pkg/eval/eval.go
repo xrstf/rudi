@@ -8,7 +8,7 @@ import (
 	"go.xrstf.de/otto/pkg/lang/ast"
 )
 
-func Run(ctx types.Context, p ast.Program) (types.Context, any, error) {
+func Run(ctx types.Context, p *ast.Program) (types.Context, any, error) {
 	newCtx, result, err := EvalProgram(ctx, p)
 	if err != nil {
 		return ctx, nil, err

@@ -11,8 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/builtin"
+	"go.xrstf.de/otto"
 	"go.xrstf.de/otto/pkg/eval/types"
 )
 
@@ -44,21 +43,10 @@ func runConsole(opts *options, args []string) error {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	var document types.Document
-
-	if len(files) > 0 {
-		document, err = types.NewDocument(files[0])
-		if err != nil {
-			return fmt.Errorf("cannot use %s as document: %w", args[0], err)
-		}
-	} else {
-		document, _ = types.NewDocument(nil)
+	ctx, err := setupOttoContext(files)
+	if err != nil {
+		return fmt.Errorf("failed to setup context: %w", err)
 	}
-
-	vars := eval.NewVariables().
-		Set("files", files)
-
-	ctx := eval.NewContext(document, builtin.Functions, vars)
 
 	fmt.Println("Welcome to Otti 🐘")
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
@@ -70,7 +58,7 @@ func runConsole(opts *options, args []string) error {
 	for reader.Scan() {
 		input := cleanInput(reader.Text())
 
-		newCtx, stop, err := processReplInput(ctx, opts, &document, input)
+		newCtx, stop, err := processReplInput(ctx, opts, input)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
@@ -87,7 +75,7 @@ func runConsole(opts *options, args []string) error {
 	return nil
 }
 
-func processReplInput(ctx types.Context, opts *options, doc *types.Document, input string) (newCtx types.Context, stop bool, err error) {
+func processReplInput(ctx types.Context, opts *options, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
 		return ctx, false, command()
 	}
@@ -97,14 +85,14 @@ func processReplInput(ctx types.Context, opts *options, doc *types.Document, inp
 	}
 
 	// parse input
-	program, err := parseScript(input)
+	program, err := otto.ParseScript("(repl)", input)
 	if err != nil {
 		return ctx, false, err
 		// fmt.Println(caretError(err, string(content)))
 		// os.Exit(1)
 	}
 
-	newCtx, evaluated, err := eval.Run(ctx, program)
+	newCtx, evaluated, err := otto.RunProgram(ctx, program)
 	if err != nil {
 		return ctx, false, err
 	}

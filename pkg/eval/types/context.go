@@ -93,6 +93,14 @@ func (f Functions) Set(name string, fun Function) Functions {
 	return f
 }
 
+func (f Functions) DeepCopy() Functions {
+	result := NewFunctions()
+	for key, val := range f {
+		result[key] = val
+	}
+	return result
+}
+
 type Variables map[string]any
 
 func NewVariables() Variables {
