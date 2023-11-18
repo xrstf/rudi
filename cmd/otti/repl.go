@@ -110,7 +110,9 @@ func processReplInput(ctx types.Context, opts *options, doc *types.Document, inp
 	}
 
 	encoder := json.NewEncoder(os.Stdout)
-	encoder.Encode(evaluated)
+	if err := encoder.Encode(evaluated); err != nil {
+		return ctx, false, fmt.Errorf("failed to encode %v: %w", evaluated, err)
+	}
 
 	return newCtx, false, nil
 }

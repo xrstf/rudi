@@ -13,8 +13,3 @@ import (
 func DumpNumber(num *ast.Number, out io.Writer) error {
 	return writeString(out, fmt.Sprintf("(number %s)", num))
 }
-
-// hack until PathExpression steps do use proper Expressions
-func dumpInteger(i *int64, out io.Writer) error {
-	return writeString(out, fmt.Sprintf("(number %d)", *i))
-}

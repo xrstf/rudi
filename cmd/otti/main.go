@@ -11,9 +11,10 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/spf13/pflag"
 	"go.xrstf.de/otto/pkg/lang/ast"
 	"go.xrstf.de/otto/pkg/lang/parser"
+
+	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,12 +38,16 @@ func printVersion() {
 type options struct {
 	interactive bool
 	scriptFile  string
+	prettyPrint bool
+	formatYaml  bool
 	version     bool
 }
 
 func (o *options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVarP(&o.interactive, "interactive", "i", o.interactive, "Start an interactive REPL to run expressions.")
 	fs.StringVarP(&o.scriptFile, "script", "s", o.scriptFile, "Load Otto script from file instead of first argument (only in non-interactive mode).")
+	fs.BoolVarP(&o.prettyPrint, "pretty", "p", o.prettyPrint, "Output pretty-printed JSON.")
+	fs.BoolVarP(&o.formatYaml, "yaml", "y", o.formatYaml, "Output pretty-printed YAML instead of JSON.")
 	fs.BoolVarP(&o.version, "version", "V", o.version, "Show version and exit.")
 }
 

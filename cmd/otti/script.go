@@ -4,7 +4,6 @@
 package main
 
 import (
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +13,8 @@ import (
 	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/builtin"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
+
+	"gopkg.in/yaml.v3"
 )
 
 func runScript(opts *options, args []string) error {
@@ -66,8 +67,23 @@ func runScript(opts *options, args []string) error {
 	}
 
 	// print the output
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.Encode(evaluated)
+	var encoder interface {
+		Encode(v any) error
+	}
+
+	if opts.formatYaml {
+		encoder = yaml.NewEncoder(os.Stdout)
+		encoder.(*yaml.Encoder).SetIndent(2)
+	} else {
+		encoder = json.NewEncoder(os.Stdout)
+		if opts.prettyPrint {
+			encoder.(*json.Encoder).SetIndent("", "  ")
+		}
+	}
+
+	if err := encoder.Encode(evaluated); err != nil {
+		return fmt.Errorf("failed to encode %v: %w", evaluated, err)
+	}
 
 	return nil
 }

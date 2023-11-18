@@ -133,7 +133,7 @@ func formatFloat(f float64) string {
 func IsEmpty(val any) (bool, error) {
 	switch v := val.(type) {
 	case bool:
-		return v == false, nil
+		return !v, nil
 	case int64:
 		return v == 0, nil
 	case float64:
