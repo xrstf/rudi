@@ -12,6 +12,8 @@ import (
 	"runtime"
 
 	"github.com/spf13/pflag"
+	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/otto/pkg/lang/parser"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,12 +36,22 @@ func printVersion() {
 
 type options struct {
 	interactive bool
+	scriptFile  string
 	version     bool
 }
 
 func (o *options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVarP(&o.interactive, "interactive", "i", o.interactive, "Start an interactive REPL to run expressions.")
+	fs.StringVarP(&o.scriptFile, "script", "s", o.scriptFile, "Load Otto script from file instead of first argument (only in non-interactive mode).")
 	fs.BoolVarP(&o.version, "version", "V", o.version, "Show version and exit.")
+}
+
+func (o *options) Validate() error {
+	if o.interactive && o.scriptFile != "" {
+		return errors.New("cannot combine --interactive with --script")
+	}
+
+	return nil
 }
 
 func main() {
@@ -53,13 +65,23 @@ func main() {
 		return
 	}
 
+	if err := opts.Validate(); err != nil {
+		fmt.Printf("Invalid command line: %v", err)
+		os.Exit(2)
+	}
+
 	args := pflag.Args()
 
 	if opts.interactive {
-		if err := replRun(&opts, args); err != nil {
+		if err := runConsole(&opts, args); err != nil {
 			fmt.Printf("Error: %v", err)
 			os.Exit(1)
 		}
+	}
+
+	if err := runScript(&opts, args); err != nil {
+		fmt.Printf("Error: %v", err)
+		os.Exit(1)
 	}
 }
 
@@ -105,4 +127,21 @@ func loadFile(opts *options, filename string) (any, error) {
 	}
 
 	return doc, nil
+}
+
+func parseScript(script string) (ast.Program, error) {
+	got, err := parser.Parse("(repl)", []byte(script))
+	if err != nil {
+		return ast.Program{}, err
+		// fmt.Println(caretError(err, script))
+		// os.Exit(1)
+	}
+
+	program, ok := got.(ast.Program)
+	if !ok {
+		// this should never happen
+		return ast.Program{}, fmt.Errorf("parsed input is not a ast.Program, but %T", got)
+	}
+
+	return program, nil
 }

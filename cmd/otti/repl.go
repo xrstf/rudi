@@ -7,16 +7,13 @@ import (
 	"bufio"
 	_ "embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 
-	"go.xrstf.de/otto/pkg/lang/ast"
 	"go.xrstf.de/otto/pkg/lang/eval"
 	"go.xrstf.de/otto/pkg/lang/eval/builtin"
 	"go.xrstf.de/otto/pkg/lang/eval/types"
-	"go.xrstf.de/otto/pkg/lang/parser"
 )
 
 //go:embed help.txt
@@ -41,19 +38,21 @@ var replCommands = map[string]replCommandFunc{
 	"help": displayHelp,
 }
 
-func replRun(opts *options, args []string) error {
-	if len(args) == 0 {
-		return errors.New("no input file given")
-	}
-
+func runConsole(opts *options, args []string) error {
 	files, err := loadFiles(opts, args)
 	if err != nil {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	document, err := types.NewDocument(files[0])
-	if err != nil {
-		return fmt.Errorf("cannot use %s as document: %w", args[0], err)
+	var document types.Document
+
+	if len(files) > 0 {
+		document, err = types.NewDocument(files[0])
+		if err != nil {
+			return fmt.Errorf("cannot use %s as document: %w", args[0], err)
+		}
+	} else {
+		document, _ = types.NewDocument(nil)
 	}
 
 	vars := eval.NewVariables().
@@ -98,16 +97,11 @@ func processReplInput(ctx types.Context, opts *options, doc *types.Document, inp
 	}
 
 	// parse input
-	got, err := parser.Parse("(repl)", []byte(input))
+	program, err := parseScript(input)
 	if err != nil {
 		return ctx, false, err
 		// fmt.Println(caretError(err, string(content)))
 		// os.Exit(1)
-	}
-
-	program, ok := got.(ast.Program)
-	if !ok {
-		return ctx, false, fmt.Errorf("parsed input is not a ast.Program, but %T", got)
 	}
 
 	newCtx, evaluated, err := eval.Run(ctx, program)
