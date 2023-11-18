@@ -7,6 +7,7 @@ import (
 	"bufio"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -57,10 +58,20 @@ func runConsole(opts *options, args []string) error {
 
 	for reader.Scan() {
 		input := cleanInput(reader.Text())
+		if input == "" {
+			printPrompt()
+			continue
+		}
 
 		newCtx, stop, err := processReplInput(ctx, opts, input)
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
+			parseErr := &otto.ParseError{}
+			if errors.As(err, parseErr) {
+				fmt.Println(parseErr.Snippet())
+				fmt.Println(parseErr)
+			} else {
+				fmt.Printf("Error: %v\n", err)
+			}
 		}
 		if stop {
 			break
@@ -88,8 +99,6 @@ func processReplInput(ctx types.Context, opts *options, input string) (newCtx ty
 	program, err := otto.ParseScript("(repl)", input)
 	if err != nil {
 		return ctx, false, err
-		// fmt.Println(caretError(err, string(content)))
-		// os.Exit(1)
 	}
 
 	newCtx, evaluated, err := otto.RunProgram(ctx, program)

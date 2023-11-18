@@ -44,9 +44,7 @@ func NewDocument(data any) (Document, error) {
 func ParseScript(name string, script string) (*Program, error) {
 	got, err := parser.Parse(name, []byte(script))
 	if err != nil {
-		return nil, err
-		// fmt.Println(caretError(err, script))
-		// os.Exit(1)
+		return nil, ParseError{script: script, err: err}
 	}
 
 	program, ok := got.(Program)

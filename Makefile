@@ -24,7 +24,6 @@ clean:
 .PHONY: build
 build:
 	mkdir -p _build
-	go build $(GO_BUILD_FLAGS) -o _build/ ./cmd/tester
 	cd cmd/otti && go build $(GO_BUILD_FLAGS) -o ../../_build .
 
 .PHONY: test

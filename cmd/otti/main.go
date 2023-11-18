@@ -4,11 +4,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
 
 	"github.com/spf13/pflag"
+	"go.xrstf.de/otto"
 )
 
 // These variables get set by ldflags during compilation.
@@ -40,7 +42,7 @@ func main() {
 	}
 
 	if err := opts.Validate(); err != nil {
-		fmt.Printf("Invalid command line: %v", err)
+		fmt.Printf("Invalid command line: %v\n", err)
 		os.Exit(2)
 	}
 
@@ -48,13 +50,20 @@ func main() {
 
 	if opts.interactive {
 		if err := runConsole(&opts, args); err != nil {
-			fmt.Printf("Error: %v", err)
+			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
 	if err := runScript(&opts, args); err != nil {
-		fmt.Printf("Error: %v", err)
+		parseErr := &otto.ParseError{}
+		if errors.As(err, parseErr) {
+			fmt.Println(parseErr.Snippet())
+			fmt.Println(parseErr)
+		} else {
+			fmt.Printf("Error: %v\n", err)
+		}
+
 		os.Exit(1)
 	}
 }
