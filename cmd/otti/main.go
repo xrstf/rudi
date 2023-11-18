@@ -12,7 +12,6 @@ import (
 	"runtime"
 
 	"github.com/spf13/pflag"
-	"go.xrstf.de/otto/pkg/lang/eval/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -64,9 +63,24 @@ func main() {
 	}
 }
 
-func loadDocument(opts *options, filename string) (types.Document, error) {
+func loadFiles(opts *options, filenames []string) ([]any, error) {
+	results := make([]any, len(filenames))
+
+	for i, filename := range filenames {
+		data, err := loadFile(opts, filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read %s: %w", filename, err)
+		}
+
+		results[i] = data
+	}
+
+	return results, nil
+}
+
+func loadFile(opts *options, filename string) (any, error) {
 	if filename == "" {
-		return types.Document{}, errors.New("no filename provided")
+		return nil, errors.New("no filename provided")
 	}
 
 	var input io.Reader
@@ -76,7 +90,7 @@ func loadDocument(opts *options, filename string) (types.Document, error) {
 	} else {
 		f, err := os.Open(filename)
 		if err != nil {
-			return types.Document{}, err
+			return nil, err
 		}
 		defer f.Close()
 
@@ -87,8 +101,8 @@ func loadDocument(opts *options, filename string) (types.Document, error) {
 
 	decoder := yaml.NewDecoder(input)
 	if err := decoder.Decode(&doc); err != nil {
-		return types.Document{}, fmt.Errorf("failed to parse document as YAML/JSON: %w", err)
+		return nil, fmt.Errorf("failed to parse document as YAML/JSON: %w", err)
 	}
 
-	return types.NewDocument(doc)
+	return doc, nil
 }

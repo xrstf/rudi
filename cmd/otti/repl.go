@@ -46,12 +46,19 @@ func replRun(opts *options, args []string) error {
 		return errors.New("no input file given")
 	}
 
-	document, err := loadDocument(opts, args[0])
+	files, err := loadFiles(opts, args)
 	if err != nil {
-		return fmt.Errorf("failed to read %q: %w", args[0], err)
+		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	vars := eval.NewVariables()
+	document, err := types.NewDocument(files[0])
+	if err != nil {
+		return fmt.Errorf("cannot use %s as document: %w", args[0], err)
+	}
+
+	vars := eval.NewVariables().
+		Set("files", files)
+
 	ctx := eval.NewContext(document, builtin.Functions, vars)
 
 	fmt.Println("Welcome to Otti 🐘")
