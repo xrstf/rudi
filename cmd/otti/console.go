@@ -4,7 +4,6 @@
 package main
 
 import (
-	"bufio"
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -12,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chzyer/readline"
 	"go.xrstf.de/otto"
 	"go.xrstf.de/otto/pkg/eval/types"
 )
@@ -39,6 +39,11 @@ var replCommands = map[string]replCommandFunc{
 }
 
 func runConsole(opts *options, args []string) error {
+	rl, err := readline.New("⮞ ")
+	if err != nil {
+		return fmt.Errorf("failed to setup readline prompt: %w", err)
+	}
+
 	files, err := loadFiles(opts, args)
 	if err != nil {
 		return fmt.Errorf("failed to read inputs: %w", err)
@@ -53,17 +58,17 @@ func runConsole(opts *options, args []string) error {
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
 
-	reader := bufio.NewScanner(os.Stdin)
-	printPrompt()
-
-	for reader.Scan() {
-		input := cleanInput(reader.Text())
-		if input == "" {
-			printPrompt()
+	for {
+		line, err := rl.Readline()
+		if err != nil { // io.EOF
+			break
+		}
+		line = cleanInput(line)
+		if line == "" {
 			continue
 		}
 
-		newCtx, stop, err := processReplInput(ctx, opts, input)
+		newCtx, stop, err := processReplInput(ctx, opts, line)
 		if err != nil {
 			parseErr := &otto.ParseError{}
 			if errors.As(err, parseErr) {
@@ -76,7 +81,6 @@ func runConsole(opts *options, args []string) error {
 		if stop {
 			break
 		}
-		printPrompt()
 
 		ctx = newCtx
 	}

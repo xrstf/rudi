@@ -53,17 +53,17 @@ func main() {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
-	}
+	} else {
+		if err := runScript(&opts, args); err != nil {
+			parseErr := &otto.ParseError{}
+			if errors.As(err, parseErr) {
+				fmt.Println(parseErr.Snippet())
+				fmt.Println(parseErr)
+			} else {
+				fmt.Printf("Error: %v\n", err)
+			}
 
-	if err := runScript(&opts, args); err != nil {
-		parseErr := &otto.ParseError{}
-		if errors.As(err, parseErr) {
-			fmt.Println(parseErr.Snippet())
-			fmt.Println(parseErr)
-		} else {
-			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
 		}
-
-		os.Exit(1)
 	}
 }
