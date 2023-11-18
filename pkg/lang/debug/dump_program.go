@@ -11,10 +11,6 @@ import (
 )
 
 func DumpProgram(p *ast.Program, out io.Writer, depth int) error {
-	if p.Expression != nil {
-		return DumpExpression(p.Expression, out, depth)
-	}
-
 	for _, stmt := range p.Statements {
 		if err := DumpStatement(&stmt, out, depth); err != nil {
 			return fmt.Errorf("failed to dump statement %s: %w", stmt.String(), err)

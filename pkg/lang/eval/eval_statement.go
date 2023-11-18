@@ -9,7 +9,7 @@ import (
 )
 
 func EvalStatement(ctx types.Context, stmt ast.Statement) (types.Context, any, error) {
-	newContext, result, err := EvalTuple(ctx, stmt.Tuple)
+	newContext, result, err := EvalExpression(ctx, stmt.Expression)
 	if err != nil {
 		return ctx, nil, err
 	}

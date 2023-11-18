@@ -34,5 +34,7 @@ func runExpression(t *testing.T, expr string, document any, variables types.Vari
 
 	progContext := eval.NewContext(doc, Functions, variables)
 
-	return eval.Run(progContext, program)
+	_, result, err := eval.Run(progContext, program)
+
+	return result, err
 }

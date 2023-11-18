@@ -22,18 +22,11 @@ type Literal interface {
 // A program is either a series of statements or a single, non-tuple expression
 type Program struct {
 	Statements []Statement
-
-	// tuple expressions are not allowed
-	Expression Expression
 }
 
 var _ Expression = Program{}
 
 func (p Program) String() string {
-	if p.Expression != nil {
-		return p.Expression.String()
-	}
-
 	statements := make([]string, len(p.Statements))
 	for i, s := range p.Statements {
 		statements[i] = s.String()
@@ -46,8 +39,6 @@ func (p Program) ExpressionName() string {
 	name := ""
 
 	switch {
-	case p.Expression != nil:
-		name = "Expression"
 	case len(p.Statements) > 0:
 		name = "Statements"
 	default:
@@ -58,13 +49,13 @@ func (p Program) ExpressionName() string {
 }
 
 type Statement struct {
-	Tuple Tuple
+	Expression Expression
 }
 
 var _ Expression = Statement{}
 
 func (s Statement) String() string {
-	return s.Tuple.String()
+	return s.Expression.String()
 }
 
 func (Statement) ExpressionName() string {

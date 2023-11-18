@@ -7,12 +7,10 @@ package parser
 import "go.xrstf.de/otto/pkg/lang/ast"
 }
 
-Program <- __ expr:NonTupleExpression __ EOF {
-   return ast.Program{
-      Expression: expr.(ast.Expression),
-   }, nil
-} / stmts:(__ Statement)* __ EOF {
-   p := ast.Program{}
+Program <- __ stmt:Statement stmts:(___ Statement)* __ EOF {
+   p := ast.Program{
+      Statements: []ast.Statement{stmt.(ast.Statement)},
+   }
 
    stmtsSl := toAnySlice(stmts)
    if len(stmtsSl) == 0 {
@@ -29,13 +27,13 @@ Program <- __ expr:NonTupleExpression __ EOF {
    return p, nil
 }
 
-// Statement is basically an alias, but allows for easier top-level detection during execution
-Statement <- tup:Tuple {
-   return ast.Statement{Tuple: tup.(ast.Tuple)}, nil
+// Statement is basically an alias for top-level expressions, making end-of-recursion detection easier.
+Statement <- expr:Expression {
+   return ast.Statement{Expression: expr.(ast.Expression)}, nil
 }
 
-Expression <- Vector / Object / ScalarExpression
-NonTupleExpression <- Vector / Object / Number / String / Null / Bool / Symbol / Identifier
+// Expressions can be anything at all.
+Expression <- Vector / Object / Tuple / Number / String / Null / Bool / Symbol / Identifier
 
 // ScalarExpression are expressions that have a _chance_ to turn into a scalar.
 ScalarExpression <- Number / String / Null / Bool / Tuple / Symbol / Identifier / ObjectWithPathExpression / VectorWithPathExpression

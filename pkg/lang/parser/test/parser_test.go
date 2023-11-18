@@ -239,19 +239,23 @@ func TestParseProgram(t *testing.T) {
 			invalid: true,
 		},
 		{
-			input:   `. .`,
-			invalid: true,
+			input:    `. .`,
+			expected: `(symbol (path [])) (symbol (path []))`,
 		},
 		{
-			input:   `(+ 1 2) .bar`,
-			invalid: true,
+			input:    `(+ 1 2) .bar`,
+			expected: `(tuple (identifier +) (number 1) (number 2)) (symbol (path [(identifier bar)]))`,
 		},
 		{
-			input:   `.bar (+ 1 2)`,
-			invalid: true,
+			input:    `.bar (+ 1 2)`,
+			expected: `(symbol (path [(identifier bar)])) (tuple (identifier +) (number 1) (number 2))`,
 		},
 		{
 			input:   `.bar.`,
+			invalid: true,
+		},
+		{
+			input:   `(bar).`,
 			invalid: true,
 		},
 		{
@@ -259,8 +263,8 @@ func TestParseProgram(t *testing.T) {
 			expected: `(symbol (path [(identifier bar)]))`,
 		},
 		{
-			input:   `.bar .bar`,
-			invalid: true,
+			input:    `.bar .bar`,
+			expected: `(symbol (path [(identifier bar)])) (symbol (path [(identifier bar)]))`,
 		},
 		{
 			input:    `.bar.foo`,

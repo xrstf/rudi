@@ -10,5 +10,5 @@ import (
 )
 
 func DumpStatement(stmt *ast.Statement, out io.Writer, depth int) error {
-	return DumpTuple(&stmt.Tuple, out, depth)
+	return DumpExpression(stmt.Expression, out, depth)
 }
