@@ -15,6 +15,7 @@ func TestEvalObjectNode(t *testing.T) {
 	testcases := []struct {
 		input    ast.ObjectNode
 		expected ast.Literal
+		invalid  bool
 	}{
 		// {}
 		{
@@ -80,6 +81,54 @@ func TestEvalObjectNode(t *testing.T) {
 			},
 			expected: ast.String("bar"),
 		},
+		// {foo bar}
+		{
+			input: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key:   ast.Identifier("foo"),
+						Value: ast.Identifier("bar"),
+					},
+				},
+			},
+			invalid: true,
+		},
+		// {true "bar"}
+		{
+			input: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key:   ast.Bool(true),
+						Value: ast.String("bar"),
+					},
+				},
+			},
+			invalid: true,
+		},
+		// {null "bar"}
+		{
+			input: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key:   ast.Null{},
+						Value: ast.String("bar"),
+					},
+				},
+			},
+			invalid: true,
+		},
+		// {1 "bar"}
+		{
+			input: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key:   ast.Number{Value: 1},
+						Value: ast.String("bar"),
+					},
+				},
+			},
+			invalid: true,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -93,7 +142,15 @@ func TestEvalObjectNode(t *testing.T) {
 
 			_, value, err := eval.EvalObjectNode(ctx, testcase.input)
 			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
+				if !testcase.invalid {
+					t.Fatalf("Failed to run: %v", err)
+				}
+
+				return
+			}
+
+			if testcase.invalid {
+				t.Fatalf("Should not have been able to run, but got: %v (%T)", value, value)
 			}
 
 			returned, ok := value.(ast.Literal)
