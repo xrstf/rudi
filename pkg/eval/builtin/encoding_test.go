@@ -102,12 +102,12 @@ func TestFromBase64Function(t *testing.T) {
 			invalid: true,
 		},
 		{
-			expr:    `(from-base64 "definitly-not-base64")`,
+			expr:    `(from-base64 "definitely-not-base64")`,
 			invalid: true,
 		},
 		{
 			// should be able to recover
-			expr:     `(try (from-base64 "definitly-not-base64") "fallback")`,
+			expr:     `(try (from-base64 "definitely-not-base64") "fallback")`,
 			expected: "fallback",
 		},
 		{

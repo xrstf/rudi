@@ -161,37 +161,6 @@ KeyValuePair <- (key:ScalarExpression __ value:Expression) {
 //////////////////////////////////////////////////////////
 // path expressions
 
-/*
-possible symbols:
-
-   (each step is evaluated immediately, so foo.bar[0] is (foo.bar)[0], not foo.(bar[0]))
-
-// regular identifier
-identifier
-
-// regular variable
-$var
-
-// traverse variable
-$var.subkey
-$var[0]
-$var[$var]
-$var[(add $var 1)]
-
-// deeper traversal
-$var.subkey[0].$othervar.subkey
-
-// instead of traversing starting with a var, you can also
-// start traversing the current object
-.subkey
-.subkey[$index].subsubkey.$varstep
-
-// array acces on the global document; this needs a leading dot to distinguish
-// it from a bare "[index]", which constructs an array with 1 element in it
-.[index]
-
-*/
-
 Symbol <- '.' acc:VectorAccessor expr:AnyQualifiedPathExpression? {
    arrAcc := acc.(ast.Expression)
 

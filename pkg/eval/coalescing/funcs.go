@@ -149,7 +149,7 @@ func IsEmpty(val any) (bool, error) {
 	default:
 		lit, ok := val.(ast.Literal)
 		if !ok {
-			return false, fmt.Errorf("cannot termine emptiness oT %s", val)
+			return false, fmt.Errorf("cannot determine emptiness oT %s", val)
 		}
 
 		return IsEmpty(lit.LiteralValue())

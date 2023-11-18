@@ -280,7 +280,7 @@ func TestHasFunction(t *testing.T) {
 
 	testVariables := types.Variables{
 		// value does not matter here, but this testcase is still meant
-		// to ensure the missing path is detected, not detect an uknown variable
+		// to ensure the missing path is detected, not detect an unknown variable
 		"myvar":  42,
 		"obj":    testObjDocument,
 		"vec":    testVecDocument,

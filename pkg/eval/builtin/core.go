@@ -310,19 +310,19 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size == 1 {
 		varNameIdent, ok := namingVector.Expressions[0].(ast.Identifier)
 		if !ok {
-			return nil, fmt.Errorf("loop variable name must be an identifer, got %T", namingVector.Expressions[0])
+			return nil, fmt.Errorf("loop variable name must be an identifier, got %T", namingVector.Expressions[0])
 		}
 
 		loopVarName = string(varNameIdent)
 	} else {
 		indexIdent, ok := namingVector.Expressions[0].(ast.Identifier)
 		if !ok {
-			return nil, fmt.Errorf("loop index name must be an identifer, got %T", namingVector.Expressions[0])
+			return nil, fmt.Errorf("loop index name must be an identifier, got %T", namingVector.Expressions[0])
 		}
 
 		varNameIdent, ok := namingVector.Expressions[1].(ast.Identifier)
 		if !ok {
-			return nil, fmt.Errorf("loop variable name must be an identifer, got %T", namingVector.Expressions[0])
+			return nil, fmt.Errorf("loop variable name must be an identifier, got %T", namingVector.Expressions[0])
 		}
 
 		loopIndexName = string(indexIdent)

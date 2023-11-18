@@ -30,7 +30,7 @@ func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.Eva
 	rootDoc := ctx.GetDocument()
 	rootValue := rootDoc.Get()
 
-	// santity check
+	// sanity check
 	if sym.Variable == nil && sym.PathExpression == nil {
 		return ctx, nil, errors.New("invalid symbol")
 	}
