@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"go.xrstf.de/otto/pkg/debug"
 	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/debug"
 	"go.xrstf.de/otto/pkg/lang/parser"
 )
 

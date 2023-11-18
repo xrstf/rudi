@@ -11,9 +11,9 @@ import (
 	"os"
 	"strings"
 
-	"go.xrstf.de/otto/pkg/lang/eval"
-	"go.xrstf.de/otto/pkg/lang/eval/builtin"
-	"go.xrstf.de/otto/pkg/lang/eval/types"
+	"go.xrstf.de/otto/pkg/eval"
+	"go.xrstf.de/otto/pkg/eval/builtin"
+	"go.xrstf.de/otto/pkg/eval/types"
 )
 
 //go:embed help.txt
