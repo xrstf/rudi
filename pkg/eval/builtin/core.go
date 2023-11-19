@@ -19,9 +19,7 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("expected 2 or 3 arguments, got %d", size)
 	}
 
-	tupleCtx := ctx
-
-	tupleCtx, condition, err := eval.EvalExpression(tupleCtx, args[0])
+	_, condition, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, fmt.Errorf("condition: %w", err)
 	}
@@ -33,14 +31,14 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	if success {
 		// discard context changes from the true path
-		_, result, err := eval.EvalExpression(tupleCtx, args[1])
+		_, result, err := eval.EvalExpression(ctx, args[1])
 		return result, err
 	}
 
 	// optional else part
 	if len(args) > 2 {
 		// discard context changes from the false path
-		_, result, err := eval.EvalExpression(tupleCtx, args[2])
+		_, result, err := eval.EvalExpression(ctx, args[2])
 		return result, err
 	}
 
