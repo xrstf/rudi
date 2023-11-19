@@ -35,8 +35,18 @@ func (tc *coreTestcase) Test(t *testing.T) {
 		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
 	}
 
-	if result != tc.expected {
-		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+	if _, ok := tc.expected.([]any); ok {
+		if !cmp.Equal(tc.expected, result) {
+			t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+		}
+	} else if _, ok := tc.expected.(map[string]any); ok {
+		if !cmp.Equal(tc.expected, result) {
+			t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+		}
+	} else {
+		if result != tc.expected {
+			t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+		}
 	}
 }
 
@@ -937,6 +947,134 @@ func TestRangeFunction(t *testing.T) {
 		{
 			expr:     `(range {foo "bar"} [key value] $value)`,
 			expected: "bar",
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestMapFunction(t *testing.T) {
+	testcases := []coreTestcase{
+		{
+			// missing everything
+			expr:    `(map)`,
+			invalid: true,
+		},
+		{
+			// missing function identifier
+			expr:    `(map [1 2 3])`,
+			invalid: true,
+		},
+		{
+			// missing naming vector
+			expr:    `(map [1 2 3] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// naming vector must be 1 or 2 elements long
+			expr:    `(map [1 2 3] [] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// naming vector must be 1 or 2 elements long
+			expr:    `(map [1 2 3] [a b c] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// do not allow numbers in the naming vector
+			expr:    `(map [1 2 3] [1 2] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// do not allow strings in naming vector
+			expr:    `(map [1 2 3] ["foo" "bar"] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// cannot map non-vectors/objects
+			expr:    `(map "invalid" [a] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// cannot map non-vectors/objects
+			expr:    `(map 5 [a] (+ 1 2))`,
+			invalid: true,
+		},
+		{
+			// single simple expression
+			expr:     `(map ["foo" "bar"] to-upper)`,
+			expected: []any{"FOO", "BAR"},
+		},
+		{
+			expr:     `(map {foo "bar"} to-upper)`,
+			expected: map[string]any{"foo": "BAR"},
+		},
+		{
+			// type safety still applies
+			expr:    `(map [1] to-upper)`,
+			invalid: true,
+		},
+		{
+			// eval expression with variable
+			expr:     `(map [1 2 3] [val] (+ $val 3))`,
+			expected: []any{int64(4), int64(5), int64(6)},
+		},
+		{
+			// eval with loop index
+			expr:     `(map ["foo" "bar"] [idx _] $idx)`,
+			expected: []any{int64(0), int64(1)},
+		},
+		{
+			// last expression controls the result
+			expr:     `(map [1 2 3] [val] (+ $val 3) "foo")`,
+			expected: []any{"foo", "foo", "foo"},
+		},
+		{
+			// multiple expressions that use a common context
+			expr:     `(map [1 2 3] [val] (set $foo $val) (+ $foo 3))`,
+			expected: []any{int64(4), int64(5), int64(6)},
+		},
+		{
+			// context is even shared across elements
+			expr:     `(map ["foo" "bar"] [_] (set $counter (+ (try $counter 0) 1)))`,
+			expected: []any{int64(1), int64(2)},
+		},
+		{
+			// variables do not leak outside the range
+			expr:    `(map [1 2 3] [idx var] $idx) (+ $var 0)`,
+			invalid: true,
+		},
+		{
+			// variables do not leak outside the range
+			expr:    `(map [1 2 3] [idx var] $idx) (+ $idx 0)`,
+			invalid: true,
+		},
+		// do not modify the source
+		{
+			expr:     `(set $foo [1 2 3]) (map $foo [_ __] "bar")`,
+			expected: []any{"bar", "bar", "bar"},
+		},
+		{
+			expr:     `(set $foo [1 2 3]) (map $foo [_ __] "bar") $foo`,
+			expected: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			expr:     `(set $foo {foo "bar"}) (map $foo [_ __] "new-value") $foo`,
+			expected: map[string]any{"foo": "bar"},
+		},
+		{
+			expr:     `(set $foo ["foo" "bar"]) (map $foo to-upper)`,
+			expected: []any{"FOO", "BAR"},
+		},
+		{
+			expr:     `(set $foo ["foo" "bar"]) (map $foo to-upper) $foo`,
+			expected: []any{"foo", "bar"},
+		},
+		{
+			expr:     `(set $foo {foo "bar"}) (map $foo to-upper) $foo`,
+			expected: map[string]any{"foo": "bar"},
 		},
 	}
 

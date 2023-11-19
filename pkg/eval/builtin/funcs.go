@@ -27,6 +27,7 @@ var Functions = types.Functions{
 	"range":   stateless(rangeFunction),
 	"set":     setFunction,
 	"empty?":  stateless(isEmptyFunction),
+	"map":     stateless(mapFunction),
 
 	// math
 	"+": stateless(sumFunction),

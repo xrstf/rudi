@@ -132,20 +132,20 @@ func (v Variables) DeepCopy() Variables {
 	return result
 }
 
-func WrapNative(val any) (any, error) {
+func WrapNative(val any) (ast.Literal, error) {
 	switch asserted := val.(type) {
 	case nil:
 		return ast.Null{}, nil
 	case ast.Null:
-		return val, nil
+		return asserted, nil
 	case string:
 		return ast.String(asserted), nil
 	case ast.String:
-		return val, nil
+		return asserted, nil
 	case bool:
 		return ast.Bool(asserted), nil
 	case ast.Bool:
-		return val, nil
+		return asserted, nil
 	case int:
 		return ast.Number{Value: int64(asserted)}, nil
 	case int32:
@@ -157,15 +157,15 @@ func WrapNative(val any) (any, error) {
 	case float64:
 		return ast.Number{Value: float64(asserted)}, nil
 	case ast.Number:
-		return val, nil
+		return asserted, nil
 	case []any:
 		return ast.Vector{Data: asserted}, nil
 	case ast.Vector:
-		return val, nil
+		return asserted, nil
 	case map[string]any:
 		return ast.Object{Data: asserted}, nil
 	case ast.Object:
-		return val, nil
+		return asserted, nil
 	default:
 		return nil, fmt.Errorf("cannot wrap %v (%T)", val, val)
 	}

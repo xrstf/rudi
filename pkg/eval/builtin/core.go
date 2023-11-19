@@ -336,55 +336,21 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (range VECTOR [item] expr+)
 // (range VECTOR [i item] expr+)
+// (range OBJECT [val] expr+)
+// (range OBJECT [key val] expr+)
 func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 3 {
 		return nil, fmt.Errorf("expected 3+ arguments, got %d", size)
 	}
 
 	// decode desired loop variable namings, as that's cheap to do
-
-	namingVector, ok := args[1].(ast.VectorNode)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a vector, but %T", args[1])
-	}
-
-	size := len(namingVector.Expressions)
-	if size < 1 || size > 2 {
-		return nil, fmt.Errorf("expected 1 or 2 identifiers in the naming vector, got %d", size)
-	}
-
-	var (
-		loopIndexName string
-		loopVarName   string
-	)
-
-	if size == 1 {
-		varNameIdent, ok := namingVector.Expressions[0].(ast.Identifier)
-		if !ok {
-			return nil, fmt.Errorf("loop variable name must be an identifier, got %T", namingVector.Expressions[0])
-		}
-
-		loopVarName = string(varNameIdent)
-	} else {
-		indexIdent, ok := namingVector.Expressions[0].(ast.Identifier)
-		if !ok {
-			return nil, fmt.Errorf("loop index name must be an identifier, got %T", namingVector.Expressions[0])
-		}
-
-		varNameIdent, ok := namingVector.Expressions[1].(ast.Identifier)
-		if !ok {
-			return nil, fmt.Errorf("loop variable name must be an identifier, got %T", namingVector.Expressions[0])
-		}
-
-		loopIndexName = string(indexIdent)
-		loopVarName = string(varNameIdent)
+	loopIndexName, loopVarName, err := evalNamingVector(ctx, args[1])
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
 	// evaluate source list
-	var (
-		source any
-		err    error
-	)
+	var source any
 
 	innerCtx := ctx
 
@@ -396,7 +362,6 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	var result any
 
 	// list over vector elements
-
 	if sourceVector, ok := source.(ast.Vector); ok {
 		for i, item := range sourceVector.Data {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
@@ -417,7 +382,6 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// list over object elements
-
 	if sourceObject, ok := source.(ast.Object); ok {
 		for key, value := range sourceObject.Data {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
@@ -438,4 +402,219 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	return nil, fmt.Errorf("cannot range over %T", source)
+}
+
+// (map VECTOR identifier)
+// (map VECTOR [item] expr+)
+// (map VECTOR [i item] expr+)
+// (map OBJECT identifier)
+// (map OBJECT [item] expr+)
+// (map OBJECT [i item] expr+)
+func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size < 2 {
+		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
+	}
+
+	// evaluate the first argument;
+	// (map (map .foo +) stuff) should work, so the first argument only needs to _evaluate_
+	// to a vector/object, it doesn't need to be a literal objectnode/vectornode.
+	innerCtx, source, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	var lit ast.Literal
+	if vec, ok := source.(ast.Vector); ok {
+		lit = vec
+	}
+	if obj, ok := source.(ast.Object); ok {
+		lit = obj
+	}
+
+	if lit == nil {
+		return nil, fmt.Errorf("argument #0: expected Vector or Object, got %T", source)
+	}
+
+	// handle plain function calls
+	// (map VECTOR identifier)
+	// (map OBJECT identifier)
+	if len(args) == 2 {
+		return anonymousMapFunction(innerCtx, lit, args[1])
+	}
+
+	// all further forms are (map THING NAMING_VEC EXPR+)
+
+	// decode desired loop variable namings
+	indexVarName, valueVarName, err := evalNamingVector(innerCtx, args[1])
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
+	}
+
+	// list over vector elements
+	if sourceVector, ok := source.(ast.Vector); ok {
+		output := ast.Vector{
+			Data: make([]any, len(sourceVector.Data)),
+		}
+
+		for i, item := range sourceVector.Data {
+			// do not use separate contexts for each loop iteration, as the loop might build up a counter
+			innerCtx = innerCtx.WithVariable(valueVarName, item)
+			if indexVarName != "" {
+				innerCtx = innerCtx.WithVariable(indexVarName, ast.Number{Value: int64(i)})
+			}
+
+			var result any
+
+			for _, expr := range args[2:] {
+				innerCtx, result, err = eval.EvalExpression(innerCtx, expr)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			// TODO: this updates the source vector, but it should be idempotent: return a map copy instead
+			output.Data[i] = result
+		}
+
+		return output, nil
+	}
+
+	// list over object elements
+	if sourceObject, ok := source.(ast.Object); ok {
+		output := ast.Object{
+			Data: map[string]any{},
+		}
+
+		for key, value := range sourceObject.Data {
+			// do not use separate contexts for each loop iteration, as the loop might build up a counter
+			innerCtx = innerCtx.WithVariable(valueVarName, value)
+			if indexVarName != "" {
+				innerCtx = innerCtx.WithVariable(indexVarName, key)
+			}
+
+			var result any
+
+			for _, expr := range args[2:] {
+				innerCtx, result, err = eval.EvalExpression(innerCtx, expr)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			// TODO: this updates the source vector, but it should be idempotent: return a map copy instead
+			output.Data[key] = result
+		}
+
+		return output, nil
+	}
+
+	return nil, fmt.Errorf("cannot map %T", source)
+}
+
+func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string, valueName string, err error) {
+	namingVector, ok := expr.(ast.VectorNode)
+	if !ok {
+		return "", "", fmt.Errorf("expected a vector, but got %T", expr)
+	}
+
+	size := len(namingVector.Expressions)
+	if size < 1 || size > 2 {
+		return "", "", fmt.Errorf("expected 1 or 2 identifiers in the naming vector, got %d", size)
+	}
+
+	if size == 1 {
+		varNameIdent, ok := namingVector.Expressions[0].(ast.Identifier)
+		if !ok {
+			return "", "", fmt.Errorf("value variable name must be an identifier, got %T", namingVector.Expressions[0])
+		}
+
+		valueName = string(varNameIdent)
+	} else {
+		indexIdent, ok := namingVector.Expressions[0].(ast.Identifier)
+		if !ok {
+			return "", "", fmt.Errorf("index variable name must be an identifier, got %T", namingVector.Expressions[0])
+		}
+
+		varNameIdent, ok := namingVector.Expressions[1].(ast.Identifier)
+		if !ok {
+			return "", "", fmt.Errorf("value variable name must be an identifier, got %T", namingVector.Expressions[0])
+		}
+
+		indexName = string(indexIdent)
+		valueName = string(varNameIdent)
+
+		if indexName == valueName {
+			return "", "", fmt.Errorf("cannot use %s for both value and index variable", indexName)
+		}
+	}
+
+	return indexName, valueName, nil
+}
+
+// (map VECTOR identifier)
+// (map OBJECT identifier)
+func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expression) (any, error) {
+	identifier, ok := expr.(ast.Identifier)
+	if !ok {
+		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
+	}
+
+	funcName := string(identifier)
+
+	function, ok := ctx.GetFunction(funcName)
+	if !ok {
+		return nil, fmt.Errorf("unknown function %s", funcName)
+	}
+
+	// call the function
+	innerCtx := ctx
+
+	if vector, ok := source.(ast.Vector); ok {
+		output := ast.Vector{
+			Data: make([]any, len(vector.Data)),
+		}
+
+		for i, item := range vector.Data {
+			wrapped, err := types.WrapNative(item)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", funcName, err)
+			}
+
+			var result any
+			innerCtx, result, err = function(innerCtx, []ast.Expression{wrapped})
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", funcName, err)
+			}
+
+			output.Data[i] = result
+		}
+
+		return output, nil
+	}
+
+	if object, ok := source.(ast.Object); ok {
+		output := ast.Object{
+			Data: map[string]any{},
+		}
+
+		for key, value := range object.Data {
+			wrapped, err := types.WrapNative(value)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", funcName, err)
+			}
+
+			var result any
+			innerCtx, result, err = function(innerCtx, []ast.Expression{wrapped})
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", funcName, err)
+			}
+
+			output.Data[key] = result
+		}
+
+		return output, nil
+	}
+
+	// should never happen, as this function call is already gated by a type check
+	return nil, fmt.Errorf("cannot apply map to %T", source)
 }
