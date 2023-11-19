@@ -312,22 +312,12 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	switch asserted := result.(type) {
-	case ast.Bool:
-		return bool(asserted) == false, nil
-	case ast.Number:
-		return asserted.ToFloat() == 0, nil
-	case ast.String:
-		return len(string(asserted)) == 0, nil
-	case ast.Null:
-		return true, nil
-	case ast.Vector:
-		return len(asserted.Data) == 0, nil
-	case ast.Object:
-		return len(asserted.Data) == 0, nil
-	default:
-		return nil, fmt.Errorf("unexpected argument %v (%T)", result, result)
+	empty, err := coalescing.IsEmpty(result)
+	if err != nil {
+		return nil, err
 	}
+
+	return ast.Bool(empty), nil
 }
 
 // (range VECTOR [item] expr+)
