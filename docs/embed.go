@@ -55,7 +55,7 @@ func Topics() []Topic {
 		}
 
 		topics = append(topics, Topic{
-			CliNames:    []string{sanitized},
+			CliNames:    []string{funcName, sanitized},
 			Group:       group + " Functions",
 			Description: fmt.Sprintf("documentation for the %s function", funcName),
 			filename:    filename,

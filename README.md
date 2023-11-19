@@ -93,7 +93,8 @@ func main() {
 
 ## Credits
 
-Thanks to @embik and @xmudrii for enduring my constant questions for feedback :smile:
+Thanks to [@embik](https://github.com/embik) and [@xmudrii](https://github.com/xmudrii) for enduring
+my constant questions for feedback :smile:
 
 ## License
 
