@@ -31,6 +31,10 @@ go install go.xrstf.de/otto/cmd/otti
 Alternatively, you can download the [latest release](https://github.com/xrstf/otto/releases/latest)
 from GitHub.
 
+## Usage
+
+Otti has extensive help built right into it, try running `otti help` to get started.
+
 ## Embedding
 
 Otto is well suited to be embedded into Go applications. A clean and simple API makes it a breeze:

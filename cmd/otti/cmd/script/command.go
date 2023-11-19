@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
-package main
+package script
 
 import (
 	"encoding/json"
@@ -11,24 +11,26 @@ import (
 	"strings"
 
 	"go.xrstf.de/otto"
+	"go.xrstf.de/otto/cmd/otti/types"
+	"go.xrstf.de/otto/cmd/otti/util"
 	"go.xrstf.de/otto/pkg/debug"
 
 	"gopkg.in/yaml.v3"
 )
 
-func runScript(opts *options, args []string) error {
+func Run(opts *types.Options, args []string) error {
 	// determine input script to evaluate
 	script := ""
 	scriptName := ""
 
-	if opts.scriptFile != "" {
-		content, err := os.ReadFile(opts.scriptFile)
+	if opts.ScriptFile != "" {
+		content, err := os.ReadFile(opts.ScriptFile)
 		if err != nil {
-			return fmt.Errorf("failed to read script from %s: %w", opts.scriptFile, err)
+			return fmt.Errorf("failed to read script from %s: %w", opts.ScriptFile, err)
 		}
 
 		script = strings.TrimSpace(string(content))
-		scriptName = opts.scriptFile
+		scriptName = opts.ScriptFile
 	} else {
 		if len(args) == 0 {
 			return errors.New("no script provided either via argument or --script")
@@ -47,7 +49,7 @@ func runScript(opts *options, args []string) error {
 	}
 
 	// show AST and quit if desired
-	if opts.printAst {
+	if opts.PrintAst {
 		if err := debug.Dump(program, os.Stdout); err != nil {
 			return fmt.Errorf("failed to dump AST: %w", err)
 		}
@@ -56,13 +58,13 @@ func runScript(opts *options, args []string) error {
 	}
 
 	// load all remaining args as input files
-	files, err := loadFiles(opts, args)
+	files, err := util.LoadFiles(opts, args)
 	if err != nil {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
 	// setup the evaluation context
-	ctx, err := setupOttoContext(files)
+	ctx, err := util.SetupOttoContext(files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
@@ -78,12 +80,12 @@ func runScript(opts *options, args []string) error {
 		Encode(v any) error
 	}
 
-	if opts.formatYaml {
+	if opts.FormatYaml {
 		encoder = yaml.NewEncoder(os.Stdout)
 		encoder.(*yaml.Encoder).SetIndent(2)
 	} else {
 		encoder = json.NewEncoder(os.Stdout)
-		if opts.prettyPrint {
+		if opts.PrettyPrint {
 			encoder.(*json.Encoder).SetIndent("", "  ")
 		}
 	}

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
-package main
+package console
 
 import (
 	_ "embed"
@@ -13,61 +13,55 @@ import (
 
 	"github.com/chzyer/readline"
 	"go.xrstf.de/otto"
+	cmdtypes "go.xrstf.de/otto/cmd/otti/types"
+	"go.xrstf.de/otto/cmd/otti/util"
 	"go.xrstf.de/otto/docs"
 	"go.xrstf.de/otto/pkg/eval/types"
 )
 
-//go:embed help.txt
+//go:embed help.md
 var helpText string
 
 func printPrompt() {
 	fmt.Print("⮞ ")
 }
 
-func displayHelp(ctx types.Context, helpTopics []docs.Topic, opts *options) error {
-	var builder strings.Builder
-	builder.WriteString(strings.TrimSpace(helpText))
-	builder.WriteString("\n\n")
-
-	width := 0
-	for _, topic := range helpTopics {
-		if l := len(topic.CliNames[0]); l > width {
-			width = l
-		}
-	}
-
-	format := fmt.Sprintf("* %%-%ds – %%s\n", width)
-	for _, topic := range helpTopics {
-		builder.WriteString(fmt.Sprintf(format, topic.CliNames[0], topic.Description))
-	}
-
-	printMarkdown(builder.String())
+func helpCommand(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Options) error {
+	fmt.Println(util.RenderMarkdown(strings.TrimSpace(helpText), 2))
+	fmt.Println(util.RenderHelpTopics(helpTopics, 2))
 
 	return nil
 }
 
-func cleanInput(text string) string {
-	return strings.TrimSpace(text)
+func helpTopicCommand(helpTopics []docs.Topic, topic string) error {
+	rendered, err := util.RenderHelpTopic(helpTopics, topic, 2)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(rendered)
+
+	return nil
 }
 
-type replCommandFunc func(ctx types.Context, helpTopics []docs.Topic, opts *options) error
+type replCommandFunc func(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Options) error
 
 var replCommands = map[string]replCommandFunc{
-	"help": displayHelp,
+	"help": helpCommand,
 }
 
-func runConsole(opts *options, args []string) error {
+func Run(opts *cmdtypes.Options, args []string) error {
 	rl, err := readline.New("⮞ ")
 	if err != nil {
 		return fmt.Errorf("failed to setup readline prompt: %w", err)
 	}
 
-	files, err := loadFiles(opts, args)
+	files, err := util.LoadFiles(opts, args)
 	if err != nil {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	ctx, err := setupOttoContext(files)
+	ctx, err := util.SetupOttoContext(files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
@@ -83,12 +77,12 @@ func runConsole(opts *options, args []string) error {
 		if err != nil { // io.EOF
 			break
 		}
-		line = cleanInput(line)
+		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
 
-		newCtx, stop, err := processReplInput(ctx, helpTopics, opts, line)
+		newCtx, stop, err := processInput(ctx, helpTopics, opts, line)
 		if err != nil {
 			parseErr := &otto.ParseError{}
 			if errors.As(err, parseErr) {
@@ -110,14 +104,14 @@ func runConsole(opts *options, args []string) error {
 	return nil
 }
 
-func processReplInput(ctx types.Context, helpTopics []docs.Topic, opts *options, input string) (newCtx types.Context, stop bool, err error) {
+func processInput(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Options, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
 		return ctx, false, command(ctx, helpTopics, opts)
 	}
 
 	if prefix := "help "; strings.HasPrefix(input, prefix) {
 		topicName := strings.TrimPrefix(input, prefix)
-		return ctx, false, renderHelpTopic(helpTopics, topicName)
+		return ctx, false, helpTopicCommand(helpTopics, topicName)
 	}
 
 	if strings.EqualFold("exit", input) {

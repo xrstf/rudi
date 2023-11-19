@@ -11,6 +11,10 @@ import (
 
 	"github.com/spf13/pflag"
 	"go.xrstf.de/otto"
+	"go.xrstf.de/otto/cmd/otti/cmd/console"
+	"go.xrstf.de/otto/cmd/otti/cmd/help"
+	"go.xrstf.de/otto/cmd/otti/cmd/script"
+	"go.xrstf.de/otto/cmd/otti/types"
 )
 
 // These variables get set by ldflags during compilation.
@@ -31,12 +35,12 @@ func printVersion() {
 }
 
 func main() {
-	opts := options{}
+	opts := types.Options{}
 
 	opts.AddFlags(pflag.CommandLine)
 	pflag.Parse()
 
-	if opts.version {
+	if opts.ShowVersion {
 		printVersion()
 		return
 	}
@@ -48,22 +52,33 @@ func main() {
 
 	args := pflag.Args()
 
-	if opts.interactive || len(args) == 0 {
-		if err := runConsole(&opts, args); err != nil {
+	if opts.ShowHelp || (len(args) > 0 && args[0] == "help") {
+		if err := help.Run(&opts, args); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
-	} else {
-		if err := runScript(&opts, args); err != nil {
-			parseErr := &otto.ParseError{}
-			if errors.As(err, parseErr) {
-				fmt.Println(parseErr.Snippet())
-				fmt.Println(parseErr)
-			} else {
-				fmt.Printf("Error: %v\n", err)
-			}
 
+		return
+	}
+
+	if opts.Interactive || len(args) == 0 {
+		if err := console.Run(&opts, args); err != nil {
+			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
+
+		return
+	}
+
+	if err := script.Run(&opts, args); err != nil {
+		parseErr := &otto.ParseError{}
+		if errors.As(err, parseErr) {
+			fmt.Println(parseErr.Snippet())
+			fmt.Println(parseErr)
+		} else {
+			fmt.Printf("Error: %v\n", err)
+		}
+
+		os.Exit(1)
 	}
 }

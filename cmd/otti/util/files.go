@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
-package main
+package util
 
 import (
 	"errors"
@@ -9,15 +9,15 @@ import (
 	"io"
 	"os"
 
-	"go.xrstf.de/otto"
+	"go.xrstf.de/otto/cmd/otti/types"
 	"gopkg.in/yaml.v3"
 )
 
-func loadFiles(opts *options, filenames []string) ([]any, error) {
+func LoadFiles(opts *types.Options, filenames []string) ([]any, error) {
 	results := make([]any, len(filenames))
 
 	for i, filename := range filenames {
-		data, err := loadFile(opts, filename)
+		data, err := LoadFile(opts, filename)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read %s: %w", filename, err)
 		}
@@ -28,7 +28,7 @@ func loadFiles(opts *options, filenames []string) ([]any, error) {
 	return results, nil
 }
 
-func loadFile(opts *options, filename string) (any, error) {
+func LoadFile(opts *types.Options, filename string) (any, error) {
 	if filename == "" {
 		return nil, errors.New("no filename provided")
 	}
@@ -55,27 +55,4 @@ func loadFile(opts *options, filename string) (any, error) {
 	}
 
 	return doc, nil
-}
-
-func setupOttoContext(files []any) (otto.Context, error) {
-	var (
-		document otto.Document
-		err      error
-	)
-
-	if len(files) > 0 {
-		document, err = otto.NewDocument(files[0])
-		if err != nil {
-			return otto.Context{}, fmt.Errorf("cannot use first input as document: %w", err)
-		}
-	} else {
-		document, _ = otto.NewDocument(nil)
-	}
-
-	vars := otto.NewVariables().
-		Set("files", files)
-
-	ctx := otto.NewContext(document, otto.NewBuiltInFunctions(), vars)
-
-	return ctx, nil
 }
