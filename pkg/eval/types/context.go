@@ -33,7 +33,7 @@ func (d *Document) Set(wrappedData any) {
 }
 
 type Context struct {
-	document  Document
+	document  *Document
 	funcs     Functions
 	variables Variables
 }
@@ -48,13 +48,13 @@ func NewContext(doc Document, funcs Functions, variables Variables) Context {
 	}
 
 	return Context{
-		document:  doc,
+		document:  &doc,
 		funcs:     funcs,
 		variables: variables,
 	}
 }
 
-func (c Context) GetDocument() Document {
+func (c Context) GetDocument() *Document {
 	return c.document
 }
 

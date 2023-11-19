@@ -158,7 +158,7 @@ func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
 }
 
 // (set VAR:Variable VALUE:any)
-// (set EXPR:PathExpression VALUE:any) <- TODO
+// (set EXPR:PathExpression VALUE:any)
 func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, error) {
 	if size := len(args); size != 2 {
 		return ctx, nil, fmt.Errorf("expected 2 arguments, got %d", size)
@@ -174,82 +174,133 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
 	}
 
-	varName := ""
-
 	// discard any context changes within the newValue expression
 	_, newValue, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
 		return ctx, nil, fmt.Errorf("argument #1: %w", err)
 	}
 
+	// pre-evaluate the path
+	var pathExpr *ast.EvaluatedPathExpression
+	if p := symbol.PathExpression; p != nil {
+		pathExpr, err = eval.EvalPathExpression(ctx, p)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("argument #1: invalid path expression: %w", err)
+		}
+	}
+
+	// get the current value
+	var currentValue any
+
+	if symbol.Variable != nil {
+		varName := string(*symbol.Variable)
+
+		// a non-existing variable is fine, this is how you define new variables in the first place
+		currentValue, _ = ctx.GetVariable(varName)
+	} else {
+		doc := ctx.GetDocument()
+		currentValue = doc.Get()
+	}
+
+	// if there is a path expression, merge in the new value
+	updatedValue := newValue
+	if pathExpr != nil {
+		updatedValue, err = setValueAtPath(currentValue, pathExpr.Steps, newValue)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
+		}
+	}
+
 	// set a variable, which will result in a new context
 	if symbol.Variable != nil {
-		// forbid weird definitions like (set $var.foo (expr)) for now
-		if symbol.PathExpression != nil {
-			return ctx, nil, errors.New("argument #0: cannot use path expression when setting variable values")
-		}
-
-		varName = string(*symbol.Variable)
+		varName := string(*symbol.Variable)
 
 		// make the variable's value the return value, so `(def $foo 12)` = 12
-		return ctx.WithVariable(varName, newValue), newValue, nil
+		return ctx.WithVariable(varName, updatedValue), newValue, nil
 	}
 
-	// set new value at path expression
+	// update the global document
+	// (the document Go struct stays the same, so this does not result in a new context)
 	doc := ctx.GetDocument()
-	setValueAtPath(ctx, doc.Get(), symbol.PathExpression.Steps, newValue)
+	doc.Set(updatedValue)
 
-	return ctx, nil, errors.New("setting a document path expression is not yet implemented")
+	return ctx, newValue, nil
 }
 
-func setValueAtPath(ctx types.Context, document any, steps []ast.Expression, newValue any) (any, error) {
+func setValueAtPath(dest any, steps []ast.EvaluatedPathStep, newValue any) (any, error) {
 	if len(steps) == 0 {
-		return nil, nil
+		return newValue, nil
 	}
 
-	return nil, nil
+	target, err := types.UnwrapType(dest)
+	if err != nil {
+		return nil, fmt.Errorf("cannot descend into %T", dest)
+	}
 
-	// firstStep := steps[0]
-	// remainingPath := steps[1:]
+	thisStep := steps[0]
+	remainingSteps := steps[1:]
 
-	// // short-circuit for expressions like (set . 42)
-	// if firstStep.IsIdentity() {
-	// 	return newValue, nil
-	// }
+	// [index]...
+	if iv := thisStep.IntegerValue; iv != nil {
+		index := int(*iv)
+		if index < 0 {
+			return nil, fmt.Errorf("index %d out of bounds", index)
+		}
 
-	// innerCtx := ctx
+		if vector, ok := target.([]any); ok {
+			if index >= len(vector) {
+				return nil, fmt.Errorf("index %d out of bounds", index)
+			}
 
-	// // evaluate the current step
-	// switch {
-	// case firstStep.Identifier != nil:
-	// 	step = ast.String(string(*firstStep.Identifier))
-	// case firstStep.StringNode != nil:
-	// 	step = ast.String(string(*firstStep.StringNode))
-	// case firstStep.Integer != nil:
-	// 	step = ast.Number{Value: *firstStep.Integer}
-	// case firstStep.Variable != nil:
-	// 	name := string(*firstStep.Variable)
+			existingValue := vector[index]
 
-	// 	value, ok := innerCtx.GetVariable(name)
-	// 	if !ok {
-	// 		return nil, fmt.Errorf("unknown variable %s (%T)", name, name), nil
-	// 	}
-	// 	step = value
-	// case firstStep.Tuple != nil:
-	// 	var (
-	// 		value any
-	// 		err   error
-	// 	)
+			updatedValue, err := setValueAtPath(existingValue, remainingSteps, newValue)
+			if err != nil {
+				return nil, err
+			}
 
-	// 	// keep accumulating context changes, so you _could_ in theory do
-	// 	// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
-	// 	innerCtx, value, err = evalTuple(innerCtx, firstStep.Tuple)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("invalid accessor: %w", err), nil
-	// 	}
+			vector[index] = updatedValue
 
-	// 	step = value
-	// }
+			return vector, nil
+		}
+
+		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, target)
+	}
+
+	// .key
+	if sv := thisStep.StringValue; sv != nil {
+		key := *sv
+
+		if object, ok := target.(map[string]any); ok {
+			// getting the empty value for non-existing keys is fine
+			existingValue, _ := object[key]
+
+			updatedValue, err := setValueAtPath(existingValue, remainingSteps, newValue)
+			if err != nil {
+				return nil, err
+			}
+
+			object[key] = updatedValue
+
+			return object, nil
+		}
+
+		// nulls can be turned into objects
+		if target == nil {
+			updatedValue, err := setValueAtPath(nil, remainingSteps, newValue)
+			if err != nil {
+				return nil, err
+			}
+
+			return map[string]any{
+				key: updatedValue,
+			}, nil
+		}
+
+		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, target)
+	}
+
+	return nil, errors.New("invalid path step: neither key nor index")
 }
 
 // (empty? VALUE:any)

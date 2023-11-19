@@ -146,7 +146,7 @@ func traverseEvaluatedPathExpression(ctx types.Context, value any, path ast.Eval
 			}
 
 			index := int(*step.IntegerValue)
-			if index >= len(valueAsVector) {
+			if index < 0 || index >= len(valueAsVector) {
 				return nil, fmt.Errorf("index %d out of bounds", index)
 			}
 

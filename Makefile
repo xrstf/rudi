@@ -13,6 +13,9 @@ GO_LDFLAGS += -w -extldflags '-static' $(GO_DEFINES)
 GO_BUILD_FLAGS ?= -v -ldflags '$(GO_LDFLAGS)'
 GO_TEST_FLAGS ?=
 
+.PHONY: all
+all: clean generate build test
+
 .PHONY: generate
 generate:
 	pigeon pkg/lang/grammar/otto.peg > pkg/lang/parser/generated.go
