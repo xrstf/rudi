@@ -214,7 +214,7 @@ func vectorishEqualEnough(left ast.Vector, right any) (bool, error) {
 		}
 
 		// wrapping always returns literals, so type assertions are safe here
-		equal, err := EqualEnough(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		equal, err := EqualEnough(leftWrapped, rightWrapped)
 		if err != nil {
 			return false, err
 		}
@@ -264,7 +264,7 @@ func objectishEqualEnough(left ast.Object, right any) (bool, error) {
 		}
 
 		// wrapping always returns literals, so type assertions are safe here
-		equal, err := EqualEnough(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		equal, err := EqualEnough(leftWrapped, rightWrapped)
 		if err != nil {
 			return false, err
 		}

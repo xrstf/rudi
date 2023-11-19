@@ -34,7 +34,7 @@ func Topics() []Topic {
 	}
 
 	for funcName := range builtin.Functions {
-		sanitized := funcName
+		var sanitized string
 		switch funcName {
 		case "+":
 			sanitized = "sum"

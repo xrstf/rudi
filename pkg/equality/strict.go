@@ -92,7 +92,7 @@ func vectorStrictEquals(left ast.Vector, right any) (bool, error) {
 		}
 
 		// wrapping always returns literals, so type assertions are safe here
-		equal, err := StrictEqual(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		equal, err := StrictEqual(leftWrapped, rightWrapped)
 		if err != nil {
 			return false, err
 		}
@@ -136,7 +136,7 @@ func objectStrictEquals(left ast.Object, right any) (bool, error) {
 		}
 
 		// wrapping always returns literals, so type assertions are safe here
-		equal, err := StrictEqual(leftWrapped.(ast.Literal), rightWrapped.(ast.Literal))
+		equal, err := StrictEqual(leftWrapped, rightWrapped)
 		if err != nil {
 			return false, err
 		}
