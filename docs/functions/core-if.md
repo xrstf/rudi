@@ -8,6 +8,7 @@
 * `(if false 42)` -> `null`
 * `(if true 42 314)` -> `42`
 * `(if false 42 314)` -> `314`
+* `(if (gt? 4 2) "yes" "no")` -> `"yes"`
 
 ## Forms
 

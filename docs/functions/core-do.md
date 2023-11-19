@@ -16,7 +16,7 @@ variables has an effect on subsequent expressions.
 
 ### `(do expr+)`
 
-* `expr` is 1 or many arbitrary expressions
+* `expr` is 1 or more expressions
 
 `do` evaluates sets up a new context and then evaluates all `expr` in sequence,
 sharing the context between them, forming a sub program. The return value of `do`

@@ -79,8 +79,8 @@ func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return ast.Bool(equal), nil
 }
 
-type intProcessor func(left, right int64) (any, error)
-type floatProcessor func(left, right float64) (any, error)
+type intProcessor func(left, right int64) (ast.Bool, error)
+type floatProcessor func(left, right float64) (ast.Bool, error)
 
 func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor) StatelessFunc {
 	return func(ctx types.Context, args []ast.Expression) (any, error) {

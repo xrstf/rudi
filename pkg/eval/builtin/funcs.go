@@ -63,20 +63,20 @@ var Functions = types.Functions{
 	"like?": stateless(likeFunction),
 
 	"lt?": stateless(makeNumberComparatorFunc(
-		func(a, b int64) (any, error) { return a < b, nil },
-		func(a, b float64) (any, error) { return a < b, nil },
+		func(a, b int64) (ast.Bool, error) { return ast.Bool(a < b), nil },
+		func(a, b float64) (ast.Bool, error) { return ast.Bool(a < b), nil },
 	)),
 	"lte?": stateless(makeNumberComparatorFunc(
-		func(a, b int64) (any, error) { return a <= b, nil },
-		func(a, b float64) (any, error) { return a <= b, nil },
+		func(a, b int64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
+		func(a, b float64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
 	)),
 	"gt?": stateless(makeNumberComparatorFunc(
-		func(a, b int64) (any, error) { return a > b, nil },
-		func(a, b float64) (any, error) { return a > b, nil },
+		func(a, b int64) (ast.Bool, error) { return ast.Bool(a > b), nil },
+		func(a, b float64) (ast.Bool, error) { return ast.Bool(a > b), nil },
 	)),
 	"gte?": stateless(makeNumberComparatorFunc(
-		func(a, b int64) (any, error) { return a >= b, nil },
-		func(a, b float64) (any, error) { return a >= b, nil },
+		func(a, b int64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
+		func(a, b float64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
 	)),
 
 	// types
