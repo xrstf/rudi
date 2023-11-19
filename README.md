@@ -19,6 +19,9 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 (set .foo[0] (+ (len .users) 42))
 ```
 
+Otto has been named after the legendary German comedian
+[Otto Waalkes](https://en.wikipedia.org/wiki/Otto_Waalkes).
+
 ## Installation
 
 Otto is primarily meant to be embedded into other Go programs, but a standalone CLI application,
@@ -87,6 +90,10 @@ func main() {
    fmt.Println(newCtx)
 }
 ```
+
+## Credits
+
+Thanks to @embik and @xmudrii for enduring my constant questions for feedback :smile:
 
 ## License
 

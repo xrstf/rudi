@@ -75,36 +75,94 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	symbol, ok := args[0].(ast.Symbol)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
-	}
+	var (
+		expr     ast.Expression
+		pathExpr *ast.PathExpression
+	)
 
-	if symbol.PathExpression == nil {
-		return nil, errors.New("argument #0 has no path expression")
-	}
+	// separate base value expression from the path expression
 
-	if symbol.Variable != nil {
-		varName := string(*symbol.Variable)
+	if symbol, ok := args[0].(ast.Symbol); ok {
+		pathExpr = symbol.PathExpression
 
-		if _, ok = ctx.GetVariable(varName); !ok {
-			return nil, fmt.Errorf("unknown variable %s", varName)
+		if symbol.Variable != nil {
+			symbol.PathExpression = nil
+		} else {
+			// for bare path expressions
+			symbol.PathExpression = &ast.PathExpression{}
 		}
+
+		expr = symbol
 	}
 
-	// do a syntax check by pre-computing the path
-	evaluatedPath, err := eval.EvalPathExpression(ctx, symbol.PathExpression)
+	if vectorNode, ok := args[0].(ast.VectorNode); ok {
+		pathExpr = vectorNode.PathExpression
+		vectorNode.PathExpression = nil
+		expr = vectorNode
+	}
+
+	if objectNode, ok := args[0].(ast.ObjectNode); ok {
+		pathExpr = objectNode.PathExpression
+		objectNode.PathExpression = nil
+		expr = objectNode
+	}
+
+	if tuple, ok := args[0].(ast.Tuple); ok {
+		pathExpr = tuple.PathExpression
+		tuple.PathExpression = nil
+		expr = tuple
+	}
+
+	if expr == nil {
+		return nil, fmt.Errorf("expected Symbol, Vector, Object or Tuple, got %T", args[0])
+	}
+
+	if pathExpr == nil {
+		return nil, errors.New("argument has no path expression")
+	}
+
+	// pre-evaluate the path
+	evaluatedPath, err := eval.EvalPathExpression(ctx, pathExpr)
 	if err != nil {
-		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+		return nil, fmt.Errorf("invalid path expression: %w", err)
 	}
 
-	_, value, err := eval.EvalSymbolWithEvaluatedPath(ctx, symbol, *evaluatedPath)
+	// evaluate the base value
+	_, value, err := eval.EvalExpression(ctx, expr)
 	if err != nil {
-		return false, nil
+		return nil, err
 	}
 
-	return ast.Bool(value != nil), nil
+	_, err = eval.TraverseEvaluatedPathExpression(ctx, value, *evaluatedPath)
+	if err != nil {
+		return ast.Bool(false), nil
+	}
+
+	return ast.Bool(true), nil
 }
+
+// func hasSymbolPath(ctx types.Context, sym ast.Symbol) (any, error) {
+// 	if sym.Variable != nil {
+// 		varName := string(*sym.Variable)
+
+// 		if _, ok := ctx.GetVariable(varName); !ok {
+// 			return nil, fmt.Errorf("unknown variable %s", varName)
+// 		}
+// 	}
+
+// 	// do a syntax check by pre-computing the path
+// 	evaluatedPath, err := eval.EvalPathExpression(ctx, sym.PathExpression)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+// 	}
+
+// 	_, _, err = eval.EvalSymbolWithEvaluatedPath(ctx, sym, *evaluatedPath)
+// 	if err != nil {
+// 		return ast.Bool(false), nil
+// 	}
+
+// 	return ast.Bool(true), nil
+// }
 
 // (default TEST:Expression FALLBACK:any)
 func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {

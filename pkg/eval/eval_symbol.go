@@ -57,7 +57,7 @@ func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.Eva
 		}
 	}
 
-	deeper, err := traverseEvaluatedPathExpression(ctx, rootValue, path)
+	deeper, err := TraverseEvaluatedPathExpression(ctx, rootValue, path)
 	if err != nil {
 		return ctx, nil, fmt.Errorf("cannot evaluate %s: %w", sym.String(), err)
 	}
@@ -129,7 +129,7 @@ func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 	return result, nil
 }
 
-func traverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
+func TraverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
 	if len(path.Steps) == 0 {
 		return types.WrapNative(value)
 	}

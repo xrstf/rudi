@@ -841,6 +841,47 @@ func TestHasFunction(t *testing.T) {
 			expected:  true,
 			variables: testVariables,
 		},
+
+		// follow a path expression on a vector node
+
+		{
+			expr:     `(has? [1 2 3][1])`,
+			expected: true,
+		},
+		{
+			expr:     `(has? [1 2 3][4])`,
+			expected: false,
+		},
+
+		// follow a path expression on an object node
+
+		{
+			expr:     `(has? {foo "bar"}.foo)`,
+			expected: true,
+		},
+		{
+			expr:     `(has? {foo "bar"}.bar)`,
+			expected: false,
+		},
+
+		// follow a path expression on a tuple node
+
+		{
+			expr:     `(has? (set $foo {foo "bar"}).foo)`,
+			expected: true,
+		},
+		{
+			expr:     `(has? (set $foo {foo "bar"}).bar)`,
+			expected: false,
+		},
+		{
+			expr:     `(has? (set $foo [1])[0])`,
+			expected: true,
+		},
+		{
+			expr:     `(has? (set $foo {foo "bar"})[0])`,
+			expected: false,
+		},
 	}
 
 	for _, testcase := range testcases {

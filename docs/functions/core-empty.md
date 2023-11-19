@@ -32,4 +32,4 @@ If the expression errors out, `empty?` also returns an error.
 ## Context
 
 `empty?` evaluates the expression in its own scope, so variables defined in it
-do not leak out of `empty?`.
+do not leak.

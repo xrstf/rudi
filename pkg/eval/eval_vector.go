@@ -44,7 +44,7 @@ func EvalVectorNode(ctx types.Context, vec ast.VectorNode) (types.Context, any, 
 			return ctx, nil, fmt.Errorf("invalid path expression: %w", err)
 		}
 
-		deeper, err := traverseEvaluatedPathExpression(ctx, result, *evaluated)
+		deeper, err := TraverseEvaluatedPathExpression(ctx, result, *evaluated)
 		if err != nil {
 			return ctx, nil, fmt.Errorf("cannot apply path %s: %w", evaluated.String(), err)
 		}
