@@ -13,6 +13,7 @@ import (
 
 	"github.com/chzyer/readline"
 	"go.xrstf.de/otto"
+	"go.xrstf.de/otto/docs"
 	"go.xrstf.de/otto/pkg/eval/types"
 )
 
@@ -23,8 +24,25 @@ func printPrompt() {
 	fmt.Print("⮞ ")
 }
 
-func displayHelp() error {
-	fmt.Println(helpText)
+func displayHelp(ctx types.Context, helpTopics []docs.Topic, opts *options) error {
+	var builder strings.Builder
+	builder.WriteString(strings.TrimSpace(helpText))
+	builder.WriteString("\n\n")
+
+	width := 0
+	for _, topic := range helpTopics {
+		if l := len(topic.CliNames[0]); l > width {
+			width = l
+		}
+	}
+
+	format := fmt.Sprintf("* %%-%ds – %%s\n", width)
+	for _, topic := range helpTopics {
+		builder.WriteString(fmt.Sprintf(format, topic.CliNames[0], topic.Description))
+	}
+
+	printMarkdown(builder.String())
+
 	return nil
 }
 
@@ -32,7 +50,7 @@ func cleanInput(text string) string {
 	return strings.TrimSpace(text)
 }
 
-type replCommandFunc func() error
+type replCommandFunc func(ctx types.Context, helpTopics []docs.Topic, opts *options) error
 
 var replCommands = map[string]replCommandFunc{
 	"help": displayHelp,
@@ -58,6 +76,8 @@ func runConsole(opts *options, args []string) error {
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
 
+	helpTopics := docs.Topics()
+
 	for {
 		line, err := rl.Readline()
 		if err != nil { // io.EOF
@@ -68,7 +88,7 @@ func runConsole(opts *options, args []string) error {
 			continue
 		}
 
-		newCtx, stop, err := processReplInput(ctx, opts, line)
+		newCtx, stop, err := processReplInput(ctx, helpTopics, opts, line)
 		if err != nil {
 			parseErr := &otto.ParseError{}
 			if errors.As(err, parseErr) {
@@ -90,9 +110,14 @@ func runConsole(opts *options, args []string) error {
 	return nil
 }
 
-func processReplInput(ctx types.Context, opts *options, input string) (newCtx types.Context, stop bool, err error) {
+func processReplInput(ctx types.Context, helpTopics []docs.Topic, opts *options, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
-		return ctx, false, command()
+		return ctx, false, command(ctx, helpTopics, opts)
+	}
+
+	if prefix := "help "; strings.HasPrefix(input, prefix) {
+		topicName := strings.TrimPrefix(input, prefix)
+		return ctx, false, renderHelpTopic(helpTopics, topicName)
 	}
 
 	if strings.EqualFold("exit", input) {
