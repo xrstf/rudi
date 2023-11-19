@@ -24,10 +24,8 @@ var Functions = types.Functions{
 	"has?":    stateless(hasFunction),
 	"default": stateless(defaultFunction),
 	"try":     stateless(tryFunction),
-	"range":   stateless(rangeFunction),
 	"set":     setFunction,
 	"empty?":  stateless(isEmptyFunction),
-	"map":     stateless(mapFunction),
 
 	// math
 	"+": stateless(sumFunction),
@@ -52,6 +50,8 @@ var Functions = types.Functions{
 	"append":  stateless(appendFunction),
 	"prepend": stateless(prependFunction),
 	"reverse": stateless(reverseFunction),
+	"range":   stateless(rangeFunction),
+	"map":     stateless(mapFunction),
 
 	// logic
 	"and": stateless(andFunction),
