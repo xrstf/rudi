@@ -25,10 +25,12 @@ Otto has been named after the legendary German comedian
 ## Installation
 
 Otto is primarily meant to be embedded into other Go programs, but a standalone CLI application,
-_Otti_, is also available to test your scripts with. Otti can be installed using Go:
+_Otti_, is also available to test your scripts with. Otti can be installed using Git & Go:
 
 ```bash
-go install go.xrstf.de/otto/cmd/otti
+git clone https://github.com/xrstf/otto
+cd otto
+make build
 ```
 
 Alternatively, you can download the [latest release](https://github.com/xrstf/otto/releases/latest)
