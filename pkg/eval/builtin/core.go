@@ -325,8 +325,6 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return len(asserted.Data) == 0, nil
 	case ast.Object:
 		return len(asserted.Data) == 0, nil
-	case ast.Identifier:
-		return nil, fmt.Errorf("unexpected identifier %s", asserted)
 	default:
 		return nil, fmt.Errorf("unexpected argument %v (%T)", result, result)
 	}
