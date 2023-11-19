@@ -48,7 +48,7 @@ func main() {
 
 	args := pflag.Args()
 
-	if opts.interactive {
+	if opts.interactive || len(args) == 0 {
 		if err := runConsole(&opts, args); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
