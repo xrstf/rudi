@@ -52,6 +52,7 @@ var Functions = types.Functions{
 	"reverse": stateless(reverseFunction),
 	"range":   stateless(rangeFunction),
 	"map":     stateless(mapFunction),
+	"filter":  stateless(filterFunction),
 
 	// logic
 	"and": stateless(andFunction),
