@@ -73,6 +73,9 @@ func main() {
       log.Fatalf("Cannot use %v as the document: %v", documentData, err)
    }
 
+   // combine document, variables and functions into an execution context
+   ctx := otto.NewContext(document, funcs, vars)
+
    // parse the script (the name is used when generating error strings)
    program, err := otto.ParseScript("myscript", script)
    if err != nil {
