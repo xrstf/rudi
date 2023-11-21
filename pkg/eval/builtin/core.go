@@ -11,6 +11,7 @@ import (
 	"go.xrstf.de/rudi/pkg/eval/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/pathexpr"
 )
 
 // (if COND:Expr YES:Expr NO:Expr?)
@@ -238,7 +239,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 	// if there is a path expression, merge in the new value
 	updatedValue := newValue
 	if pathExpr != nil {
-		updatedValue, err = setValueAtPath(currentValue, pathExpr.Steps, newValue)
+		updatedValue, err = pathexpr.Set(currentValue, pathexpr.FromEvaluatedPath(*pathExpr), newValue)
 		if err != nil {
 			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 		}
@@ -258,82 +259,6 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 	doc.Set(updatedValue)
 
 	return ctx, newValue, nil
-}
-
-func setValueAtPath(dest any, steps []ast.EvaluatedPathStep, newValue any) (any, error) {
-	if len(steps) == 0 {
-		return newValue, nil
-	}
-
-	target, err := types.UnwrapType(dest)
-	if err != nil {
-		return nil, fmt.Errorf("cannot descend into %T", dest)
-	}
-
-	thisStep := steps[0]
-	remainingSteps := steps[1:]
-
-	// [index]...
-	if iv := thisStep.IntegerValue; iv != nil {
-		index := int(*iv)
-		if index < 0 {
-			return nil, fmt.Errorf("index %d out of bounds", index)
-		}
-
-		if vector, ok := target.([]any); ok {
-			if index >= len(vector) {
-				return nil, fmt.Errorf("index %d out of bounds", index)
-			}
-
-			existingValue := vector[index]
-
-			updatedValue, err := setValueAtPath(existingValue, remainingSteps, newValue)
-			if err != nil {
-				return nil, err
-			}
-
-			vector[index] = updatedValue
-
-			return vector, nil
-		}
-
-		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, target)
-	}
-
-	// .key
-	if sv := thisStep.StringValue; sv != nil {
-		key := *sv
-
-		if object, ok := target.(map[string]any); ok {
-			// getting the empty value for non-existing keys is fine
-			existingValue, _ := object[key]
-
-			updatedValue, err := setValueAtPath(existingValue, remainingSteps, newValue)
-			if err != nil {
-				return nil, err
-			}
-
-			object[key] = updatedValue
-
-			return object, nil
-		}
-
-		// nulls can be turned into objects
-		if target == nil {
-			updatedValue, err := setValueAtPath(nil, remainingSteps, newValue)
-			if err != nil {
-				return nil, err
-			}
-
-			return map[string]any{
-				key: updatedValue,
-			}, nil
-		}
-
-		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, target)
-	}
-
-	return nil, errors.New("invalid path step: neither key nor index")
 }
 
 // (empty? VALUE:any)

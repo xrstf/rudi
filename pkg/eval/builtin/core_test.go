@@ -115,190 +115,6 @@ func TestIfFunction(t *testing.T) {
 	}
 }
 
-func makeEvaluatedPath(steps ...any) []ast.EvaluatedPathStep {
-	path := make([]ast.EvaluatedPathStep, len(steps))
-
-	for i, step := range steps {
-		if s, ok := step.(string); ok {
-			path[i].StringValue = &s
-			continue
-		}
-
-		if integer, ok := step.(int); ok {
-			wider := int64(integer)
-			path[i].IntegerValue = &wider
-			continue
-		}
-
-		panic("unexpectd path step type")
-	}
-
-	return path
-}
-
-func TestSetValueAtPathFunction(t *testing.T) {
-	type testcase struct {
-		input    any
-		path     []ast.EvaluatedPathStep
-		newValue any
-		expected any
-		invalid  bool
-	}
-
-	testcases := []testcase{
-		{
-			input:    nil,
-			path:     []ast.EvaluatedPathStep{},
-			newValue: 42,
-			expected: 42,
-		},
-		// can turn nils into objects
-		{
-			input:    nil,
-			path:     makeEvaluatedPath("foo"),
-			newValue: 42,
-			expected: map[string]any{"foo": 42},
-		},
-		// can set new keys
-		{
-			input:    map[string]any{"foo": int64(42)},
-			path:     makeEvaluatedPath("bar"),
-			newValue: 1,
-			expected: map[string]any{"foo": int64(42), "bar": 1},
-		},
-		// can update keys
-		{
-			input:    map[string]any{"foo": int64(42)},
-			path:     makeEvaluatedPath("foo"),
-			newValue: 1,
-			expected: map[string]any{"foo": 1},
-		},
-		// cannot turn nils into vectors because [index] syntax cannot are not allowed to reach past
-		// the end of a vector; but to create a new vector, we'd need to do this here
-		{
-			input:    nil,
-			path:     makeEvaluatedPath(0),
-			newValue: 42,
-			invalid:  true,
-		},
-		// cannot descend into strings
-		{
-			input:    "foo",
-			path:     makeEvaluatedPath("foo"),
-			newValue: 42,
-			invalid:  true,
-		},
-		{
-			input:    "foo",
-			path:     makeEvaluatedPath(0),
-			newValue: 42,
-			invalid:  true,
-		},
-		// cannot descend into bools
-		{
-			input:    true,
-			path:     makeEvaluatedPath("foo"),
-			newValue: 42,
-			invalid:  true,
-		},
-		{
-			input:    true,
-			path:     makeEvaluatedPath(0),
-			newValue: 42,
-			invalid:  true,
-		},
-		// cannot descend into numbers
-		{
-			input:    1,
-			path:     makeEvaluatedPath("foo"),
-			newValue: 42,
-			invalid:  true,
-		},
-		{
-			input:    1,
-			path:     makeEvaluatedPath(0),
-			newValue: 42,
-			invalid:  true,
-		},
-		// can update vector items
-		{
-			input:    []any{"foo", "bar"},
-			path:     makeEvaluatedPath(1),
-			newValue: "updated",
-			expected: []any{"foo", "updated"},
-		},
-		// cannot reach past bounds
-		{
-			input:    []any{"foo", "bar"},
-			path:     makeEvaluatedPath(2),
-			newValue: "updated",
-			invalid:  true,
-		},
-		{
-			input:    []any{"foo", "bar"},
-			path:     makeEvaluatedPath(-1),
-			newValue: "updated",
-			invalid:  true,
-		},
-		// can update sub keys
-		{
-			input:    map[string]any{"foo": map[string]any{"bar": 42}},
-			path:     makeEvaluatedPath("foo", "bar"),
-			newValue: 1,
-			expected: map[string]any{"foo": map[string]any{"bar": 1}},
-		},
-		// can create sub keys
-		{
-			input:    map[string]any{"foo": map[string]any{"bar": int64(42)}},
-			path:     makeEvaluatedPath("foo", "baz"),
-			newValue: 1,
-			expected: map[string]any{"foo": map[string]any{"bar": int64(42), "baz": 1}},
-		},
-		// can turn null sub items into objects
-		{
-			input:    map[string]any{"foo": nil},
-			path:     makeEvaluatedPath("foo", "bar"),
-			newValue: 1,
-			expected: map[string]any{"foo": map[string]any{"bar": 1}},
-		},
-		// cannot change other sub item types
-		{
-			input:    map[string]any{"foo": "bar"},
-			path:     makeEvaluatedPath("foo", "bar"),
-			newValue: 1,
-			invalid:  true,
-		},
-		// can update sub vectors
-		{
-			input:    map[string]any{"foo": []any{"foo", "bar"}},
-			path:     makeEvaluatedPath("foo", 1),
-			newValue: 1,
-			expected: map[string]any{"foo": []any{"foo", 1}},
-		},
-	}
-
-	for _, tc := range testcases {
-		t.Run("", func(t *testing.T) {
-			result, err := setValueAtPath(tc.input, tc.path, tc.newValue)
-			if err != nil {
-				if !tc.invalid {
-					t.Fatalf("Failed to run: %v", err)
-				}
-
-				return
-			}
-
-			if tc.invalid {
-				t.Fatalf("Should not have been able to run, but got: %v (%T)", result, result)
-			}
-
-			if !cmp.Equal(tc.expected, result) {
-				t.Fatalf("Expected %#v, but got %#v", tc.expected, result)
-			}
-		})
-	}
-}
-
 func TestSetFunction(t *testing.T) {
 	testObjDocument := map[string]any{
 		"aString": "foo",
@@ -349,6 +165,10 @@ func TestSetFunction(t *testing.T) {
 			expr:    `(set $var "too" "many")`,
 			invalid: true,
 		},
+		{
+			expr:    `(set $var (unknown-func))`,
+			invalid: true,
+		},
 		// return the value that was set
 		{
 			expr:     `(set $var "foo")`,
@@ -392,6 +212,20 @@ func TestSetFunction(t *testing.T) {
 		{
 			expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated")) $a.foo`,
 			expected: "bar",
+		},
+		// handle bad paths
+		{
+			expr:    `(set $obj[5.6] "new value")`,
+			invalid: true,
+		},
+		// not a vector
+		{
+			expr:    `(set $obj[5] "new value")`,
+			invalid: true,
+		},
+		{
+			expr:    `(set $obj.aBool[5] "new value")`,
+			invalid: true,
 		},
 		// update a key within an object variable
 		{
@@ -524,6 +358,11 @@ func TestDefaultFunction(t *testing.T) {
 			expr:    `(default (eq? 3 "foo") 3)`,
 			invalid: true,
 		},
+
+		{
+			expr:    `(default false (eq? 3 "foo"))`,
+			invalid: true,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -566,6 +405,13 @@ func TestTryFunction(t *testing.T) {
 		{
 			expr:     `(try (eq? 3 "foo") "fallback")`,
 			expected: "fallback",
+		},
+
+		// not in the fallback though
+
+		{
+			expr:    `(try (eq? 3 "foo") (eq? 3 "foo"))`,
+			invalid: true,
 		},
 	}
 
@@ -685,6 +531,10 @@ func TestHasFunction(t *testing.T) {
 		},
 		{
 			expr:    `(has? .[5.6])`,
+			invalid: true,
+		},
+		{
+			expr:    `(has? (unknown-func).bar)`,
 			invalid: true,
 		},
 

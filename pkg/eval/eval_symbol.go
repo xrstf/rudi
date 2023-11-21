@@ -9,6 +9,7 @@ import (
 
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/pathexpr"
 )
 
 func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
@@ -130,55 +131,10 @@ func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 }
 
 func TraverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
-	if len(path.Steps) == 0 {
-		return types.WrapNative(value)
+	result, err := pathexpr.Get(value, pathexpr.FromEvaluatedPath(path))
+	if err != nil {
+		return nil, err
 	}
 
-	for _, step := range path.Steps {
-		unwrappedValue, err := types.UnwrapType(value)
-		if err != nil {
-			return nil, fmt.Errorf("cannot descend with %s into %T", step.String(), value)
-		}
-
-		if valueAsVector, ok := unwrappedValue.([]any); ok {
-			if step.IntegerValue == nil {
-				return nil, fmt.Errorf("cannot use %v as an array index", step.String())
-			}
-
-			index := int(*step.IntegerValue)
-			if index < 0 || index >= len(valueAsVector) {
-				return nil, fmt.Errorf("index %d out of bounds", index)
-			}
-
-			rawValue := valueAsVector[index]
-			value, err = types.WrapNative(rawValue)
-			if err != nil {
-				return nil, err
-			}
-
-			continue
-		}
-
-		if valueAsObject, ok := unwrappedValue.(map[string]any); ok {
-			if step.StringValue == nil {
-				return nil, fmt.Errorf("cannot use %v as an object key", step.String())
-			}
-
-			rawValue, exists := valueAsObject[*step.StringValue]
-			if !exists {
-				return nil, fmt.Errorf("no such key: %q", *step.StringValue)
-			}
-
-			value, err = types.WrapNative(rawValue)
-			if err != nil {
-				return nil, err
-			}
-
-			continue
-		}
-
-		return nil, fmt.Errorf("cannot descend with %s into %T", step.String(), value)
-	}
-
-	return value, nil
+	return types.WrapNative(result)
 }
