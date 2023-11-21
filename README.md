@@ -95,6 +95,23 @@ func main() {
 }
 ```
 
+## Alternatives
+
+Rudi doesn't exist in a vacuum; there are many other great embeddable programming/scripting languages
+out there, allbeit with slightly different ideas and goals than Rudi:
+
+* [Anko](https://github.com/mattn/anko) – Go-like syntax, allows recursion
+* [ECAL](https://github.com/krotik/ecal) – event-based systems using rules which are triggered by
+  events, allows recursion
+* [Expr](https://github.com/antonmedv/expr), [GVal](https://github.com/PaesslerAG/gval),
+  [CEL](https://github.com/google/cel-go) – great languages for writing a single expression, but not
+  suitable for transforming/mutating data structures
+* [Gentee](https://github.com/gentee/gentee) – similar to C/Python, allows recursion
+* [Jsonnet](https://github.com/google/go-jsonnet) – not built for manipulating existing objects, but
+  for assembling new objects
+* [Starlark](https://github.com/google/starlark-go) – language behind Bazel, has optional
+  nun-Turing-complete mode
+
 ## Credits
 
 Thanks to [@embik](https://github.com/embik) and [@xmudrii](https://github.com/xmudrii) for enduring
