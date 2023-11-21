@@ -65,6 +65,30 @@ func TestIfFunction(t *testing.T) {
 			invalid: true,
 		},
 		{
+			expr:    `(if identifier "yes")`,
+			invalid: true,
+		},
+		{
+			expr:    `(if {} "yes")`,
+			invalid: true,
+		},
+		{
+			expr:    `(if [] "yes")`,
+			invalid: true,
+		},
+		{
+			expr:    `(if 1 "yes")`,
+			invalid: true,
+		},
+		{
+			expr:    `(if 3.4 "yes")`,
+			invalid: true,
+		},
+		{
+			expr:    `(if (+ 1 1) "yes")`,
+			invalid: true,
+		},
+		{
 			expr:     `(if true 3)`,
 			expected: int64(3),
 		},
@@ -431,6 +455,10 @@ func TestDoFunction(t *testing.T) {
 	testcases := []coreTestcase{
 		{
 			expr:    `(do)`,
+			invalid: true,
+		},
+		{
+			expr:    `(do identifier)`,
 			invalid: true,
 		},
 		{

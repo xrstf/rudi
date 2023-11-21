@@ -32,7 +32,7 @@ func (p Program) String() string {
 		statements[i] = s.String()
 	}
 
-	return strings.Join(statements, "\n")
+	return strings.Join(statements, " ")
 }
 
 func (p Program) ExpressionName() string {
@@ -55,6 +55,10 @@ type Statement struct {
 var _ Expression = Statement{}
 
 func (s Statement) String() string {
+	if s.Expression == nil {
+		return "<invalid Statement>"
+	}
+
 	return s.Expression.String()
 }
 
@@ -94,7 +98,7 @@ func (s Symbol) String() string {
 
 		return path
 	default:
-		return "<unknown symbol>"
+		return "<invalid Symbol>"
 	}
 }
 
@@ -441,23 +445,10 @@ func (e PathExpression) IsIdentity() bool {
 func (e PathExpression) String() string {
 	result := ""
 	for _, step := range e.Steps {
-		switch asserted := step.(type) {
-		case Symbol:
-			result += "[" + asserted.String() + "]"
-		case Tuple:
-			result += "[" + asserted.String() + "]"
-		case Number:
-			result += "[" + asserted.String() + "]"
-		case Identifier:
-			result += "." + asserted.String()
-		case String:
-			result += "[" + asserted.String() + "]"
-		case Bool:
-			result += "[" + asserted.String() + "]"
-		case Null:
-			result += "[" + asserted.String() + "]"
-		default:
-			result += "?<unknown accessor expression>"
+		if ident, ok := step.(Identifier); ok {
+			result += "." + ident.String()
+		} else {
+			result += "[" + step.String() + "]"
 		}
 	}
 
@@ -491,7 +482,7 @@ func (e EvaluatedPathExpression) String() string {
 }
 
 func (EvaluatedPathExpression) ExpressionName() string {
-	return "EvaluatedPathExpression"
+	return "PathExpression"
 }
 
 type EvaluatedPathStep struct {
@@ -506,7 +497,7 @@ func (a EvaluatedPathStep) String() string {
 	case a.IntegerValue != nil:
 		return fmt.Sprintf("[%d]", *a.IntegerValue)
 	default:
-		return "<unknown evaluatedPathStep>"
+		return "<unknown PathStep>"
 	}
 }
 
@@ -517,10 +508,10 @@ func (a EvaluatedPathStep) ExpressionName() string {
 	case a.StringValue != nil:
 		name = "String"
 	case a.IntegerValue != nil:
-		name = "Integer"
+		name = "Number"
 	default:
 		name = "?"
 	}
 
-	return "EvaluatedPathStep(" + name + ")"
+	return "PathStep(" + name + ")"
 }

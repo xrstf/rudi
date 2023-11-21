@@ -94,6 +94,14 @@ func TestEqFunction(t *testing.T) {
 			expr:    `(eq? "too" "many" "args")`,
 			invalid: true,
 		},
+		{
+			expr:    `(eq? identifier "foo")`,
+			invalid: true,
+		},
+		{
+			expr:    `(eq? "foo" identifier)`,
+			invalid: true,
+		},
 	}
 
 	flipped := genFlippedExpressions("eq?", []flippedTestcases{
@@ -241,6 +249,14 @@ func TestLikeFunction(t *testing.T) {
 			expr:    `(like? "too" "many" "args")`,
 			invalid: true,
 		},
+		{
+			expr:    `(like? identifier "foo")`,
+			invalid: true,
+		},
+		{
+			expr:    `(like? "foo" identifier)`,
+			invalid: true,
+		},
 	}
 
 	testcases := genFlippedExpressions("like?", []flippedTestcases{
@@ -362,6 +378,91 @@ func TestLikeFunction(t *testing.T) {
 	})
 
 	for _, testcase := range append(syntax, testcases...) {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
+func TestLtFunction(t *testing.T) {
+	testcases := []comparisonsTestcase{
+		{
+			expr:    `(lt?)`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? true)`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? "too" "many" "args")`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? identifier "foo")`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? "foo" identifier)`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? 3 "strings")`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? 3 3.1)`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? 3 [1 2 3])`,
+			invalid: true,
+		},
+		{
+			expr:    `(lt? 3 {foo "bar"})`,
+			invalid: true,
+		},
+		{
+			expr:     `(lt? 3 3)`,
+			expected: false,
+		},
+		{
+			expr:     `(lt? 2 (+ 1 2))`,
+			expected: true,
+		},
+		{
+			expr:     `(lt? 2 3)`,
+			expected: true,
+		},
+		{
+			expr:     `(lt? -3 2)`,
+			expected: true,
+		},
+		{
+			expr:     `(lt? -3 -5)`,
+			expected: false,
+		},
+		{
+			expr:     `(lt? 3.4 3.4)`,
+			expected: false,
+		},
+		{
+			expr:     `(lt? 2.4 (+ 1.4 2))`,
+			expected: true,
+		},
+		{
+			expr:     `(lt? 2.4 3.4)`,
+			expected: true,
+		},
+		{
+			expr:     `(lt? -3.4 2.4)`,
+			expected: true,
+		},
+		{
+			expr:     `(lt? -3.4 -5.4)`,
+			expected: false,
+		},
+	}
+
+	for _, testcase := range testcases {
 		t.Run(testcase.expr, testcase.Test)
 	}
 }

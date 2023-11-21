@@ -57,6 +57,15 @@ func TestEvalTuple(t *testing.T) {
 			},
 			invalid: true,
 		},
+		// (unknownfunc)
+		{
+			input: ast.Tuple{
+				Expressions: []ast.Expression{
+					ast.Identifier("unknownfunc"),
+				},
+			},
+			invalid: true,
+		},
 		// (eval "too" "many")
 		{
 			input: ast.Tuple{

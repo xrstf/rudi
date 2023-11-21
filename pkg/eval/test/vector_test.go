@@ -15,11 +15,21 @@ func TestEvalVectorNode(t *testing.T) {
 	testcases := []struct {
 		input    ast.VectorNode
 		expected ast.Literal
+		invalid  bool
 	}{
 		// []
 		{
 			input:    ast.VectorNode{},
 			expected: ast.Vector{},
+		},
+		// [identifier]
+		{
+			input: ast.VectorNode{
+				Expressions: []ast.Expression{
+					ast.Identifier("identifier"),
+				},
+			},
+			invalid: true,
 		},
 		// [true "foo" (eval "evaled")]
 		{
@@ -58,6 +68,48 @@ func TestEvalVectorNode(t *testing.T) {
 			},
 			expected: ast.String("foo"),
 		},
+		// ["foo"][1]
+		{
+			input: ast.VectorNode{
+				Expressions: []ast.Expression{
+					ast.String("foo"),
+				},
+				PathExpression: &ast.PathExpression{
+					Steps: []ast.Expression{
+						ast.Number{Value: 1},
+					},
+				},
+			},
+			invalid: true,
+		},
+		// ["foo"].ident
+		{
+			input: ast.VectorNode{
+				Expressions: []ast.Expression{
+					ast.String("foo"),
+				},
+				PathExpression: &ast.PathExpression{
+					Steps: []ast.Expression{
+						ast.Identifier("foo"),
+					},
+				},
+			},
+			invalid: true,
+		},
+		// ["foo"][1.2]
+		{
+			input: ast.VectorNode{
+				Expressions: []ast.Expression{
+					ast.String("foo"),
+				},
+				PathExpression: &ast.PathExpression{
+					Steps: []ast.Expression{
+						ast.Number{Value: 1.2},
+					},
+				},
+			},
+			invalid: true,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -71,7 +123,15 @@ func TestEvalVectorNode(t *testing.T) {
 
 			_, value, err := eval.EvalVectorNode(ctx, testcase.input)
 			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
+				if !testcase.invalid {
+					t.Fatalf("Failed to run: %v", err)
+				}
+
+				return
+			}
+
+			if testcase.invalid {
+				t.Fatalf("Should not have been able to run, but got: %v (%T)", value, value)
 			}
 
 			returned, ok := value.(ast.Literal)
