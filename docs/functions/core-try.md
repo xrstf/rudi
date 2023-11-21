@@ -9,7 +9,7 @@ occurs, compared to `default` which tests for empty-ishness.
 
 ## Examples
 
-* `(try (+ 1 2) "fallback")` -> `3` (no error occured in `+`)
+* `(try (+ 1 2) "fallback")` -> `3` (no error occurred in `+`)
 * `(try (+ 1 "invalid") "fallback")` -> `"fallback"`
 * `(try (+ 1 "invalid") (+ "also invalid"))` -> error
 
