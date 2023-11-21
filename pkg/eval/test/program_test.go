@@ -6,9 +6,9 @@ package test
 import (
 	"testing"
 
-	"go.xrstf.de/otto/pkg/equality"
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/equality"
+	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func makeProgram(exprs ...ast.Expression) ast.Program {

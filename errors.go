@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2023 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
-package otto
+package rudi
 
 import (
 	"strings"
 
-	"go.xrstf.de/otto/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/lang/parser"
 )
 
 type ParseError struct {

@@ -18,7 +18,7 @@ all: clean generate build test
 
 .PHONY: generate
 generate:
-	pigeon pkg/lang/grammar/otto.peg > pkg/lang/parser/generated.go
+	pigeon pkg/lang/grammar/rudi.peg > pkg/lang/parser/generated.go
 
 .PHONY: clean
 clean:
@@ -27,7 +27,7 @@ clean:
 .PHONY: build
 build:
 	mkdir -p _build
-	cd cmd/otti && go build $(GO_BUILD_FLAGS) -o ../../_build .
+	cd cmd/rudi && go build $(GO_BUILD_FLAGS) -o ../../_build .
 
 .PHONY: test
 test:

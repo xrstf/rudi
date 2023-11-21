@@ -10,10 +10,10 @@ import (
 	"os"
 	"strings"
 
-	"go.xrstf.de/otto"
-	"go.xrstf.de/otto/cmd/otti/types"
-	"go.xrstf.de/otto/cmd/otti/util"
-	"go.xrstf.de/otto/pkg/debug"
+	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/cmd/rudi/util"
+	"go.xrstf.de/rudi/pkg/debug"
 
 	"gopkg.in/yaml.v3"
 )
@@ -43,7 +43,7 @@ func Run(opts *types.Options, args []string) error {
 	}
 
 	// parse the script
-	program, err := otto.ParseScript(scriptName, script)
+	program, err := rudi.ParseScript(scriptName, script)
 	if err != nil {
 		return fmt.Errorf("invalid script: %w", err)
 	}
@@ -64,13 +64,13 @@ func Run(opts *types.Options, args []string) error {
 	}
 
 	// setup the evaluation context
-	ctx, err := util.SetupOttoContext(files)
+	ctx, err := util.SetupRudiContext(files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
 	// evaluate the script
-	_, evaluated, err := otto.RunProgram(ctx, program)
+	_, evaluated, err := rudi.RunProgram(ctx, program)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

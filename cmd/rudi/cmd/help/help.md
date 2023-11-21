@@ -1,25 +1,25 @@
-# The Otto interpreter :)
+# The Rudi interpreter :)
 
-Otti is a command line interpreter for the Otto programming language. Otti can
+Rudi is a command line interpreter for the Rudi programming language. Rudi can
 read multiple JSON/YAML files and then apply JSON paths or scripts to them. For
 quicker development, an interactive REPL is also available.
 
 ## Modes
 
-Otti can run in one of two modes:
+Rudi can run in one of two modes:
 
 * **Interactive Mode** is enabled by passing `--interactive` (or `-i`). This will
-  start a REPL session where Otto scripts are read from stdin and evaluated
+  start a REPL session where Rudi scripts are read from stdin and evaluated
   against the loaded files.
-* **Script Mode** is used the an Otto script is passed either as the first
-  argument or read from a file defined by `--script`. In this mode Otti will
+* **Script Mode** is used the an Rudi script is passed either as the first
+  argument or read from a file defined by `--script`. In this mode Rudi will
   run all statements from the script and print the resulting value, then it exits.
 
     Examples:
 
-    * `otti '.foo' myfile.json`
-    * `otti '(set .foo "bar") (set .users 42) .' myfile.json`
-    * `otti --script convert.otto myfile.json`
+    * `rudi '.foo' myfile.json`
+    * `rudi '(set .foo "bar") (set .users 42) .' myfile.json`
+    * `rudi --script convert.rudi myfile.json`
 
 ## File Handling
 
@@ -31,5 +31,5 @@ for `set` for more information).
 
 ## Help
 
-Help is available by using `help` as the first argument to Otto. This can be
+Help is available by using `help` as the first argument to Rudi. This can be
 followed by a topic, like `help if`.

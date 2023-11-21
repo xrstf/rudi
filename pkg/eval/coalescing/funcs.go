@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func ToBool(val any) (bool, error) {

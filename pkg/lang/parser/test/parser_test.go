@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"go.xrstf.de/otto/pkg/debug"
-	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/debug"
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/lang/parser"
 )
 
 func TestParseProgram(t *testing.T) {

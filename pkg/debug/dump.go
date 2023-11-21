@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 var Indent = "  "

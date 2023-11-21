@@ -1,4 +1,4 @@
-module go.xrstf.de/otto
+module go.xrstf.de/rudi
 
 go 1.18
 

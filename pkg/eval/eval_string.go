@@ -4,8 +4,8 @@
 package eval
 
 import (
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func EvalString(ctx types.Context, str ast.String) (types.Context, any, error) {

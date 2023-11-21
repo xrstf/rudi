@@ -12,11 +12,11 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	"go.xrstf.de/otto"
-	cmdtypes "go.xrstf.de/otto/cmd/otti/types"
-	"go.xrstf.de/otto/cmd/otti/util"
-	"go.xrstf.de/otto/docs"
-	"go.xrstf.de/otto/pkg/eval/types"
+	"go.xrstf.de/rudi"
+	cmdtypes "go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/cmd/rudi/util"
+	"go.xrstf.de/rudi/docs"
+	"go.xrstf.de/rudi/pkg/eval/types"
 )
 
 //go:embed help.md
@@ -61,12 +61,12 @@ func Run(opts *cmdtypes.Options, args []string) error {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	ctx, err := util.SetupOttoContext(files)
+	ctx, err := util.SetupRudiContext(files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
-	fmt.Println("Welcome to Otti 🐘")
+	fmt.Println("Welcome to Rudi 🐘")
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
 
@@ -84,7 +84,7 @@ func Run(opts *cmdtypes.Options, args []string) error {
 
 		newCtx, stop, err := processInput(ctx, helpTopics, opts, line)
 		if err != nil {
-			parseErr := &otto.ParseError{}
+			parseErr := &rudi.ParseError{}
 			if errors.As(err, parseErr) {
 				fmt.Println(parseErr.Snippet())
 				fmt.Println(parseErr)
@@ -119,12 +119,12 @@ func processInput(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Opt
 	}
 
 	// parse input
-	program, err := otto.ParseScript("(repl)", input)
+	program, err := rudi.ParseScript("(repl)", input)
 	if err != nil {
 		return ctx, false, err
 	}
 
-	newCtx, evaluated, err := otto.RunProgram(ctx, program)
+	newCtx, evaluated, err := rudi.RunProgram(ctx, program)
 	if err != nil {
 		return ctx, false, err
 	}

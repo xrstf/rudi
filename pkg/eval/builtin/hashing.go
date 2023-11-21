@@ -12,9 +12,9 @@ import (
 	"hash"
 	"io"
 
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func hashFunc(ctx types.Context, args []ast.Expression, h hash.Hash) (any, error) {

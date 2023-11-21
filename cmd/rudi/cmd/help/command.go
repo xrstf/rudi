@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/spf13/pflag"
-	"go.xrstf.de/otto/cmd/otti/types"
-	"go.xrstf.de/otto/cmd/otti/util"
-	"go.xrstf.de/otto/docs"
+	"go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/cmd/rudi/util"
+	"go.xrstf.de/rudi/docs"
 )
 
 //go:embed help.md

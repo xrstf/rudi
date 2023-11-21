@@ -6,8 +6,8 @@ package eval
 import (
 	"fmt"
 
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func EvalIdentifier(ctx types.Context, ident ast.Identifier) (types.Context, any, error) {

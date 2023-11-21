@@ -10,11 +10,11 @@ import (
 	"runtime"
 
 	"github.com/spf13/pflag"
-	"go.xrstf.de/otto"
-	"go.xrstf.de/otto/cmd/otti/cmd/console"
-	"go.xrstf.de/otto/cmd/otti/cmd/help"
-	"go.xrstf.de/otto/cmd/otti/cmd/script"
-	"go.xrstf.de/otto/cmd/otti/types"
+	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/cmd/console"
+	"go.xrstf.de/rudi/cmd/rudi/cmd/help"
+	"go.xrstf.de/rudi/cmd/rudi/cmd/script"
+	"go.xrstf.de/rudi/cmd/rudi/types"
 )
 
 // These variables get set by ldflags during compilation.
@@ -26,7 +26,7 @@ var (
 
 func printVersion() {
 	fmt.Printf(
-		"Otti %s (%s), built with %s on %s\n",
+		"Rudi %s (%s), built with %s on %s\n",
 		BuildTag,
 		BuildCommit[:10],
 		runtime.Version(),
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	if err := script.Run(&opts, args); err != nil {
-		parseErr := &otto.ParseError{}
+		parseErr := &rudi.ParseError{}
 		if errors.As(err, parseErr) {
 			fmt.Println(parseErr.Snippet())
 			fmt.Println(parseErr)

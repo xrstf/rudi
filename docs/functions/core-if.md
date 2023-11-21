@@ -34,7 +34,7 @@ and its return value is the final return value of `if`.
 If the condition is `false`, `if` evaluates and returns `expr-b`.
 
 `if` guarantees that only one of `expr-a` and `expr-b` is ever evaluated, as
-expressions in Otto can have side effects on the global document.
+expressions in Rudi can have side effects on the global document.
 
 If `condition`, `expr-a` or `expr-b` return an error, `if` returns that error.
 

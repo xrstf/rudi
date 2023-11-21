@@ -4,8 +4,8 @@
 package builtin
 
 import (
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 type StatelessFunc func(ctx types.Context, args []ast.Expression) (any, error)

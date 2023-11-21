@@ -1,48 +1,47 @@
-# Otto
+# Rudi
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/xrstf/otto" alt="last stable release">
+  <img src="https://img.shields.io/github/v/release/xrstf/rudi" alt="last stable release">
 
-  <a href="https://goreportcard.com/report/go.xrstf.de/otto">
-    <img src="https://goreportcard.com/badge/go.xrstf.de/otto" alt="go report card">
+  <a href="https://goreportcard.com/report/go.xrstf.de/rudi">
+    <img src="https://goreportcard.com/badge/go.xrstf.de/rudi" alt="go report card">
   </a>
 
-  <a href="https://pkg.go.dev/go.xrstf.de/otto">
-    <img src="https://pkg.go.dev/badge/go.xrstf.de/otto" alt="godoc">
+  <a href="https://pkg.go.dev/go.xrstf.de/rudi">
+    <img src="https://pkg.go.dev/badge/go.xrstf.de/rudi" alt="godoc">
   </a>
 </p>
 
-Otto is a Lisp-based, embeddable programming language that focuses on transforming data structures
-like those available in JSON (numbers, bools, objects, vectors etc.). A statement in Otto looks like
+Rudi is a Lisp-based, embeddable programming language that focuses on transforming data structures
+like those available in JSON (numbers, bools, objects, vectors etc.). A statement in Rudi looks like
 
 ```lisp
 (set .foo[0] (+ (len .users) 42))
 ```
 
-Otto has been named after the legendary German comedian
-[Otto Waalkes](https://en.wikipedia.org/wiki/Otto_Waalkes).
+Rudi has been named after my grandfather.
 
 ## Installation
 
-Otto is primarily meant to be embedded into other Go programs, but a standalone CLI application,
-_Otti_, is also available to test your scripts with. Otti can be installed using Git & Go:
+Rudi is primarily meant to be embedded into other Go programs, but a standalone CLI application,
+_Rudi_, is also available to test your scripts with. Rudi can be installed using Git & Go:
 
 ```bash
-git clone https://github.com/xrstf/otto
-cd otto
+git clone https://github.com/xrstf/rudi
+cd rudi
 make build
 ```
 
-Alternatively, you can download the [latest release](https://github.com/xrstf/otto/releases/latest)
+Alternatively, you can download the [latest release](https://github.com/xrstf/rudi/releases/latest)
 from GitHub.
 
 ## Usage
 
-Otti has extensive help built right into it, try running `otti help` to get started.
+Rudi has extensive help built right into it, try running `rudi help` to get started.
 
 ## Embedding
 
-Otto is well suited to be embedded into Go applications. A clean and simple API makes it a breeze:
+Rudi is well suited to be embedded into Go applications. A clean and simple API makes it a breeze:
 
 ```go
 package main
@@ -51,33 +50,33 @@ import (
    "fmt"
    "log"
 
-   "go.xrstf.de/otto"
+   "go.xrstf.de/rudi"
 )
 
 const script = `(+ $myvar 42 .foo)`
 
 func main() {
    // setup the set of variables available by default in the script
-   vars := otto.NewVariables().
+   vars := rudi.NewVariables().
       Set("myvar", 42)
 
    // Likewise, setup the functions available (note that this includes functions like "if" and "and",
    // so running with an empty function set is generally not advisable).
-   funcs := otto.NewBuiltInFunctions()
+   funcs := rudi.NewBuiltInFunctions()
 
-   // Otto programs are meant to manipulate a document (path expressions like ".foo" resolve within
+   // Rudi programs are meant to manipulate a document (path expressions like ".foo" resolve within
    // that document). The document can be anything, but is most often a JSON object.
    documentData := map[string]any{"foo": 9000}
-   document, err := otto.NewDocument(documentData)
+   document, err := rudi.NewDocument(documentData)
    if err != nil {
       log.Fatalf("Cannot use %v as the document: %v", documentData, err)
    }
 
    // combine document, variables and functions into an execution context
-   ctx := otto.NewContext(document, funcs, vars)
+   ctx := rudi.NewContext(document, funcs, vars)
 
    // parse the script (the name is used when generating error strings)
-   program, err := otto.ParseScript("myscript", script)
+   program, err := rudi.ParseScript("myscript", script)
    if err != nil {
       log.Fatalf("The script is invalid: %v", err)
    }
@@ -86,7 +85,7 @@ func main() {
    // this returns an evaluated value, which is the result of the last expression that was evaluated,
    // plus a new context, which contains for example newly set runtime variables; in many cases the
    // new context is not that important and you'd focus on the evaluated value.
-   newCtx, evaluated, err := otto.RunProgram(ctx, program)
+   newCtx, evaluated, err := rudi.RunProgram(ctx, program)
    if err != nil {
       log.Fatalf("Failed to evaluate script: %v", err)
    }

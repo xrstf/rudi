@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.xrstf.de/otto/pkg/eval/builtin"
+	"go.xrstf.de/rudi/pkg/eval/builtin"
 )
 
 //go:embed *
@@ -26,9 +26,9 @@ func (t *Topic) Content() ([]byte, error) {
 func Topics() []Topic {
 	topics := []Topic{
 		{
-			CliNames:    []string{"language", "lang", "otto"},
+			CliNames:    []string{"language", "lang", "rudi"},
 			Group:       "General",
-			Description: "A short introduction to the Otto language",
+			Description: "A short introduction to the Rudi language",
 			filename:    "language.md",
 		},
 	}
@@ -65,7 +65,7 @@ func Topics() []Topic {
 	return topics
 }
 
-// Function names are global in Otto; however the docs is logically split
+// Function names are global in Rudi; however the docs is logically split
 // into groups like "core" or "math", which also make sense in the documentation
 // (hence why names are like "core-if.md").
 // In order not to introduce any sort of weird grouping/namespacing in the

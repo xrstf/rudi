@@ -1,8 +1,8 @@
-# Otto Functions
+# Rudi Functions
 
-Otto ships with a set of built-in functions. When embedding Otto, this set can
+Rudi ships with a set of built-in functions. When embedding Rudi, this set can
 be extended or overwritten as desired to inject custom functions. It is not
-possible to define functions in an Otto program itself.
+possible to define functions in an Rudi program itself.
 
 ## Core
 

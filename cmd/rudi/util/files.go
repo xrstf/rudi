@@ -9,7 +9,7 @@ import (
 	"io"
 	"os"
 
-	"go.xrstf.de/otto/cmd/otti/types"
+	"go.xrstf.de/rudi/cmd/rudi/types"
 	"gopkg.in/yaml.v3"
 )
 

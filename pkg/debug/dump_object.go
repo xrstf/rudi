@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func DumpObject(obj *ast.Object, out io.Writer, depth int) error {

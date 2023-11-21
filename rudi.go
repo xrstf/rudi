@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: 2023 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
-package otto
+package rudi
 
 import (
 	"fmt"
 
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/builtin"
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/eval/builtin"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/lang/parser"
 )
 
 // alias types

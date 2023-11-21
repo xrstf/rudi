@@ -4,7 +4,7 @@
 
 package parser
 
-import "go.xrstf.de/otto/pkg/lang/ast"
+import "go.xrstf.de/rudi/pkg/lang/ast"
 }
 
 Program <- __ stmt:Statement stmts:(___ Statement)* __ EOF {

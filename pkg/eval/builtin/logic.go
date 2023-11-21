@@ -6,9 +6,9 @@ package builtin
 import (
 	"fmt"
 
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func andFunction(ctx types.Context, args []ast.Expression) (any, error) {

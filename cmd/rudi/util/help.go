@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	markdown "go.xrstf.de/go-term-markdown"
-	"go.xrstf.de/otto/docs"
+	"go.xrstf.de/rudi/docs"
 )
 
 func RenderMarkdown(markup string, indent int) string {

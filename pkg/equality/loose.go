@@ -6,9 +6,9 @@ package equality
 import (
 	"fmt"
 
-	"go.xrstf.de/otto/pkg/eval/coalescing"
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval/coalescing"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 // equality, but with using coalescing, so 1 == "1"

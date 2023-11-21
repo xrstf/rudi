@@ -1,11 +1,11 @@
-# The Otto Language
+# The Rudi Language
 
-Otto is a Lisp dialect. Each Otto program consists of a series of statement, which are tuples
+Rudi is a Lisp dialect. Each Rudi program consists of a series of statement, which are tuples
 (`( ... )`), which are executed in series.
 
 ## Data Types
 
-Otto knows the following data types:
+Rudi knows the following data types:
 
 * Null (`null`)
 * Bool (`true` or `false`)
@@ -17,15 +17,15 @@ Otto knows the following data types:
   but the key expression must return a string; keys can also be identifiers, i.e. unquoted, so
   `{foo "bar"}` is the same as `{"foo" "bar"}`)
 
-As you can see, Otto is basically JSON extended with S-expressions.
+As you can see, Rudi is basically JSON extended with S-expressions.
 
-In addition to these literal data types, Otto understands a number of expressions:
+In addition to these literal data types, Rudi understands a number of expressions:
 
 ## Expressions
 
 ### Statements
 
-Statements are the top-level elements of an Otto program and in fact just an alias for tuples. The
+Statements are the top-level elements of an Rudi program and in fact just an alias for tuples. The
 term "statement" is simply used to denote a top-level tuple.
 
 ```
@@ -76,7 +76,7 @@ Symbols are either variables or bare path expressions that reference the global 
 
 ### Variables
 
-Otto has support for runtime variables. A variable holds any of the possible data types and has a
+Rudi has support for runtime variables. A variable holds any of the possible data types and has a
 unique, case-sensitive name, like `$myVar`. Symbols are expressions and can therefore be used in
 most places:
 
@@ -100,7 +100,7 @@ See further down for more details on path expressions.
 
 ### Global Document Access
 
-Otto programs are meant to transform a document (usually an `Object`). To make it easy to access
+Rudi programs are meant to transform a document (usually an `Object`). To make it easy to access
 the document and sub fields within, path expressions can be used just like with variables:
 
 Suppose a JSON document like
@@ -112,7 +112,7 @@ Suppose a JSON document like
 }
 ```
 
-is being processed by an Otto program, then you could write
+is being processed by an Rudi program, then you could write
 
 ```
 (print .foo)

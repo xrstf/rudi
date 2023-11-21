@@ -7,9 +7,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 // (to-base64 VAL:string)

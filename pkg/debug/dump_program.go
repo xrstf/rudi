@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/otto/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 func DumpProgram(p *ast.Program, out io.Writer, depth int) error {

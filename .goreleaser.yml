@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 builds:
-  - dir: cmd/otti
-    binary: otti
+  - dir: cmd/rudi
+    binary: rudi
     env:
       # goreleaser does not work with CGO, it could also complicate
       # usage by users in CI/CD systems like Terraform Cloud where
@@ -32,7 +32,7 @@ builds:
         goarch: '386'
 archives:
   - format: tar.gz
-    name_template: 'otti_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: 'rudi_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
     wrap_in_directory: true
     strip_parent_binary_folder: true
     format_overrides:

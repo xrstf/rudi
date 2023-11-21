@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"go.xrstf.de/otto/pkg/eval"
-	"go.xrstf.de/otto/pkg/eval/types"
-	"go.xrstf.de/otto/pkg/lang/ast"
-	"go.xrstf.de/otto/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/lang/parser"
 )
 
 func runExpression(t *testing.T, expr string, document any, variables types.Variables) (any, error) {
