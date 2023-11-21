@@ -6,8 +6,9 @@ package pathexpr
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestGet(t *testing.T) {

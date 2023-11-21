@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"go.xrstf.de/rudi/cmd/rudi/types"
+
 	"gopkg.in/yaml.v3"
 )
 

@@ -9,12 +9,13 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/spf13/pflag"
 	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/console"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/help"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/script"
 	"go.xrstf.de/rudi/cmd/rudi/types"
+
+	"github.com/spf13/pflag"
 )
 
 // These variables get set by ldflags during compilation.

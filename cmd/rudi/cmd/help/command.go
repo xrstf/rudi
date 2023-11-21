@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/pflag"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
 	"go.xrstf.de/rudi/docs"
+
+	"github.com/spf13/pflag"
 )
 
 //go:embed help.md

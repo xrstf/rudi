@@ -11,12 +11,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/chzyer/readline"
 	"go.xrstf.de/rudi"
 	cmdtypes "go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
 	"go.xrstf.de/rudi/docs"
 	"go.xrstf.de/rudi/pkg/eval/types"
+
+	"github.com/chzyer/readline"
 )
 
 //go:embed help.md

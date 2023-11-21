@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	markdown "go.xrstf.de/go-term-markdown"
 	"go.xrstf.de/rudi/docs"
+
+	markdown "go.xrstf.de/go-term-markdown"
 )
 
 func RenderMarkdown(markup string, indent int) string {
