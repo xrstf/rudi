@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-// evaluated vectors are technically considered expressions
+// evaluated vectors are technically considered expressions.
 func EvalVector(ctx types.Context, vec ast.Vector) (types.Context, any, error) {
 	return ctx, vec, nil
 }

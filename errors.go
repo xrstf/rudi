@@ -4,6 +4,7 @@
 package rudi
 
 import (
+	"errors"
 	"strings"
 
 	"go.xrstf.de/rudi/pkg/lang/parser"
@@ -21,12 +22,13 @@ func (p ParseError) Error() string {
 }
 
 func (p ParseError) Snippet() string {
-	if el, ok := p.err.(parser.ErrorLister); ok {
+	var lister parser.ErrorLister
+	if errors.As(p.err, &lister) {
 		var buffer strings.Builder
 
-		for _, e := range el.Errors() {
-			parserErr, ok := e.(parser.ParserError)
-			if !ok {
+		for _, e := range lister.Errors() {
+			var parserErr parser.ParserError
+			if !errors.As(e, &parserErr) {
 				return ""
 			}
 
@@ -34,10 +36,8 @@ func (p ParseError) Snippet() string {
 			line := extractLine(p.script, off)
 			if col >= len(line) {
 				col = len(line) - 1
-			} else {
-				if col > 0 {
-					col--
-				}
+			} else if col > 0 {
+				col--
 			}
 			if col < 0 {
 				col = 0

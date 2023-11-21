@@ -541,6 +541,9 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 
 		var result any
 		ctx, result, err = function(ctx, []ast.Expression{wrapped})
+		if err != nil {
+			return ctx, false, err
+		}
 
 		native, err := types.UnwrapType(result)
 		if err != nil {

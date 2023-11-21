@@ -4,7 +4,7 @@
 package parser
 
 // ErrorLister is the public interface to access the inner errors
-// included in a errList
+// included in a errList.
 type ErrorLister interface {
 	Errors() []error
 }
@@ -13,7 +13,7 @@ func (e errList) Errors() []error {
 	return e
 }
 
-// ParserError is the public interface to errors of type parserError
+// ParserError is the public interface to errors of type parserError.
 type ParserError interface {
 	Error() string
 	InnerError() error

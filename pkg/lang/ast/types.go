@@ -19,7 +19,7 @@ type Literal interface {
 	LiteralValue() any
 }
 
-// A program is either a series of statements or a single, non-tuple expression
+// A program is either a series of statements or a single, non-tuple expression.
 type Program struct {
 	Statements []Statement
 }
@@ -36,7 +36,7 @@ func (p Program) String() string {
 }
 
 func (p Program) ExpressionName() string {
-	name := ""
+	var name string
 
 	switch {
 	case len(p.Statements) > 0:
@@ -82,7 +82,7 @@ func (s Symbol) String() string {
 		return "."
 	}
 
-	path := ""
+	var path string
 	if s.PathExpression != nil {
 		path = s.PathExpression.String()
 	}
@@ -103,7 +103,7 @@ func (s Symbol) String() string {
 }
 
 func (s Symbol) ExpressionName() string {
-	name := ""
+	var name string
 
 	switch {
 	case s.Variable != nil:
@@ -502,7 +502,7 @@ func (a EvaluatedPathStep) String() string {
 }
 
 func (a EvaluatedPathStep) ExpressionName() string {
-	name := ""
+	var name string
 
 	switch {
 	case a.StringValue != nil:

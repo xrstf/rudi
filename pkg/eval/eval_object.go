@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-// evaluated objects are technically considered expressions
+// evaluated objects are technically considered expressions.
 func EvalObject(ctx types.Context, obj ast.Object) (types.Context, any, error) {
 	return ctx, obj, nil
 }

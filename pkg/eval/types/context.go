@@ -151,11 +151,11 @@ func WrapNative(val any) (ast.Literal, error) {
 	case int32:
 		return ast.Number{Value: int64(asserted)}, nil
 	case int64:
-		return ast.Number{Value: int64(asserted)}, nil
+		return ast.Number{Value: asserted}, nil
 	case float32:
 		return ast.Number{Value: float64(asserted)}, nil
 	case float64:
-		return ast.Number{Value: float64(asserted)}, nil
+		return ast.Number{Value: asserted}, nil
 	case ast.Number:
 		return asserted, nil
 	case []any:

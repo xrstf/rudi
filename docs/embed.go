@@ -70,7 +70,7 @@ func Topics() []Topic {
 // (hence why names are like "core-if.md").
 // In order not to introduce any sort of weird grouping/namespacing in the
 // actual eval packages, we deduce the correct file by searching through _all_
-// function files and search for *-[funcName].md
+// function files and search for *-[funcName].md.
 func getFunctionDocs(sanitizedFuncName string) (group string, filename string, found bool) {
 	const functionsDir = "functions"
 

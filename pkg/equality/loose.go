@@ -11,7 +11,7 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-// equality, but with using coalescing, so 1 == "1"
+// equality, but with using coalescing, so 1 == "1".
 func EqualEnough(left, right ast.Literal) (bool, error) {
 	// if either of the sides is a null, convert the other to null
 	matched, equal, err := nullishEqualEnough(left, right)

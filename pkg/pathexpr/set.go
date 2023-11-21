@@ -53,7 +53,7 @@ func Set(dest any, path Path, newValue any) (any, error) {
 	if key, ok := toStringStep(thisStep); ok {
 		if object, ok := target.(map[string]any); ok {
 			// getting the empty value for non-existing keys is fine
-			existingValue, _ := object[key]
+			existingValue := object[key]
 
 			updatedValue, err := Set(existingValue, remainingSteps, newValue)
 			if err != nil {
