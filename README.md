@@ -21,6 +21,17 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 
 Rudi has been named after my grandfather.
 
+## Features
+
+* **Safe** evaluation: Rudi is not Turing-complete and so Rudi programs are always guaranteed to
+  complete in a reasonable time frame.
+* **Lightweight**: Rudi comes with only a single dependency on `go-cmp`, nothing else.
+* **Hackable**: Rudi tries to keep the language itself approachable, so that modifications are
+  easier and newcomers have an easier time to get started.
+* **Variables** can be pre-defined or set at runtime.
+* **JSONPath** expressions are first-class citizens and make referring to the current JSON document
+  a breeze.
+
 ## Installation
 
 Rudi is primarily meant to be embedded into other Go programs, but a standalone CLI application,
