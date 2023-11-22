@@ -16,7 +16,7 @@ func removeSliceItem(slice []any, index int) []any {
 
 func Delete(dest any, path Path) (any, error) {
 	if len(path) == 0 {
-		return dest, nil
+		return nil, nil
 	}
 
 	target, err := types.UnwrapType(dest)

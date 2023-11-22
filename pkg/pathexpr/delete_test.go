@@ -36,6 +36,12 @@ func TestDelete(t *testing.T) {
 			invalid: true,
 		},
 		{
+			name:     "delete everything",
+			dest:     map[string]any{"foo": "bar", "other": "value"},
+			path:     Path{},
+			expected: nil,
+		},
+		{
 			name:     "delete root key",
 			dest:     map[string]any{"foo": "bar", "other": "value"},
 			path:     Path{"other"},

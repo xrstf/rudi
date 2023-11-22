@@ -286,6 +286,89 @@ func TestSetFunction(t *testing.T) {
 	}
 }
 
+func TestDeleteFunction(t *testing.T) {
+	testcases := []coreTestcase{
+		{
+			expr:    `(delete)`,
+			invalid: true,
+		},
+		{
+			expr:    `(delete "too" "many")`,
+			invalid: true,
+		},
+		{
+			expr:    `(delete $var)`,
+			invalid: true,
+		},
+		{
+			// TODO: This should be valid.
+			expr:    `(delete [1 2 3][1])`,
+			invalid: true,
+		},
+		{
+			// TODO: This should be valid.
+			expr:    `(delete {foo "bar"}.foo)`,
+			invalid: true,
+		},
+		// allow removing everything
+		{
+			expr:     `(delete .)`,
+			document: map[string]any{"foo": "bar"},
+			expected: nil,
+		},
+		{
+			expr:     `(delete .)`,
+			document: map[string]any{"foo": "bar"},
+			expected: nil,
+		},
+		// delete does not update the target
+		{
+			expr:     `(delete .) .`,
+			document: map[string]any{"foo": "bar"},
+			expected: map[string]any{"foo": "bar"},
+		},
+		// can remove a key
+		{
+			expr:     `(delete .foo)`,
+			document: map[string]any{"foo": "bar"},
+			expected: map[string]any{},
+		},
+		// non-existent key is okay
+		{
+			expr:     `(delete .bar)`,
+			document: map[string]any{"foo": "bar"},
+			expected: map[string]any{"foo": "bar"},
+		},
+		// path must be sane though
+		{
+			expr:     `(delete .[1])`,
+			document: map[string]any{"foo": "bar"},
+			invalid:  true,
+		},
+		// can delete from array
+		{
+			expr:     `(delete .[1])`,
+			document: []any{"a", "b", "c"},
+			expected: []any{"a", "c"},
+		},
+		// vector bounds are checked
+		{
+			expr:     `(delete .[-1])`,
+			document: []any{"a", "b", "c"},
+			invalid:  true,
+		},
+		{
+			expr:     `(delete .[3])`,
+			document: []any{"a", "b", "c"},
+			invalid:  true,
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.expr, testcase.Test)
+	}
+}
+
 func TestDoFunction(t *testing.T) {
 	testcases := []coreTestcase{
 		{

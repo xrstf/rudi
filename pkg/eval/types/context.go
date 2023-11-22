@@ -171,7 +171,7 @@ func WrapNative(val any) (ast.Literal, error) {
 	}
 }
 
-func Must(val any, _ error) any {
+func Must[T any](val T, _ error) T {
 	return val
 }
 

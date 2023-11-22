@@ -25,6 +25,7 @@ var Functions = types.Functions{
 	"default": stateless(defaultFunction),
 	"try":     stateless(tryFunction),
 	"set":     setFunction,
+	"delete":  stateless(deleteFunction),
 	"empty?":  stateless(isEmptyFunction),
 
 	// math

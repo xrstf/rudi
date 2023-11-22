@@ -219,7 +219,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 	if p := symbol.PathExpression; p != nil {
 		pathExpr, err = eval.EvalPathExpression(ctx, p)
 		if err != nil {
-			return ctx, nil, fmt.Errorf("argument #1: invalid path expression: %w", err)
+			return ctx, nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
 		}
 	}
 
@@ -259,6 +259,51 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 	doc.Set(updatedValue)
 
 	return ctx, newValue, nil
+}
+
+// (delete VAR:Variable)
+// (delete EXPR:PathExpression)
+func deleteFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 1 {
+		return nil, fmt.Errorf("expected 1 argument, got %d", size)
+	}
+
+	symbol, ok := args[0].(ast.Symbol)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
+	}
+
+	// catch symbols that are technically invalid
+	if symbol.PathExpression == nil {
+		return nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
+	}
+
+	// pre-evaluate the path
+	pathExpr, err := eval.EvalPathExpression(ctx, symbol.PathExpression)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+	}
+
+	// get the current value
+	var currentValue any
+
+	if symbol.Variable != nil {
+		varName := string(*symbol.Variable)
+
+		// a non-existing variable is fine, this is how you define new variables in the first place
+		currentValue, _ = ctx.GetVariable(varName)
+	} else {
+		doc := ctx.GetDocument()
+		currentValue = doc.Get()
+	}
+
+	// delete the desired path in the value
+	updatedValue, err := pathexpr.Delete(currentValue, pathexpr.FromEvaluatedPath(*pathExpr))
+	if err != nil {
+		return nil, fmt.Errorf("cannot delete %s in %T: %w", pathExpr, currentValue, err)
+	}
+
+	return types.Must(types.WrapNative(updatedValue)), nil
 }
 
 // (empty? VALUE:any)
