@@ -78,6 +78,18 @@ func TestDelete(t *testing.T) {
 			invalid: true,
 		},
 		{
+			name:     "remove item from slice",
+			dest:     []any{"foo", map[string]any{"foo": "bar"}, "bar"},
+			path:     Path{1},
+			expected: []any{"foo", "bar"},
+		},
+		{
+			name:     "remove deeper item from slice",
+			dest:     []any{"foo", map[string]any{"foo": []any{"a", "b", "c"}}, "bar"},
+			path:     Path{1, "foo", 0},
+			expected: []any{"foo", map[string]any{"foo": []any{"b", "c"}}, "bar"},
+		},
+		{
 			name:     "object in slice",
 			dest:     []any{"foo", map[string]any{"foo": "bar"}, "bar"},
 			path:     Path{1, "foo"},

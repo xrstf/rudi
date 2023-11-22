@@ -10,6 +10,10 @@ import (
 	"go.xrstf.de/rudi/pkg/eval/types"
 )
 
+func removeSliceItem(slice []any, index int) []any {
+	return append(slice[:index], slice[index+1:]...)
+}
+
 func Delete(dest any, path Path) (any, error) {
 	if len(path) == 0 {
 		return dest, nil
@@ -25,6 +29,23 @@ func Delete(dest any, path Path) (any, error) {
 
 	// we reached the level at which we want to remove the key
 	if len(remainingSteps) == 0 {
+		// [index]
+		if index, ok := toIntegerStep(thisStep); ok {
+			if index < 0 {
+				return nil, fmt.Errorf("index %d out of bounds", index)
+			}
+
+			if slice, ok := target.([]any); ok {
+				if index >= len(slice) {
+					return nil, fmt.Errorf("index %d out of bounds", index)
+				}
+
+				return removeSliceItem(slice, index), nil
+			}
+
+			return nil, fmt.Errorf("cannot delete index from %T", target)
+		}
+
 		// .key
 		if key, ok := toStringStep(thisStep); ok {
 			if object, ok := target.(map[string]any); ok {
@@ -35,7 +56,7 @@ func Delete(dest any, path Path) (any, error) {
 			return nil, fmt.Errorf("cannot delete key from %T", target)
 		}
 
-		return nil, fmt.Errorf("can only remove object keys, not %T", thisStep)
+		return nil, fmt.Errorf("can only remove object keys or slice items, not %T", thisStep)
 	}
 
 	// [index]...
