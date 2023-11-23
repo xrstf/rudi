@@ -62,7 +62,7 @@ import (
    "go.xrstf.de/rudi"
 )
 
-const script = `(+ $myvar 42 .foo) (set! .foo 42)`
+const script = `(set! .foo 42) (+ $myvar 42 .foo)`
 
 func main() {
    // Rudi programs are meant to manipulate a document (path expressions like ".foo" resolve within
@@ -90,7 +90,7 @@ func main() {
       log.Fatalf("Script failed: %v", err)
    }
 
-   fmt.Println(result)       // => 9084
+   fmt.Println(result)       // => 126
    fmt.Println(updatedData)  // => {"foo": 42}
 }
 ```
