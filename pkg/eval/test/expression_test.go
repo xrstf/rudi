@@ -41,7 +41,7 @@ func TestEvalExpression(t *testing.T) {
 			input: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
-						Key:   ast.Identifier("foo"),
+						Key:   ast.Identifier{Name: "foo"},
 						Value: ast.String("bar"),
 					},
 				},

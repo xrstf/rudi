@@ -306,12 +306,12 @@ func TestRangeFunction(t *testing.T) {
 		},
 		{
 			// multiple expressions that use a common context
-			expr:     `(range [1 2 3] [a] (set $foo $a) (+ $foo 3))`,
+			expr:     `(range [1 2 3] [a] (set! $foo $a) (+ $foo 3))`,
 			expected: int64(6),
 		},
 		{
 			// count iterations
-			expr:     `(range [1 2 3] [loop-var] (set $counter (+ (default (try $counter) 0) 1)))`,
+			expr:     `(range [1 2 3] [loop-var] (set! $counter (+ (default (try $counter) 0) 1)))`,
 			expected: int64(3),
 		},
 		{
@@ -437,12 +437,12 @@ func TestMapFunction(t *testing.T) {
 		},
 		{
 			// multiple expressions that use a common context
-			expr:     `(map [1 2 3] [val] (set $foo $val) (+ $foo 3))`,
+			expr:     `(map [1 2 3] [val] (set! $foo $val) (+ $foo 3))`,
 			expected: []any{int64(4), int64(5), int64(6)},
 		},
 		{
 			// context is even shared across elements
-			expr:     `(map ["foo" "bar"] [_] (set $counter (+ (try $counter 0) 1)))`,
+			expr:     `(map ["foo" "bar"] [_] (set! $counter (+ (try $counter 0) 1)))`,
 			expected: []any{int64(1), int64(2)},
 		},
 		{
@@ -457,27 +457,27 @@ func TestMapFunction(t *testing.T) {
 		},
 		// do not modify the source
 		{
-			expr:     `(set $foo [1 2 3]) (map $foo [_ __] "bar")`,
+			expr:     `(set! $foo [1 2 3]) (map $foo [_ __] "bar")`,
 			expected: []any{"bar", "bar", "bar"},
 		},
 		{
-			expr:     `(set $foo [1 2 3]) (map $foo [_ __] "bar") $foo`,
+			expr:     `(set! $foo [1 2 3]) (map $foo [_ __] "bar") $foo`,
 			expected: []any{int64(1), int64(2), int64(3)},
 		},
 		{
-			expr:     `(set $foo {foo "bar"}) (map $foo [_ __] "new-value") $foo`,
+			expr:     `(set! $foo {foo "bar"}) (map $foo [_ __] "new-value") $foo`,
 			expected: map[string]any{"foo": "bar"},
 		},
 		{
-			expr:     `(set $foo ["foo" "bar"]) (map $foo to-upper)`,
+			expr:     `(set! $foo ["foo" "bar"]) (map $foo to-upper)`,
 			expected: []any{"FOO", "BAR"},
 		},
 		{
-			expr:     `(set $foo ["foo" "bar"]) (map $foo to-upper) $foo`,
+			expr:     `(set! $foo ["foo" "bar"]) (map $foo to-upper) $foo`,
 			expected: []any{"foo", "bar"},
 		},
 		{
-			expr:     `(set $foo {foo "bar"}) (map $foo to-upper) $foo`,
+			expr:     `(set! $foo {foo "bar"}) (map $foo to-upper) $foo`,
 			expected: map[string]any{"foo": "bar"},
 		},
 	}

@@ -52,7 +52,7 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Tuple{Expressions: []ast.Expression{ast.Identifier("eval")}},
+					ast.Tuple{Expressions: []ast.Expression{ast.Identifier{Name: "eval"}}},
 				},
 			},
 			invalid: true,
@@ -61,7 +61,7 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("unknownfunc"),
+					ast.Identifier{Name: "unknownfunc"},
 				},
 			},
 			invalid: true,
@@ -70,7 +70,7 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("eval"),
+					ast.Identifier{Name: "eval"},
 					ast.String("too"),
 					ast.String("many"),
 				},
@@ -81,7 +81,7 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("eval"),
+					ast.Identifier{Name: "eval"},
 					ast.String("foo"),
 				},
 			},
@@ -91,11 +91,11 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("eval"),
+					ast.Identifier{Name: "eval"},
 					ast.ObjectNode{
 						Data: []ast.KeyValuePair{
 							{
-								Key:   ast.Identifier("foo"),
+								Key:   ast.Identifier{Name: "foo"},
 								Value: ast.String("bar"),
 							},
 						},
@@ -103,7 +103,7 @@ func TestEvalTuple(t *testing.T) {
 				},
 				PathExpression: &ast.PathExpression{
 					Steps: []ast.Expression{
-						ast.Identifier("foo"),
+						ast.Identifier{Name: "foo"},
 					},
 				},
 			},
@@ -113,11 +113,11 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("eval"),
+					ast.Identifier{Name: "eval"},
 					ast.ObjectNode{
 						Data: []ast.KeyValuePair{
 							{
-								Key:   ast.Identifier("foo"),
+								Key:   ast.Identifier{Name: "foo"},
 								Value: ast.String("bar"),
 							},
 						},
@@ -135,7 +135,7 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("eval"),
+					ast.Identifier{Name: "eval"},
 					ast.VectorNode{
 						Expressions: []ast.Expression{
 							ast.Number{Value: 1},
@@ -155,7 +155,7 @@ func TestEvalTuple(t *testing.T) {
 		{
 			input: ast.Tuple{
 				Expressions: []ast.Expression{
-					ast.Identifier("eval"),
+					ast.Identifier{Name: "eval"},
 					ast.VectorNode{
 						Expressions: []ast.Expression{
 							ast.Number{Value: 1},

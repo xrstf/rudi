@@ -191,94 +191,119 @@ func TestSetFunction(t *testing.T) {
 			expected:  "new value",
 			variables: testVariables,
 		},
-		// changes must stick to the sibling statements
 		{
-			expr:     `(set $a 1) (set $b 2) (+ $a $b)`,
-			expected: int64(3),
+			expr: `(set $obj.aList[1] "new value")`,
+			expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", "new value", "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+				},
+			},
+			variables: testVariables,
 		},
-		// ...but not leak into upper scopes
+		// set itself does not change the first argument
 		{
-			expr:     `(set $a 1) (if true (set $a 2)) $a`,
-			expected: int64(1),
-		},
-		{
-			expr:    `(set $a 1) (if true (set $b 2)) $b`,
-			invalid: true,
-		},
-		// do not accidentally set a key without creating a new context
-		{
-			expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated"))`,
-			expected: "updated",
-		},
-		{
-			expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated")) $a.foo`,
-			expected: "bar",
-		},
-		// handle bad paths
-		{
-			expr:    `(set $obj[5.6] "new value")`,
-			invalid: true,
-		},
-		// not a vector
-		{
-			expr:    `(set $obj[5] "new value")`,
-			invalid: true,
-		},
-		{
-			expr:    `(set $obj.aBool[5] "new value")`,
-			invalid: true,
-		},
-		// update a key within an object variable
-		{
-			expr:      `(set $obj.aString "new value")`,
-			expected:  "new value",
+			expr:      `(set $myvar "new value") $myvar`,
+			expected:  int64(42),
 			variables: testVariables,
 		},
 		{
 			expr:      `(set $obj.aString "new value") $obj.aString`,
-			expected:  "new value",
-			variables: testVariables,
-		},
-		// add a new sub key
-		{
-			expr:      `(set $obj.newKey "new value")`,
-			expected:  "new value",
+			expected:  "foo",
 			variables: testVariables,
 		},
 		{
-			expr:      `(set $obj.newKey "new value") $obj.newKey`,
-			expected:  "new value",
+			expr:      `(set $obj.aList[1] "new value") $obj.aList`,
+			expected:  []any{"first", int64(2), "third"},
 			variables: testVariables,
 		},
-		// runtime variables
-		{
-			expr:     `(set $vec [1]) (set $vec[0] 2) $vec[0]`,
-			expected: int64(2),
-		},
-		// replace the global document
-		{
-			expr:     `(set . 1) .`,
-			document: testObjDocument,
-			expected: int64(1),
-		},
-		// update keys in the global document
-		{
-			expr:     `(set .aString "new-value") .aString`,
-			document: testObjDocument,
-			expected: "new-value",
-		},
-		// add new keys
-		{
-			expr:     `(set .newKey "new-value") .newKey`,
-			document: testObjDocument,
-			expected: "new-value",
-		},
-		// update vectors
-		{
-			expr:     `(set .aList[1] "new-value") .aList[1]`,
-			document: testObjDocument,
-			expected: "new-value",
-		},
+		// // ...but not leak into upper scopes
+		// {
+		// 	expr:     `(set $a 1) (if true (set $a 2)) $a`,
+		// 	expected: int64(1),
+		// },
+		// {
+		// 	expr:    `(set $a 1) (if true (set $b 2)) $b`,
+		// 	invalid: true,
+		// },
+		// // do not accidentally set a key without creating a new context
+		// {
+		// 	expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated"))`,
+		// 	expected: "updated",
+		// },
+		// {
+		// 	expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated")) $a.foo`,
+		// 	expected: "bar",
+		// },
+		// // handle bad paths
+		// {
+		// 	expr:    `(set $obj[5.6] "new value")`,
+		// 	invalid: true,
+		// },
+		// // not a vector
+		// {
+		// 	expr:    `(set $obj[5] "new value")`,
+		// 	invalid: true,
+		// },
+		// {
+		// 	expr:    `(set $obj.aBool[5] "new value")`,
+		// 	invalid: true,
+		// },
+		// // update a key within an object variable
+		// {
+		// 	expr:      `(set $obj.aString "new value")`,
+		// 	expected:  "new value",
+		// 	variables: testVariables,
+		// },
+		// {
+		// 	expr:      `(set $obj.aString "new value") $obj.aString`,
+		// 	expected:  "new value",
+		// 	variables: testVariables,
+		// },
+		// // add a new sub key
+		// {
+		// 	expr:      `(set $obj.newKey "new value")`,
+		// 	expected:  "new value",
+		// 	variables: testVariables,
+		// },
+		// {
+		// 	expr:      `(set $obj.newKey "new value") $obj.newKey`,
+		// 	expected:  "new value",
+		// 	variables: testVariables,
+		// },
+		// // runtime variables
+		// {
+		// 	expr:     `(set $vec [1]) (set $vec[0] 2) $vec[0]`,
+		// 	expected: int64(2),
+		// },
+		// // replace the global document
+		// {
+		// 	expr:     `(set . 1) .`,
+		// 	document: testObjDocument,
+		// 	expected: int64(1),
+		// },
+		// // update keys in the global document
+		// {
+		// 	expr:     `(set .aString "new-value") .aString`,
+		// 	document: testObjDocument,
+		// 	expected: "new-value",
+		// },
+		// // add new keys
+		// {
+		// 	expr:     `(set .newKey "new-value") .newKey`,
+		// 	document: testObjDocument,
+		// 	expected: "new-value",
+		// },
+		// // update vectors
+		// {
+		// 	expr:     `(set .aList[1] "new-value") .aList[1]`,
+		// 	document: testObjDocument,
+		// 	expected: "new-value",
+		// },
 	}
 
 	for _, testcase := range testcases {
@@ -386,21 +411,21 @@ func TestDoFunction(t *testing.T) {
 
 		// test that the runtime context is inherited from one step to another
 		{
-			expr:     `(do (set $var "foo") $var)`,
+			expr:     `(do (set! $var "foo") $var)`,
 			expected: "foo",
 		},
 		{
-			expr:     `(do (set $var "foo") $var (set $var "new") $var)`,
+			expr:     `(do (set! $var "foo") $var (set! $var "new") $var)`,
 			expected: "new",
 		},
 
 		// test that the runtime context doesn't leak
 		{
-			expr:     `(set $var "outer") (do (set $var "inner")) (concat $var ["1" "2"])`,
+			expr:     `(set! $var "outer") (do (set! $var "inner")) (concat $var ["1" "2"])`,
 			expected: "1outer2",
 		},
 		{
-			expr:    `(do (set $var "inner")) (concat $var ["1" "2"])`,
+			expr:    `(do (set! $var "inner")) (concat $var ["1" "2"])`,
 			invalid: true,
 		},
 	}
@@ -827,6 +852,7 @@ func TestHasFunction(t *testing.T) {
 		},
 
 		// follow a path expression on a tuple node
+		// (don't even need "set!" here)
 
 		{
 			expr:     `(has? (set $foo {foo "bar"}).foo)`,

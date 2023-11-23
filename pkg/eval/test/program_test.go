@@ -70,13 +70,13 @@ func TestEvalProgram(t *testing.T) {
 		{
 			input: makeProgram(
 				makeTuple(
-					ast.Identifier("set"),
+					ast.Identifier{Name: "set"},
 					makeVar("foo"),
 					ast.Number{Value: 1},
 				),
 				makeVar("foo"),
 				makeTuple(
-					ast.Identifier("set"),
+					ast.Identifier{Name: "set"},
 					makeVar("bar"),
 					makeVar("foo"),
 				),
@@ -89,10 +89,10 @@ func TestEvalProgram(t *testing.T) {
 		{
 			input: makeProgram(
 				makeTuple(
-					ast.Identifier("set"),
+					ast.Identifier{Name: "set"},
 					makeVar("foo"),
 					makeTuple(
-						ast.Identifier("set"),
+						ast.Identifier{Name: "set"},
 						makeVar("bar"),
 						ast.Number{Value: 1},
 					),

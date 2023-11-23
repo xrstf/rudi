@@ -322,7 +322,7 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
 	}
 
-	funcName := string(identifier)
+	funcName := identifier.Name
 
 	function, ok := ctx.GetFunction(funcName)
 	if !ok {
@@ -523,7 +523,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
 	}
 
-	funcName := string(identifier)
+	funcName := identifier.Name
 
 	function, ok := ctx.GetFunction(funcName)
 	if !ok {
@@ -627,7 +627,7 @@ func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string,
 			return "", "", fmt.Errorf("value variable name must be an identifier, got %T", namingVector.Expressions[0])
 		}
 
-		valueName = string(varNameIdent)
+		valueName = varNameIdent.Name
 	} else {
 		indexIdent, ok := namingVector.Expressions[0].(ast.Identifier)
 		if !ok {
@@ -639,8 +639,8 @@ func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string,
 			return "", "", fmt.Errorf("value variable name must be an identifier, got %T", namingVector.Expressions[0])
 		}
 
-		indexName = string(indexIdent)
-		valueName = string(varNameIdent)
+		indexName = indexIdent.Name
+		valueName = varNameIdent.Name
 
 		if indexName == valueName {
 			return "", "", fmt.Errorf("cannot use %s for both value and index variable", indexName)

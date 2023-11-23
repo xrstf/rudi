@@ -27,7 +27,7 @@ func TestEvalObjectNode(t *testing.T) {
 			input: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
-						Key:   ast.Identifier("foo"),
+						Key:   ast.Identifier{Name: "foo"},
 						Value: ast.String("bar"),
 					},
 				},
@@ -45,13 +45,13 @@ func TestEvalObjectNode(t *testing.T) {
 					{
 						Key: ast.Tuple{
 							Expressions: []ast.Expression{
-								ast.Identifier("eval"),
+								ast.Identifier{Name: "eval"},
 								ast.String("evaled"),
 							},
 						},
 						Value: ast.Tuple{
 							Expressions: []ast.Expression{
-								ast.Identifier("eval"),
+								ast.Identifier{Name: "eval"},
 								ast.String("also evaled"),
 							},
 						},
@@ -69,13 +69,13 @@ func TestEvalObjectNode(t *testing.T) {
 			input: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
-						Key:   ast.Identifier("foo"),
+						Key:   ast.Identifier{Name: "foo"},
 						Value: ast.String("bar"),
 					},
 				},
 				PathExpression: &ast.PathExpression{
 					Steps: []ast.Expression{
-						ast.Identifier("foo"),
+						ast.Identifier{Name: "foo"},
 					},
 				},
 			},
@@ -86,8 +86,8 @@ func TestEvalObjectNode(t *testing.T) {
 			input: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
-						Key:   ast.Identifier("foo"),
-						Value: ast.Identifier("bar"),
+						Key:   ast.Identifier{Name: "foo"},
+						Value: ast.Identifier{Name: "bar"},
 					},
 				},
 			},

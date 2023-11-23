@@ -4,6 +4,7 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 
 	"go.xrstf.de/rudi/pkg/eval/types"
@@ -31,7 +32,11 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 		switch asserted := pair.Key.(type) {
 		// as a convenience feature, we allow unquoted object keys, which are parsed as bare identifiers
 		case ast.Identifier:
-			key = ast.String(string(asserted))
+			if asserted.Bang {
+				return ctx, nil, errors.New("cannot use bang modifier in object keys")
+			}
+
+			key = ast.String(asserted.Name)
 		// do not even evaluate vectors and objects, as they can never be valid object keys
 		case ast.ObjectNode:
 			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.ExpressionName())

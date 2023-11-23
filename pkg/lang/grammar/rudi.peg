@@ -254,7 +254,7 @@ VectorAccessor <- '[' expr:ScalarExpression ']' {
 }
 
 PathIdentifier <- [a-zA-Z_][a-zA-Z0-9_]* {
-   return ast.Identifier(string(c.text)), nil
+   return ast.Identifier{Name: string(c.text)}, nil
 }
 
 //////////////////////////////////////////////////////////
@@ -269,7 +269,14 @@ VariableName <- [a-zA-Z_][a-zA-Z0-9_]* {
 }
 
 Identifier <- [a-zA-Z_+/*_%?-][a-zA-Z0-9_+/*_%?!-]* {
-   return ast.Identifier(string(c.text)), nil
+   name := string(c.text)
+   bang := false
+   if strings.HasSuffix(name, "!") {
+      bang = true
+      name = strings.TrimSuffix(name, "!")
+   }
+
+   return ast.Identifier{Name: name, Bang: bang}, nil
 }
 
 //////////////////////////////////////////////////////////

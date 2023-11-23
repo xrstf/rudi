@@ -272,20 +272,33 @@ func (Variable) ExpressionName() string {
 	return "Variable"
 }
 
-type Identifier string
+type Identifier struct {
+	Name string
+	Bang bool
+}
 
-var _ Expression = Identifier("")
+var _ Expression = Identifier{}
 
 func (i Identifier) Equal(other Identifier) bool {
-	return string(i) == string(other)
+	return i.Name == other.Name
 }
 
 func (i Identifier) String() string {
-	return string(i)
+	result := i.Name
+	if i.Bang {
+		result += "!"
+	}
+
+	return result
 }
 
-func (Identifier) ExpressionName() string {
-	return "Identifier"
+func (i Identifier) ExpressionName() string {
+	result := "Identifier"
+	if i.Bang {
+		result += "!"
+	}
+
+	return result
 }
 
 type String string

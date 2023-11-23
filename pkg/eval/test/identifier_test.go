@@ -15,7 +15,10 @@ func TestEvalIdentifier(t *testing.T) {
 		input ast.Identifier
 	}{
 		{
-			input: ast.Identifier("foo"),
+			input: ast.Identifier{Name: "foo"},
+		},
+		{
+			input: ast.Identifier{Name: "foo", Bang: true},
 		},
 	}
 

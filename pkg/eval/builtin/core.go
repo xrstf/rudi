@@ -193,25 +193,25 @@ func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (set VAR:Variable VALUE:any)
 // (set EXPR:PathExpression VALUE:any)
-func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, error) {
+func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 2 {
-		return ctx, nil, fmt.Errorf("expected 2 arguments, got %d", size)
+		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
 	}
 
 	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
-		return ctx, nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
+		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
 	}
 
 	// catch symbols that are technically invalid
 	if symbol.Variable == nil && symbol.PathExpression == nil {
-		return ctx, nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
+		return nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
 	}
 
 	// discard any context changes within the newValue expression
 	_, newValue, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
-		return ctx, nil, fmt.Errorf("argument #1: %w", err)
+		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
 	// pre-evaluate the path
@@ -219,7 +219,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 	if p := symbol.PathExpression; p != nil {
 		pathExpr, err = eval.EvalPathExpression(ctx, p)
 		if err != nil {
-			return ctx, nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+			return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
 		}
 	}
 
@@ -241,24 +241,11 @@ func setFunction(ctx types.Context, args []ast.Expression) (types.Context, any, 
 	if pathExpr != nil {
 		updatedValue, err = pathexpr.Set(currentValue, pathexpr.FromEvaluatedPath(*pathExpr), newValue)
 		if err != nil {
-			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
+			return nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 		}
 	}
 
-	// set a variable, which will result in a new context
-	if symbol.Variable != nil {
-		varName := string(*symbol.Variable)
-
-		// make the variable's value the return value, so `(def $foo 12)` = 12
-		return ctx.WithVariable(varName, updatedValue), newValue, nil
-	}
-
-	// update the global document
-	// (the document Go struct stays the same, so this does not result in a new context)
-	doc := ctx.GetDocument()
-	doc.Set(updatedValue)
-
-	return ctx, newValue, nil
+	return updatedValue, nil
 }
 
 // (delete VAR:Variable)

@@ -61,7 +61,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $var.foo
 		{
-			input: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier("foo")}}),
+			input: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
 			variables: types.Variables{
 				"var": map[string]any{
 					"foo": ast.String("foobar"),
@@ -71,7 +71,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $aVector.foo
 		{
-			input: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier("foo")}}),
+			input: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
 			variables: types.Variables{
 				"var": ast.Vector{
 					Data: []any{ast.String("first")},

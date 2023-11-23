@@ -83,8 +83,12 @@ func TestExpressionNames(t *testing.T) {
 			expected: "Variable",
 		},
 		{
-			expr:     Identifier("foo"),
+			expr:     Identifier{Name: "foo"},
 			expected: "Identifier",
+		},
+		{
+			expr:     Identifier{Name: "foo", Bang: true},
+			expected: "Identifier!",
 		},
 		{
 			expr: Symbol{
@@ -215,7 +219,7 @@ func TestStringers(t *testing.T) {
 				PathExpression: &PathExpression{
 					Steps: []Expression{
 						Number{Value: 1},
-						Identifier("foo"),
+						Identifier{Name: "foo"},
 					},
 				},
 			},
@@ -226,7 +230,7 @@ func TestStringers(t *testing.T) {
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
 					Steps: []Expression{
-						Identifier("foo"),
+						Identifier{Name: "foo"},
 					},
 				},
 			},
@@ -237,8 +241,8 @@ func TestStringers(t *testing.T) {
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
 					Steps: []Expression{
-						Identifier("foo"),
-						Identifier("bar"),
+						Identifier{Name: "foo"},
+						Identifier{Name: "bar"},
 					},
 				},
 			},
@@ -249,7 +253,7 @@ func TestStringers(t *testing.T) {
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
 					Steps: []Expression{
-						Identifier("foo"),
+						Identifier{Name: "foo"},
 						Number{Value: 1},
 					},
 				},
@@ -314,7 +318,7 @@ func TestStringers(t *testing.T) {
 					Steps: []Expression{
 						Tuple{
 							Expressions: []Expression{
-								Identifier("ident"),
+								Identifier{Name: "ident"},
 							},
 						},
 					},
@@ -330,7 +334,7 @@ func TestStringers(t *testing.T) {
 						ObjectNode{
 							Data: []KeyValuePair{
 								{
-									Key:   Identifier("k"),
+									Key:   Identifier{Name: "k"},
 									Value: String("v"),
 								},
 							},

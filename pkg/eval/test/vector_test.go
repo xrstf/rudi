@@ -26,7 +26,7 @@ func TestEvalVectorNode(t *testing.T) {
 		{
 			input: ast.VectorNode{
 				Expressions: []ast.Expression{
-					ast.Identifier("identifier"),
+					ast.Identifier{Name: "identifier"},
 				},
 			},
 			invalid: true,
@@ -39,7 +39,7 @@ func TestEvalVectorNode(t *testing.T) {
 					ast.String("foo"),
 					ast.Tuple{
 						Expressions: []ast.Expression{
-							ast.Identifier("eval"),
+							ast.Identifier{Name: "eval"},
 							ast.String("evaled"),
 						},
 					},
@@ -90,7 +90,7 @@ func TestEvalVectorNode(t *testing.T) {
 				},
 				PathExpression: &ast.PathExpression{
 					Steps: []ast.Expression{
-						ast.Identifier("foo"),
+						ast.Identifier{Name: "foo"},
 					},
 				},
 			},
