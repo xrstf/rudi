@@ -102,7 +102,7 @@ out there, allbeit with slightly different ideas and goals than Rudi:
 
 * [Anko](https://github.com/mattn/anko) – Go-like syntax and allows recursion, making it more
   dangerous and hard to learn for non-developers than I'd like.
-* [ECAL](https://github.com/krotik/ecal) – Is an event-based syste using rules which are triggered by
+* [ECAL](https://github.com/krotik/ecal) – Is an event-based system using rules which are triggered by
   events; comes with recursion as well and is therefore out.
 * [Expr](https://github.com/antonmedv/expr), [GVal](https://github.com/PaesslerAG/gval),
   [CEL](https://github.com/google/cel-go) – Great languages for writing a single expression, but not

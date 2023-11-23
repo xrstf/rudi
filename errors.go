@@ -23,7 +23,7 @@ func (p ParseError) Error() string {
 	return p.err.Error()
 }
 
-// Snippet is the line of the program where the error occured, marked with a
+// Snippet is the line of the program where the error occurred, marked with a
 // caret and the error message in a second line below that.
 func (p ParseError) Snippet() string {
 	var lister parser.ErrorLister
