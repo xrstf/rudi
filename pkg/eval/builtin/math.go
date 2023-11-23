@@ -65,7 +65,7 @@ func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return ast.Number{Value: sum}, nil
 }
 
-func minusFunction(ctx types.Context, args []ast.Expression) (any, error) {
+func subFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size < 2 {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}

@@ -21,9 +21,15 @@ var Functions = types.Functions{
 
 	// math
 	"+": sumFunction,
-	"-": minusFunction,
+	"-": subFunction,
 	"*": multiplyFunction,
 	"/": divideFunction,
+
+	// math aliases to make bang functions nicer (sum! vs +!)
+	"add":  sumFunction,
+	"sub":  subFunction,
+	"mult": multiplyFunction,
+	"div":  divideFunction,
 
 	// strings
 	// "len": lenFunction is defined for lists, but works for strings as well
