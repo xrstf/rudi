@@ -5,10 +5,8 @@ package console
 
 import (
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"go.xrstf.de/rudi"
@@ -17,6 +15,7 @@ import (
 	"go.xrstf.de/rudi/docs"
 	"go.xrstf.de/rudi/pkg/eval/types"
 
+	colorjson "github.com/TylerBrock/colorjson"
 	"github.com/chzyer/readline"
 )
 
@@ -130,10 +129,16 @@ func processInput(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Opt
 		return ctx, false, err
 	}
 
-	encoder := json.NewEncoder(os.Stdout)
-	if err := encoder.Encode(evaluated); err != nil {
+	f := colorjson.NewFormatter()
+	f.Indent = 0
+	f.EscapeHTML = false
+
+	encoded, err := f.Marshal(evaluated)
+	if err != nil {
 		return ctx, false, fmt.Errorf("failed to encode %v: %w", evaluated, err)
 	}
+
+	fmt.Println(string(encoded))
 
 	return newCtx, false, nil
 }
