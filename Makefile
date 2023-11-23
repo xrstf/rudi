@@ -29,6 +29,10 @@ build:
 	mkdir -p _build
 	cd cmd/rudi && go build $(GO_BUILD_FLAGS) -o ../../_build .
 
+.PHONY: install
+install:
+	cd cmd/rudi && go install $(GO_BUILD_FLAGS) .
+
 .PHONY: test
 test:
 	CGO_ENABLED=1 go test $(GO_TEST_FLAGS) ./...
