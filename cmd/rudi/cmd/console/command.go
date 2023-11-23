@@ -66,7 +66,7 @@ func Run(opts *cmdtypes.Options, args []string) error {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
-	fmt.Println("Welcome to Rudi 🐘")
+	fmt.Println("Welcome to 🚂Rudi")
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
 
