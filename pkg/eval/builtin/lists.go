@@ -6,7 +6,9 @@ package builtin
 import (
 	"errors"
 	"fmt"
+	"strings"
 
+	"go.xrstf.de/rudi/pkg/equality"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
@@ -634,4 +636,51 @@ func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string,
 	}
 
 	return indexName, valueName, nil
+}
+
+func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size < 2 {
+		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
+	}
+
+	arguments, err := evalArgs(ctx, args, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	haystack, ok := arguments[0].(ast.Literal)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a literal, but %T", arguments[0])
+	}
+
+	needle, ok := arguments[1].(ast.Literal)
+	if !ok {
+		return nil, fmt.Errorf("argument #1 is not a literal, but %T", arguments[1])
+	}
+
+	if str, ok := haystack.(ast.String); ok {
+		if strNeedle, ok := needle.(ast.String); ok {
+			contains := strings.Contains(string(str), string(strNeedle))
+
+			return ast.Bool(contains), nil
+		}
+
+		return nil, fmt.Errorf("argument #1: expected string, got %T", needle)
+	}
+
+	if vec, ok := haystack.(ast.Vector); ok {
+		for _, val := range vec.Data {
+			valLiteral, err := types.WrapNative(val)
+			if err != nil {
+				return nil, fmt.Errorf("cannot compare with %T: %w", val, err)
+			}
+
+			equal, err := equality.StrictEqual(valLiteral, needle)
+			if err == nil && equal {
+				return ast.Bool(true), nil
+			}
+		}
+	}
+
+	return ast.Bool(false), nil
 }

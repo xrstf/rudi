@@ -42,15 +42,17 @@ var Functions = types.Functions{
 	"trim-suffix": fromStringFunc(trimSuffixFunction, 2),
 	"to-lower":    fromStringFunc(toLowerFunction, 1),
 	"to-upper":    fromStringFunc(toUpperFunction, 1),
+	"trim":        fromStringFunc(trimFunction, 1),
 
 	// lists
-	"len":     lenFunction,
-	"append":  appendFunction,
-	"prepend": prependFunction,
-	"reverse": reverseFunction,
-	"range":   rangeFunction,
-	"map":     mapFunction,
-	"filter":  filterFunction,
+	"len":       lenFunction,
+	"append":    appendFunction,
+	"prepend":   prependFunction,
+	"reverse":   reverseFunction,
+	"range":     rangeFunction,
+	"map":       mapFunction,
+	"filter":    filterFunction,
+	"contains?": containsFunction,
 
 	// logic
 	"and": andFunction,

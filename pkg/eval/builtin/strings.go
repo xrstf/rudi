@@ -138,3 +138,10 @@ func toUpperFunction(ctx types.Context, args []string) (any, error) {
 
 	return ast.String(result), nil
 }
+
+// (trim SOURCE:String)
+func trimFunction(ctx types.Context, args []string) (any, error) {
+	result := strings.TrimSpace(args[0])
+
+	return ast.String(result), nil
+}
