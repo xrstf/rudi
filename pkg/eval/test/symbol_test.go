@@ -114,7 +114,7 @@ func TestEvalSymbol(t *testing.T) {
 				t.Fatalf("Failed to create test document: %v", err)
 			}
 
-			ctx := eval.NewContext(doc, dummyFunctions, testcase.variables)
+			ctx := eval.NewContext(doc, testcase.variables, dummyFunctions)
 
 			_, value, err := eval.EvalSymbol(ctx, testcase.input)
 			if err != nil {

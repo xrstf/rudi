@@ -233,7 +233,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		currentValue, _ = ctx.GetVariable(varName)
 	} else {
 		doc := ctx.GetDocument()
-		currentValue = doc.Get()
+		currentValue = doc.Data()
 	}
 
 	// if there is a path expression, merge in the new value
@@ -281,7 +281,7 @@ func deleteFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		currentValue, _ = ctx.GetVariable(varName)
 	} else {
 		doc := ctx.GetDocument()
-		currentValue = doc.Get()
+		currentValue = doc.Data()
 	}
 
 	// delete the desired path in the value

@@ -119,7 +119,7 @@ func TestEvalVectorNode(t *testing.T) {
 				t.Fatalf("Failed to create test document: %v", err)
 			}
 
-			ctx := eval.NewContext(doc, dummyFunctions, nil)
+			ctx := eval.NewContext(doc, nil, dummyFunctions)
 
 			_, value, err := eval.EvalVectorNode(ctx, testcase.input)
 			if err != nil {

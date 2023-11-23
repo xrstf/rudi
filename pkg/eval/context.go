@@ -5,8 +5,8 @@ package eval
 
 import "go.xrstf.de/rudi/pkg/eval/types"
 
-func NewContext(doc types.Document, funcs types.Functions, variables types.Variables) types.Context {
-	return types.NewContext(doc, funcs, variables)
+func NewContext(doc types.Document, variables types.Variables, funcs types.Functions) types.Context {
+	return types.NewContext(doc, variables, funcs)
 }
 
 func NewFunctions() types.Functions {

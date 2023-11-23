@@ -50,7 +50,7 @@ func TestEvalStatement(t *testing.T) {
 				t.Fatalf("Failed to create test document: %v", err)
 			}
 
-			ctx := eval.NewContext(doc, dummyFunctions, nil)
+			ctx := eval.NewContext(doc, nil, dummyFunctions)
 
 			_, value, err := eval.EvalStatement(ctx, testcase.input)
 			if err != nil {

@@ -120,12 +120,12 @@ func processInput(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Opt
 	}
 
 	// parse input
-	program, err := rudi.ParseScript("(repl)", input)
+	program, err := rudi.Parse("(repl)", input)
 	if err != nil {
 		return ctx, false, err
 	}
 
-	newCtx, evaluated, err := rudi.RunProgram(ctx, program)
+	newCtx, evaluated, err := program.RunContext(ctx)
 	if err != nil {
 		return ctx, false, err
 	}

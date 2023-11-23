@@ -43,7 +43,7 @@ func Run(opts *types.Options, args []string) error {
 	}
 
 	// parse the script
-	program, err := rudi.ParseScript(scriptName, script)
+	program, err := rudi.Parse(scriptName, script)
 	if err != nil {
 		return fmt.Errorf("invalid script: %w", err)
 	}
@@ -70,7 +70,7 @@ func Run(opts *types.Options, args []string) error {
 	}
 
 	// evaluate the script
-	_, evaluated, err := rudi.RunProgram(ctx, program)
+	_, evaluated, err := program.RunContext(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

@@ -28,7 +28,7 @@ func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
 
 func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.EvaluatedPathExpression) (types.Context, any, error) {
 	rootDoc := ctx.GetDocument()
-	rootValue := rootDoc.Get()
+	rootValue := rootDoc.Data()
 
 	// sanity check
 	if sym.Variable == nil && sym.PathExpression == nil {

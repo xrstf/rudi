@@ -24,7 +24,7 @@ func NewDocument(data any) (Document, error) {
 	}, nil
 }
 
-func (d *Document) Get() any {
+func (d *Document) Data() any {
 	return d.data
 }
 
@@ -38,7 +38,7 @@ type Context struct {
 	variables Variables
 }
 
-func NewContext(doc Document, funcs Functions, variables Variables) Context {
+func NewContext(doc Document, variables Variables, funcs Functions) Context {
 	if funcs == nil {
 		funcs = NewFunctions()
 	}

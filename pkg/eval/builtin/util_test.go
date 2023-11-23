@@ -32,7 +32,7 @@ func runExpression(t *testing.T, expr string, document any, variables types.Vari
 		log.Fatalf("Failed to create parser document: %v", err)
 	}
 
-	progContext := eval.NewContext(doc, Functions, variables)
+	progContext := eval.NewContext(doc, variables, Functions)
 
 	_, result, err := eval.Run(progContext, &program)
 
