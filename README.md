@@ -1,6 +1,10 @@
 # Rudi
 
 <p align="center">
+  <img src="./docs/rudi-portrait.png" alt="">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/github/v/release/xrstf/rudi" alt="last stable release">
 
   <a href="https://goreportcard.com/report/go.xrstf.de/rudi">
