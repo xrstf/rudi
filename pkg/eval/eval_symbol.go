@@ -27,8 +27,7 @@ func EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
 }
 
 func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.EvaluatedPathExpression) (types.Context, any, error) {
-	rootDoc := ctx.GetDocument()
-	rootValue := rootDoc.Data()
+	rootValue := ctx.GetDocument().Data()
 
 	// sanity check
 	if sym.Variable == nil && sym.PathExpression == nil {
@@ -57,7 +56,7 @@ func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.Eva
 		}
 	}
 
-	deeper, err := TraverseEvaluatedPathExpression(ctx, rootValue, path)
+	deeper, err := TraverseEvaluatedPathExpression(rootValue, path)
 	if err != nil {
 		return ctx, nil, fmt.Errorf("cannot evaluate %s: %w", sym.String(), err)
 	}

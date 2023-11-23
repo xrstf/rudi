@@ -65,22 +65,12 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 	}
 
 	if obj.PathExpression != nil {
-		evaluated, err := EvalPathExpression(ctx, obj.PathExpression)
-		if err != nil {
-			return ctx, nil, fmt.Errorf("invalid path expression: %w", err)
-		}
-
-		deeper, err := TraverseEvaluatedPathExpression(ctx, result, *evaluated)
-		if err != nil {
-			return ctx, nil, fmt.Errorf("cannot apply path %s: %w", evaluated.String(), err)
-		}
-
-		result, err := types.WrapNative(deeper)
+		deeper, err := TraversePathExpression(ctx, result, obj.PathExpression)
 		if err != nil {
 			return ctx, nil, err
 		}
 
-		return ctx, result, nil
+		return ctx, deeper, nil
 	}
 
 	return ctx, result, nil

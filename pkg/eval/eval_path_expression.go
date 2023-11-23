@@ -80,7 +80,16 @@ func convertToAccessor(evaluated any) (*ast.EvaluatedPathStep, error) {
 	}
 }
 
-func TraverseEvaluatedPathExpression(ctx types.Context, value any, path ast.EvaluatedPathExpression) (any, error) {
+func TraversePathExpression(ctx types.Context, value any, path *ast.PathExpression) (any, error) {
+	evaluated, err := EvalPathExpression(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path expression: %w", err)
+	}
+
+	return TraverseEvaluatedPathExpression(value, *evaluated)
+}
+
+func TraverseEvaluatedPathExpression(value any, path ast.EvaluatedPathExpression) (any, error) {
 	result, err := pathexpr.Get(value, pathexpr.FromEvaluatedPath(path))
 	if err != nil {
 		return nil, err

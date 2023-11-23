@@ -134,7 +134,7 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	_, err = eval.TraverseEvaluatedPathExpression(ctx, value, *evaluatedPath)
+	_, err = eval.TraverseEvaluatedPathExpression(value, *evaluatedPath)
 	if err != nil {
 		return ast.Bool(false), nil
 	}
@@ -232,8 +232,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		// a non-existing variable is fine, this is how you define new variables in the first place
 		currentValue, _ = ctx.GetVariable(varName)
 	} else {
-		doc := ctx.GetDocument()
-		currentValue = doc.Data()
+		currentValue = ctx.GetDocument().Data()
 	}
 
 	// if there is a path expression, merge in the new value
@@ -280,8 +279,7 @@ func deleteFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		// a non-existing variable is fine, this is how you define new variables in the first place
 		currentValue, _ = ctx.GetVariable(varName)
 	} else {
-		doc := ctx.GetDocument()
-		currentValue = doc.Data()
+		currentValue = ctx.GetDocument().Data()
 	}
 
 	// delete the desired path in the value
