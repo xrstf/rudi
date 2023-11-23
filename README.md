@@ -16,10 +16,8 @@ Rudi is a Lisp-based, embeddable programming language that focuses on transformi
 like those available in JSON (numbers, bools, objects, vectors etc.). A statement in Rudi looks like
 
 ```lisp
-(set .foo[0] (+ (len .users) 42))
+(set! .foo[0] (+ (len .users) 42))
 ```
-
-Rudi has been named after my grandfather.
 
 ## Features
 
@@ -64,27 +62,12 @@ import (
    "go.xrstf.de/rudi"
 )
 
-const script = `(+ $myvar 42 .foo)`
+const script = `(+ $myvar 42 .foo) (set! .foo 42)`
 
 func main() {
-   // setup the set of variables available by default in the script
-   vars := rudi.NewVariables().
-      Set("myvar", 42)
-
-   // Likewise, setup the functions available (note that this includes functions like "if" and "and",
-   // so running with an empty function set is generally not advisable).
-   funcs := rudi.NewBuiltInFunctions()
-
    // Rudi programs are meant to manipulate a document (path expressions like ".foo" resolve within
    // that document). The document can be anything, but is most often a JSON object.
    documentData := map[string]any{"foo": 9000}
-   document, err := rudi.NewDocument(documentData)
-   if err != nil {
-      log.Fatalf("Cannot use %v as the document: %v", documentData, err)
-   }
-
-   // combine document, variables and functions into an execution context
-   ctx := rudi.NewContext(document, funcs, vars)
 
    // parse the script (the name is used when generating error strings)
    program, err := rudi.ParseScript("myscript", script)
@@ -94,15 +77,21 @@ func main() {
 
    // evaluate the program;
    // this returns an evaluated value, which is the result of the last expression that was evaluated,
-   // plus a new context, which contains for example newly set runtime variables; in many cases the
-   // new context is not that important and you'd focus on the evaluated value.
-   newCtx, evaluated, err := rudi.RunProgram(ctx, program)
+   // plus the final document state (the updatedData) after the script has finished.
+   updatedData, result, err := program.Run(
+      documentData,
+      // setup the set of variables available by default in the script
+      rudi.NewVariables().Set("myvar", 42),
+      // Likewise, setup the functions available (note that this includes functions like "if" and "and",
+      // so running with an empty function set is generally not advisable).
+      rudi.NewBuiltInFunctions(),
+   )
    if err != nil {
-      log.Fatalf("Failed to evaluate script: %v", err)
+      log.Fatalf("Script failed: %v", err)
    }
 
-   fmt.Println(evaluated)
-   fmt.Println(newCtx)
+   fmt.Println(result)       // => 9084
+   fmt.Println(updatedData)  // => {"foo": 42}
 }
 ```
 
@@ -111,19 +100,26 @@ func main() {
 Rudi doesn't exist in a vacuum; there are many other great embeddable programming/scripting languages
 out there, allbeit with slightly different ideas and goals than Rudi:
 
-* [Anko](https://github.com/mattn/anko) – Go-like syntax, allows recursion
-* [ECAL](https://github.com/krotik/ecal) – event-based systems using rules which are triggered by
-  events, allows recursion
+* [Anko](https://github.com/mattn/anko) – Go-like syntax and allows recursion, making it more
+  dangerous and hard to learn for non-developers than I'd like.
+* [ECAL](https://github.com/krotik/ecal) – Is an event-based syste using rules which are triggered by
+  events; comes with recursion as well and is therefore out.
 * [Expr](https://github.com/antonmedv/expr), [GVal](https://github.com/PaesslerAG/gval),
-  [CEL](https://github.com/google/cel-go) – great languages for writing a single expression, but not
-  suitable for transforming/mutating data structures
-* [Gentee](https://github.com/gentee/gentee) – similar to C/Python, allows recursion
-* [Jsonnet](https://github.com/google/go-jsonnet) – not built for manipulating existing objects, but
-  for assembling new objects
-* [Starlark](https://github.com/google/starlark-go) – language behind Bazel, has optional
-  nun-Turing-complete mode
+  [CEL](https://github.com/google/cel-go) – Great languages for writing a single expression, but not
+  suitable for transforming/mutating data structures.
+* [Gentee](https://github.com/gentee/gentee) – Is similar to C/Python and allows recursion, so both
+  to powerful/dangerous and not my preference in terms of syntax.
+* [Jsonnet](https://github.com/google/go-jsonnet) – Probably one of the most obvious alternatives
+  among this list. Jsonnet shines when constructing new elements and complexer configurations
+  out of smaller pieces of information, less so when manipulating objects. Also I personally really
+  am no fan of Jsonnet's syntax, plus: NIH.
+* [Starlark](https://github.com/google/starlark-go) – Is the language behind Bazel and actually has
+  an optional nun-Turing-complete mode. However I am really no fan of its syntax and have not
+  investigated it further.
 
 ## Credits
+
+Rudi has been named after my grandfather.
 
 Thanks to [@embik](https://github.com/embik) and [@xmudrii](https://github.com/xmudrii) for enduring
 my constant questions for feedback :smile:

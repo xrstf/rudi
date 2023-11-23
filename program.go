@@ -87,7 +87,7 @@ func (p *rudiProgram) Run(data any, variables Variables, funcs Functions) (docum
 	// get current state of the document
 	docData := finalCtx.GetDocument().Data()
 
-	unwrappedDocData, err := UnwrapType(docData)
+	unwrappedDocData, err := Unwrap(docData)
 	if err != nil {
 		// this should never happen
 		return nil, nil, fmt.Errorf("failed to unwrap final document data: %w", err)
@@ -105,7 +105,7 @@ func (p *rudiProgram) RunContext(ctx Context) (finalCtx Context, result any, err
 		return ctx, nil, err
 	}
 
-	unwrappedResult, err := UnwrapType(result)
+	unwrappedResult, err := Unwrap(result)
 	if err != nil {
 		// this should never happen
 		return ctx, nil, fmt.Errorf("failed to unwrap result: %w", err)

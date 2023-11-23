@@ -10,6 +10,7 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/parser"
 )
 
+// ParseErrors can occur while parsing a Rudi program.
 type ParseError struct {
 	script string
 	err    error
@@ -17,10 +18,13 @@ type ParseError struct {
 
 var _ error = ParseError{}
 
+// Error returns the underlying parse error.
 func (p ParseError) Error() string {
 	return p.err.Error()
 }
 
+// Snippet is the line of the program where the error occured, marked with a
+// caret and the error message in a second line below that.
 func (p ParseError) Snippet() string {
 	var lister parser.ErrorLister
 	if errors.As(p.err, &lister) {
