@@ -322,13 +322,6 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
 	}
 
-	funcName := identifier.Name
-
-	function, ok := ctx.GetFunction(funcName)
-	if !ok {
-		return nil, fmt.Errorf("unknown function %s", funcName)
-	}
-
 	// call the function
 	innerCtx := ctx
 
@@ -338,7 +331,7 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 			return ctx, nil, err
 		}
 
-		return function(ctx, []ast.Expression{wrapped})
+		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{wrapped})
 	}
 
 	if vector, ok := source.(ast.Vector); ok {
@@ -354,7 +347,7 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 
 			innerCtx, result, err = mapItem(innerCtx, item)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", funcName, err)
+				return nil, err
 			}
 
 			output.Data[i] = result
@@ -376,7 +369,7 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 
 			innerCtx, result, err = mapItem(innerCtx, value)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", funcName, err)
+				return nil, err
 			}
 
 			output.Data[key] = result
@@ -523,13 +516,6 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
 	}
 
-	funcName := identifier.Name
-
-	function, ok := ctx.GetFunction(funcName)
-	if !ok {
-		return nil, fmt.Errorf("unknown function %s", funcName)
-	}
-
 	// call the function
 	innerCtx := ctx
 
@@ -540,7 +526,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 		}
 
 		var result any
-		ctx, result, err = function(ctx, []ast.Expression{wrapped})
+		ctx, result, err = eval.EvalFunctionCall(ctx, identifier, []ast.Expression{wrapped})
 		if err != nil {
 			return ctx, false, err
 		}
@@ -571,7 +557,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 
 			innerCtx, result, err = filterItem(innerCtx, item)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", funcName, err)
+				return nil, err
 			}
 
 			if result {
@@ -595,7 +581,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 
 			innerCtx, result, err = filterItem(innerCtx, value)
 			if err != nil {
-				return nil, fmt.Errorf("%s: %w", funcName, err)
+				return nil, err
 			}
 
 			if result {

@@ -61,7 +61,7 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 type genericStringFunc func(ctx types.Context, args []string) (any, error)
 
-func fromStringFunc(f genericStringFunc, expectedArgs int) StatelessFunc {
+func fromStringFunc(f genericStringFunc, expectedArgs int) types.Function {
 	return func(ctx types.Context, args []ast.Expression) (any, error) {
 		if size := len(args); size != expectedArgs {
 			return nil, fmt.Errorf("expected %d argument(s), got %d", expectedArgs, size)

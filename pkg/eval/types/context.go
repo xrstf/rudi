@@ -74,7 +74,7 @@ func (c Context) WithVariable(name string, val any) Context {
 	}
 }
 
-type Function func(ctx Context, args []ast.Expression) (Context, any, error)
+type Function func(ctx Context, args []ast.Expression) (any, error)
 type Functions map[string]Function
 
 func NewFunctions() Functions {

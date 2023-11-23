@@ -66,17 +66,17 @@ func TestEvalProgram(t *testing.T) {
 			expected: ast.String("bar"),
 		},
 		// context changes from one statement should affect the next
-		// (set $foo 1) $foo (set $bar $foo) $bar
+		// (set! $foo 1) $foo (set! $bar $foo) $bar
 		{
 			input: makeProgram(
 				makeTuple(
-					ast.Identifier{Name: "set"},
+					ast.Identifier{Name: "set", Bang: true},
 					makeVar("foo"),
 					ast.Number{Value: 1},
 				),
 				makeVar("foo"),
 				makeTuple(
-					ast.Identifier{Name: "set"},
+					ast.Identifier{Name: "set", Bang: true},
 					makeVar("bar"),
 					makeVar("foo"),
 				),
@@ -85,14 +85,14 @@ func TestEvalProgram(t *testing.T) {
 			expected: ast.Number{Value: 1},
 		},
 		// context changes from inner statements should not leak
-		// (set $foo (set $bar 1)) $bar
+		// (set! $foo (set! $bar 1)) $bar
 		{
 			input: makeProgram(
 				makeTuple(
-					ast.Identifier{Name: "set"},
+					ast.Identifier{Name: "set", Bang: true},
 					makeVar("foo"),
 					makeTuple(
-						ast.Identifier{Name: "set"},
+						ast.Identifier{Name: "set", Bang: true},
 						makeVar("bar"),
 						ast.Number{Value: 1},
 					),

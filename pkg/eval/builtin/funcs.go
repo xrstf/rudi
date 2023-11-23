@@ -8,95 +8,86 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-type StatelessFunc func(ctx types.Context, args []ast.Expression) (any, error)
-
-func stateless(f StatelessFunc) types.Function {
-	return func(ctx types.Context, args []ast.Expression) (types.Context, any, error) {
-		result, err := f(ctx, args)
-		return ctx, result, err
-	}
-}
-
 var Functions = types.Functions{
 	// core
-	"if":      stateless(ifFunction),
-	"do":      stateless(doFunction),
-	"has?":    stateless(hasFunction),
-	"default": stateless(defaultFunction),
-	"try":     stateless(tryFunction),
-	"set":     stateless(setFunction),
-	"delete":  stateless(deleteFunction),
-	"empty?":  stateless(isEmptyFunction),
+	"if":      ifFunction,
+	"do":      doFunction,
+	"has?":    hasFunction,
+	"default": defaultFunction,
+	"try":     tryFunction,
+	"set":     setFunction,
+	"delete":  deleteFunction,
+	"empty?":  isEmptyFunction,
 
 	// math
-	"+": stateless(sumFunction),
-	"-": stateless(minusFunction),
-	"*": stateless(multiplyFunction),
-	"/": stateless(divideFunction),
+	"+": sumFunction,
+	"-": minusFunction,
+	"*": multiplyFunction,
+	"/": divideFunction,
 
 	// strings
-	// "len": stateless(lenFunction) is defined for lists, but works for strings as well
+	// "len": lenFunction is defined for lists, but works for strings as well
 	// "reverse" also works for strings
-	"concat":      stateless(concatFunction),
-	"split":       stateless(fromStringFunc(splitFunction, 2)),
-	"has-prefix?": stateless(fromStringFunc(hasPrefixFunction, 2)),
-	"has-suffix?": stateless(fromStringFunc(hasSuffixFunction, 2)),
-	"trim-prefix": stateless(fromStringFunc(trimPrefixFunction, 2)),
-	"trim-suffix": stateless(fromStringFunc(trimSuffixFunction, 2)),
-	"to-lower":    stateless(fromStringFunc(toLowerFunction, 1)),
-	"to-upper":    stateless(fromStringFunc(toUpperFunction, 1)),
+	"concat":      concatFunction,
+	"split":       fromStringFunc(splitFunction, 2),
+	"has-prefix?": fromStringFunc(hasPrefixFunction, 2),
+	"has-suffix?": fromStringFunc(hasSuffixFunction, 2),
+	"trim-prefix": fromStringFunc(trimPrefixFunction, 2),
+	"trim-suffix": fromStringFunc(trimSuffixFunction, 2),
+	"to-lower":    fromStringFunc(toLowerFunction, 1),
+	"to-upper":    fromStringFunc(toUpperFunction, 1),
 
 	// lists
-	"len":     stateless(lenFunction),
-	"append":  stateless(appendFunction),
-	"prepend": stateless(prependFunction),
-	"reverse": stateless(reverseFunction),
-	"range":   stateless(rangeFunction),
-	"map":     stateless(mapFunction),
-	"filter":  stateless(filterFunction),
+	"len":     lenFunction,
+	"append":  appendFunction,
+	"prepend": prependFunction,
+	"reverse": reverseFunction,
+	"range":   rangeFunction,
+	"map":     mapFunction,
+	"filter":  filterFunction,
 
 	// logic
-	"and": stateless(andFunction),
-	"or":  stateless(orFunction),
-	"not": stateless(notFunction),
+	"and": andFunction,
+	"or":  orFunction,
+	"not": notFunction,
 
 	// comparisons
-	"eq?":   stateless(eqFunction),
-	"like?": stateless(likeFunction),
+	"eq?":   eqFunction,
+	"like?": likeFunction,
 
-	"lt?": stateless(makeNumberComparatorFunc(
+	"lt?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a < b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a < b), nil },
-	)),
-	"lte?": stateless(makeNumberComparatorFunc(
+	),
+	"lte?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
-	)),
-	"gt?": stateless(makeNumberComparatorFunc(
+	),
+	"gt?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a > b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a > b), nil },
-	)),
-	"gte?": stateless(makeNumberComparatorFunc(
+	),
+	"gte?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
-	)),
+	),
 
 	// types
-	"type-of":   stateless(typeOfFunction),
-	"to-string": stateless(toStringFunction),
-	"to-int":    stateless(toIntFunction),
-	"to-float":  stateless(toFloatFunction),
-	"to-bool":   stateless(toBoolFunction),
+	"type-of":   typeOfFunction,
+	"to-string": toStringFunction,
+	"to-int":    toIntFunction,
+	"to-float":  toFloatFunction,
+	"to-bool":   toBoolFunction,
 
 	// hashes
-	"sha1":   stateless(sha1Function),
-	"sha256": stateless(sha256Function),
-	"sha512": stateless(sha512Function),
+	"sha1":   sha1Function,
+	"sha256": sha256Function,
+	"sha512": sha512Function,
 
 	// encoding
-	"to-base64":   stateless(toBase64Function),
-	"from-base64": stateless(fromBase64Function),
+	"to-base64":   toBase64Function,
+	"from-base64": fromBase64Function,
 
 	// dates & time
-	"now": stateless(nowFunction),
+	"now": nowFunction,
 }

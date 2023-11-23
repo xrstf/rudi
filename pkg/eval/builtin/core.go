@@ -244,6 +244,9 @@ func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		}
 	}
 
+	// Funny enough, due to the way functions work in Rudi, "set" does not
+	// actually set anything, it relies on the function magic behind the
+	// scenes to handle the bang modifier.
 	return updatedValue, nil
 }
 
