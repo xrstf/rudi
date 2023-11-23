@@ -12,7 +12,7 @@
   </a>
 </p>
 
-Rudi is a Lisp-based, embeddable programming language that focuses on transforming data structures
+Rudi is a Lisp-like, embeddable programming language that focuses on transforming data structures
 like those available in JSON (numbers, bools, objects, vectors etc.). A statement in Rudi looks like
 
 ```lisp
@@ -33,7 +33,7 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 ## Installation
 
 Rudi is primarily meant to be embedded into other Go programs, but a standalone CLI application,
-_Rudi_, is also available to test your scripts with. Rudi can be installed using Git & Go:
+`rudi`, is also available to test your scripts with. `rudi` can be installed using Git & Go:
 
 ```bash
 git clone https://github.com/xrstf/rudi
@@ -46,9 +46,32 @@ from GitHub.
 
 ## Usage
 
-Rudi has extensive help built right into it, try running `rudi help` to get started.
+### Command Line
 
-## Embedding
+`rudi` can run in one of two modes:
+
+* **Interactive Mode** is enabled by passing `--interactive` (or `-i`). This will start a REPL
+  session where Rudi scripts are read from stdin and evaluated against the loaded files.
+* **Script Mode** is used the an Rudi script is passed either as the first argument or read from a
+  file defined by `--script`. In this mode `rudi` will run all statements from the script and print
+  the resulting value, then it exits.
+
+    Examples:
+
+    * `rudi '.foo' myfile.json`
+    * `rudi '(set .foo "bar") (set .users 42) .' myfile.json`
+    * `rudi --script convert.rudi myfile.json`
+
+`rudi` has extensive help built right into it, try running `rudi help` to get started.
+
+#### File Handling
+
+The first loaded file is known as the "document". Its content is available via path expressions like
+`.foo[0]`. All loaded files are also available via the `$files` variable (i.e. `.` is the same as
+`$files[0]` for reading, but when writing data, there is a difference between both notations; refer
+to the docs for `set` for more information).
+
+### Embedding
 
 Rudi is well suited to be embedded into Go applications. A clean and simple API makes it a breeze:
 
