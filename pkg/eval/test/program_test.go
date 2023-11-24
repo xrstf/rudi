@@ -29,11 +29,12 @@ func makeTuple(exprs ...ast.Expression) ast.Tuple {
 	}
 }
 
-func makeVar(name string) ast.Symbol {
+func makeVar(name string, pathExpr *ast.PathExpression) ast.Symbol {
 	variable := ast.Variable(name)
 
 	return ast.Symbol{
-		Variable: &variable,
+		Variable:       &variable,
+		PathExpression: pathExpr,
 	}
 }
 
@@ -71,16 +72,16 @@ func TestEvalProgram(t *testing.T) {
 			input: makeProgram(
 				makeTuple(
 					ast.Identifier{Name: "set", Bang: true},
-					makeVar("foo"),
+					makeVar("foo", nil),
 					ast.Number{Value: 1},
 				),
-				makeVar("foo"),
+				makeVar("foo", nil),
 				makeTuple(
 					ast.Identifier{Name: "set", Bang: true},
-					makeVar("bar"),
-					makeVar("foo"),
+					makeVar("bar", nil),
+					makeVar("foo", nil),
 				),
-				makeVar("bar"),
+				makeVar("bar", nil),
 			),
 			expected: ast.Number{Value: 1},
 		},
@@ -90,14 +91,14 @@ func TestEvalProgram(t *testing.T) {
 			input: makeProgram(
 				makeTuple(
 					ast.Identifier{Name: "set", Bang: true},
-					makeVar("foo"),
+					makeVar("foo", nil),
 					makeTuple(
 						ast.Identifier{Name: "set", Bang: true},
-						makeVar("bar"),
+						makeVar("bar", nil),
 						ast.Number{Value: 1},
 					),
 				),
-				makeVar("bar"),
+				makeVar("bar", nil),
 			),
 			invalid: true,
 		},

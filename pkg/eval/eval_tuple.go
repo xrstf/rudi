@@ -9,6 +9,7 @@ import (
 
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/pathexpr"
 )
 
 func EvalTuple(ctx types.Context, tup ast.Tuple) (types.Context, any, error) {
@@ -71,11 +72,44 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 
 	// if desired, update the symbol's value
 	if updateSymbol != nil {
+		// We always return the computed value, no matter how deep we inject it
+		// into the symbol; but for setting the new variable/document, we need the
+		// _whole_ new value, which might be the result of combining the current +
+		// setting a value deep somewhere.
+		updatedValue := result
+
+		// if the symbol has a path to traverse, do so
+		if updateSymbol.PathExpression != nil {
+			// pre-evaluate the path expression
+			pathExpr, err := EvalPathExpression(ctx, updateSymbol.PathExpression)
+			if err != nil {
+				return ctx, nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+			}
+
+			// get the current value of the symbol
+			var currentValue any
+
+			if updateSymbol.Variable != nil {
+				varName := string(*updateSymbol.Variable)
+
+				// a non-existing variable is fine, this is how you define new variables in the first place
+				currentValue, _ = ctx.GetVariable(varName)
+			} else {
+				currentValue = ctx.GetDocument().Data()
+			}
+
+			// apply the path expression
+			updatedValue, err = pathexpr.Set(currentValue, pathexpr.FromEvaluatedPath(*pathExpr), result)
+			if err != nil {
+				return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
+			}
+		}
+
 		if updateSymbol.Variable != nil {
 			varName := string(*updateSymbol.Variable)
-			resultCtx = resultCtx.WithVariable(varName, result)
+			resultCtx = resultCtx.WithVariable(varName, updatedValue)
 		} else {
-			ctx.GetDocument().Set(result)
+			ctx.GetDocument().Set(updatedValue)
 		}
 	}
 

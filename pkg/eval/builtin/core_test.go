@@ -170,29 +170,48 @@ func TestSetFunction(t *testing.T) {
 			expr:    `(set $var (unknown-func))`,
 			invalid: true,
 		},
-		// return the value that was set
+		// return the value that was set (without a bang modifier, this doesn't actually modify anything)
 		{
 			expr:     `(set $var "foo")`,
 			expected: "foo",
 		},
 		{
+			expr:    `(set $var "foo") $var`,
+			invalid: true,
+		},
+		{
 			expr:     `(set $var 1)`,
+			expected: int64(1),
+		},
+		// with bang it works as expected
+		{
+			expr:     `(set! $var 1)`,
+			expected: int64(1),
+		},
+		{
+			expr:     `(set! $var 1) $var`,
 			expected: int64(1),
 		},
 		// can overwrite variables on the top level
 		{
-			expr:      `(set $myvar 12)`,
-			expected:  int64(12),
+			expr:      `(set! $myvar 12) $myvar`,
 			variables: testVariables,
+			expected:  int64(12),
 		},
 		// can change the type
 		{
-			expr:      `(set $myvar "new value")`,
-			expected:  "new value",
+			expr:      `(set! $myvar "new value") $myvar`,
 			variables: testVariables,
+			expected:  "new value",
 		},
 		{
-			expr: `(set $obj.aList[1] "new value")`,
+			expr:      `(set! $obj.aList[1] "new value")`,
+			variables: testVariables,
+			expected:  "new value",
+		},
+		{
+			expr:      `(set! $obj.aList[1] "new value") $obj`,
+			variables: testVariables,
 			expected: map[string]any{
 				"aString": "foo",
 				"aList":   []any{"first", "new value", "third"},
@@ -203,107 +222,106 @@ func TestSetFunction(t *testing.T) {
 					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
 				},
 			},
-			variables: testVariables,
 		},
 		// set itself does not change the first argument
 		{
 			expr:      `(set $myvar "new value") $myvar`,
-			expected:  int64(42),
 			variables: testVariables,
+			expected:  int64(42),
 		},
 		{
 			expr:      `(set $obj.aString "new value") $obj.aString`,
-			expected:  "foo",
 			variables: testVariables,
+			expected:  "foo",
 		},
 		{
 			expr:      `(set $obj.aList[1] "new value") $obj.aList`,
+			variables: testVariables,
 			expected:  []any{"first", int64(2), "third"},
+		},
+		// ...but not leak into upper scopes
+		{
+			expr:     `(set! $a 1) (if true (set! $a 2)) $a`,
+			expected: int64(1),
+		},
+		{
+			expr:    `(set! $a 1) (if true (set! $b 2)) $b`,
+			invalid: true,
+		},
+		// do not accidentally set a key without creating a new context
+		{
+			expr:     `(set! $a {foo "bar"}) (if true (set! $a.foo "updated"))`,
+			expected: "updated",
+		},
+		{
+			expr:     `(set! $a {foo "bar"}) (if true (set! $a.foo "updated")) $a.foo`,
+			expected: "bar",
+		},
+		// handle bad paths
+		{
+			expr:    `(set! $obj[5.6] "new value")`,
+			invalid: true,
+		},
+		// not a vector
+		{
+			expr:    `(set! $obj[5] "new value")`,
+			invalid: true,
+		},
+		{
+			expr:    `(set! $obj.aBool[5] "new value")`,
+			invalid: true,
+		},
+		// update a key within an object variable
+		{
+			expr:      `(set! $obj.aString "new value")`,
+			expected:  "new value",
 			variables: testVariables,
 		},
-		// // ...but not leak into upper scopes
-		// {
-		// 	expr:     `(set $a 1) (if true (set $a 2)) $a`,
-		// 	expected: int64(1),
-		// },
-		// {
-		// 	expr:    `(set $a 1) (if true (set $b 2)) $b`,
-		// 	invalid: true,
-		// },
-		// // do not accidentally set a key without creating a new context
-		// {
-		// 	expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated"))`,
-		// 	expected: "updated",
-		// },
-		// {
-		// 	expr:     `(set $a {foo "bar"}) (if true (set $a.foo "updated")) $a.foo`,
-		// 	expected: "bar",
-		// },
-		// // handle bad paths
-		// {
-		// 	expr:    `(set $obj[5.6] "new value")`,
-		// 	invalid: true,
-		// },
-		// // not a vector
-		// {
-		// 	expr:    `(set $obj[5] "new value")`,
-		// 	invalid: true,
-		// },
-		// {
-		// 	expr:    `(set $obj.aBool[5] "new value")`,
-		// 	invalid: true,
-		// },
-		// // update a key within an object variable
-		// {
-		// 	expr:      `(set $obj.aString "new value")`,
-		// 	expected:  "new value",
-		// 	variables: testVariables,
-		// },
-		// {
-		// 	expr:      `(set $obj.aString "new value") $obj.aString`,
-		// 	expected:  "new value",
-		// 	variables: testVariables,
-		// },
-		// // add a new sub key
-		// {
-		// 	expr:      `(set $obj.newKey "new value")`,
-		// 	expected:  "new value",
-		// 	variables: testVariables,
-		// },
-		// {
-		// 	expr:      `(set $obj.newKey "new value") $obj.newKey`,
-		// 	expected:  "new value",
-		// 	variables: testVariables,
-		// },
-		// // runtime variables
-		// {
-		// 	expr:     `(set $vec [1]) (set $vec[0] 2) $vec[0]`,
-		// 	expected: int64(2),
-		// },
-		// // replace the global document
-		// {
-		// 	expr:     `(set . 1) .`,
-		// 	document: testObjDocument,
-		// 	expected: int64(1),
-		// },
-		// // update keys in the global document
-		// {
-		// 	expr:     `(set .aString "new-value") .aString`,
-		// 	document: testObjDocument,
-		// 	expected: "new-value",
-		// },
-		// // add new keys
-		// {
-		// 	expr:     `(set .newKey "new-value") .newKey`,
-		// 	document: testObjDocument,
-		// 	expected: "new-value",
-		// },
-		// // update vectors
-		// {
-		// 	expr:     `(set .aList[1] "new-value") .aList[1]`,
-		// 	document: testObjDocument,
-		// 	expected: "new-value",
-		// },
+		{
+			expr:      `(set! $obj.aString "new value") $obj.aString`,
+			expected:  "new value",
+			variables: testVariables,
+		},
+		// add a new sub key
+		{
+			expr:      `(set! $obj.newKey "new value")`,
+			expected:  "new value",
+			variables: testVariables,
+		},
+		{
+			expr:      `(set! $obj.newKey "new value") $obj.newKey`,
+			expected:  "new value",
+			variables: testVariables,
+		},
+		// runtime variables
+		{
+			expr:     `(set! $vec [1]) (set! $vec[0] 2) $vec[0]`,
+			expected: int64(2),
+		},
+		// replace the global document
+		{
+			expr:     `(set! . 1) .`,
+			document: testObjDocument,
+			expected: int64(1),
+		},
+		// update keys in the global document
+		{
+			expr:     `(set! .aString "new-value") .aString`,
+			document: testObjDocument,
+			expected: "new-value",
+		},
+		// add new keys
+		{
+			expr:     `(set! .newKey "new-value") .newKey`,
+			document: testObjDocument,
+			expected: "new-value",
+		},
+		// update vectors
+		{
+			expr:     `(set! .aList[1] "new-value") .aList[1]`,
+			document: testObjDocument,
+			expected: "new-value",
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -342,7 +360,12 @@ func TestDeleteFunction(t *testing.T) {
 			expected: nil,
 		},
 		{
-			expr:     `(delete .)`,
+			expr:     `(delete .) .`,
+			document: map[string]any{"foo": "bar"},
+			expected: map[string]any{"foo": "bar"},
+		},
+		{
+			expr:     `(delete! .) .`,
 			document: map[string]any{"foo": "bar"},
 			expected: nil,
 		},

@@ -214,40 +214,11 @@ func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
-	// pre-evaluate the path
-	var pathExpr *ast.EvaluatedPathExpression
-	if p := symbol.PathExpression; p != nil {
-		pathExpr, err = eval.EvalPathExpression(ctx, p)
-		if err != nil {
-			return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
-		}
-	}
+	// Set relies entirely on the bang modifier handling to actually set values
+	// in variables or the global document; without the bang modifier, (set)
+	// is basically a no-op.
 
-	// get the current value
-	var currentValue any
-
-	if symbol.Variable != nil {
-		varName := string(*symbol.Variable)
-
-		// a non-existing variable is fine, this is how you define new variables in the first place
-		currentValue, _ = ctx.GetVariable(varName)
-	} else {
-		currentValue = ctx.GetDocument().Data()
-	}
-
-	// if there is a path expression, merge in the new value
-	updatedValue := newValue
-	if pathExpr != nil {
-		updatedValue, err = pathexpr.Set(currentValue, pathexpr.FromEvaluatedPath(*pathExpr), newValue)
-		if err != nil {
-			return nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
-		}
-	}
-
-	// Funny enough, due to the way functions work in Rudi, "set" does not
-	// actually set anything, it relies on the function magic behind the
-	// scenes to handle the bang modifier.
-	return updatedValue, nil
+	return newValue, nil
 }
 
 // (delete VAR:Variable)
