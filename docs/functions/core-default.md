@@ -17,6 +17,11 @@ value, but returns the error instead.
 * `(default "set" "fallback")` -> `"set"`
 * `(default (+ "invalid") "fallback")` -> error
 
+The function is also nice when combined with the bang modifier to apply default
+values to a variable:
+
+* `(default! $var.foo "default-value")`
+
 ## Forms
 
 ### `(default candidate fallback)`

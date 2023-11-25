@@ -10,14 +10,14 @@ import (
 
 var Functions = types.Functions{
 	// core
-	"if":      types.BasicFunction(ifFunction, "evaluate one of two expressions based on a condition"),
-	"do":      types.BasicFunction(doFunction, "eval a sequence of statements where only one expression is valid"),
-	"has?":    types.BasicFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value"),
 	"default": types.BasicFunction(defaultFunction, "returns the default value if the first argument is empty"),
-	"try":     types.BasicFunction(tryFunction, "returns the fallback if the first expression errors out"),
-	"set":     types.BasicFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)"),
 	"delete":  deleteFunction{},
+	"do":      types.BasicFunction(doFunction, "eval a sequence of statements where only one expression is valid"),
 	"empty?":  types.BasicFunction(isEmptyFunction, "returns true when the given value is empty-ish (0, false, null, \"\", ...)"),
+	"has?":    types.BasicFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value"),
+	"if":      types.BasicFunction(ifFunction, "evaluate one of two expressions based on a condition"),
+	"set":     types.BasicFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)"),
+	"try":     types.BasicFunction(tryFunction, "returns the fallback if the first expression errors out"),
 
 	// math
 	"+": types.BasicFunction(sumFunction, "returns the sum of all of its arguments"),
@@ -26,7 +26,7 @@ var Functions = types.Functions{
 	"/": types.BasicFunction(divideFunction, "returns arg1 / arg2 / .. / argN"),
 
 	// math aliases to make bang functions nicer (sum! vs +!)
-	"add":  types.BasicFunction(sumFunction, "alias for +"),
+	"sum":  types.BasicFunction(sumFunction, "alias for +"),
 	"sub":  types.BasicFunction(subFunction, "alias for -"),
 	"mult": types.BasicFunction(multiplyFunction, "alias for *"),
 	"div":  types.BasicFunction(divideFunction, "alias for div"),

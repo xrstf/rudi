@@ -1,13 +1,15 @@
 # if
 
-`if` allows to form conditions.
+`if` allows to form conditions. It supports evaluating one expression if another
+is true, and allows to optionally evaluate another expression if the
+condition was false.
 
 ## Examples
 
 * `(if true 42)` -> `42`
 * `(if false 42)` -> `null`
-* `(if true 42 314)` -> `42`
-* `(if false 42 314)` -> `314`
+* `(if true "yes" "no")` -> `"yes"`
+* `(if false "yes" "no")` -> `"no"`
 * `(if (gt? 4 2) "yes" "no")` -> `"yes"`
 
 ## Forms

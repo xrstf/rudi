@@ -34,17 +34,28 @@ func Topics() []Topic {
 		},
 	}
 
+	ignoredFunctions := map[string]struct{}{
+		"sum":  {},
+		"sub":  {},
+		"mult": {},
+		"div":  {},
+	}
+
 	for funcName, function := range builtin.Functions {
+		if _, ok := ignoredFunctions[funcName]; ok {
+			continue
+		}
+
 		var sanitized string
 		switch funcName {
 		case "+":
 			sanitized = "sum"
 		case "-":
-			sanitized = "minus"
+			sanitized = "sub"
 		case "*":
-			sanitized = "multiply"
+			sanitized = "mult"
 		case "/":
-			sanitized = "divide"
+			sanitized = "div"
 		default:
 			sanitized = strings.ReplaceAll(funcName, "?", "")
 			sanitized = strings.ReplaceAll(sanitized, "!", "")
@@ -73,9 +84,8 @@ func ucFirst(s string) string {
 	}
 
 	first := string(s[0])
-	tail := string(s[1:])
 
-	return strings.ToUpper(first) + tail
+	return strings.ToUpper(first) + s[1:]
 }
 
 // Function names are global in Rudi; however the docs is logically split

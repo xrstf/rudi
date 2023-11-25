@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	html "html/template"
 	"log"
 	"os"
 	"regexp"
@@ -16,27 +15,44 @@ import (
 )
 
 const (
-	filename    = "docs/README.md"
-	beginMarker = `<!-- BEGIN_TOC -->`
-	endMarker   = `<!-- END_TOC -->`
+	readme          = "docs/README.md"
+	functionsReadme = "docs/functions/README.md"
+	beginMarker     = `<!-- BEGIN_TOC -->`
+	endMarker       = `<!-- END_TOC -->`
 )
 
 func main() {
 	topics := docs.Topics()
 	groups := getGroups(topics)
 
+	// the main readme gets all topics
+	if err := updateFileWithTopics(readme, topics, groups); err != nil {
+		log.Fatalf("Failed to update %s: %v", readme, err)
+	}
+
+	// the functions readme does not get the first section ("general")
+	if err := updateFileWithTopics(functionsReadme, topics, groups[1:]); err != nil {
+		log.Fatalf("Failed to update %s: %v", functionsReadme, err)
+	}
+}
+
+func updateFileWithTopics(filename string, topics []docs.Topic, groups []string) error {
 	rendered := renderTopics(topics, groups)
 	rendered = fmt.Sprintf("%s\n%s\n%s", beginMarker, rendered, endMarker)
 
 	content, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatalf("Failed to read %s: %v", filename, err)
+		return fmt.Errorf("failed to read %s: %w", filename, err)
 	}
 
 	regex := regexp.MustCompile(`(?s)` + beginMarker + `.+` + endMarker)
 	output := regex.ReplaceAllString(string(content), rendered)
 
-	os.WriteFile(filename, []byte(output), 0644)
+	if err := os.WriteFile(filename, []byte(output), 0644); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filename, err)
+	}
+
+	return nil
 }
 
 func strSliceHas(haystack []string, needle string) bool {
@@ -95,10 +111,6 @@ func renderTopics(topics []docs.Topic, groups []string) string {
 	}
 
 	return strings.TrimSpace(out.String())
-}
-
-func htmlencode(s string) string {
-	return html.HTMLEscapeString(s)
 }
 
 func getTopicNames(topics []docs.Topic, group string) []string {
