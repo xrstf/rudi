@@ -33,7 +33,7 @@ func Topics() []Topic {
 		},
 	}
 
-	for funcName := range builtin.Functions {
+	for funcName, function := range builtin.Functions {
 		var sanitized string
 		switch funcName {
 		case "+":
@@ -57,7 +57,7 @@ func Topics() []Topic {
 		topics = append(topics, Topic{
 			CliNames:    []string{funcName, sanitized},
 			Group:       group + " Functions",
-			Description: fmt.Sprintf("documentation for the %s function", funcName),
+			Description: function.Description(),
 			filename:    filename,
 		})
 	}

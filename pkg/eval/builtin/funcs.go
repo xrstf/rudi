@@ -45,57 +45,61 @@ var Functions = types.Functions{
 	"trim":        fromStringFunc(trimFunction, 1, "returns the given whitespace with leading/trailing whitespace removed"),
 
 	// lists
-	"len":       types.BasicFunction(lenFunction, ""),
-	"append":    types.BasicFunction(appendFunction, ""),
-	"prepend":   types.BasicFunction(prependFunction, ""),
-	"reverse":   types.BasicFunction(reverseFunction, ""),
-	"range":     types.BasicFunction(rangeFunction, ""),
-	"map":       types.BasicFunction(mapFunction, ""),
-	"filter":    types.BasicFunction(filterFunction, ""),
-	"contains?": types.BasicFunction(containsFunction, ""),
+	"len":       types.BasicFunction(lenFunction, "returns the length of a string, vector or object"),
+	"append":    types.BasicFunction(appendFunction, "appends more strings to a string or arbitrary items into a vector"),
+	"prepend":   types.BasicFunction(prependFunction, "prepends more strings to a string or arbitrary items into a vector"),
+	"reverse":   types.BasicFunction(reverseFunction, "reverses a string or the elements of a vector"),
+	"range":     types.BasicFunction(rangeFunction, "allows to iterate (loop) over a vector or object"),
+	"map":       types.BasicFunction(mapFunction, "applies an expression to every element in a vector or object"),
+	"filter":    types.BasicFunction(filterFunction, "returns a copy of a given vector/object with only those elements remaining that satisfy a condition"),
+	"contains?": types.BasicFunction(containsFunction, "returns true if a string contains a substring or a vector contains the given element"),
 
 	// logic
-	"and": types.BasicFunction(andFunction, ""),
-	"or":  types.BasicFunction(orFunction, ""),
-	"not": types.BasicFunction(notFunction, ""),
+	"and": types.BasicFunction(andFunction, "returns true if all arguments are true"),
+	"or":  types.BasicFunction(orFunction, "returns true if any of the arguments is true"),
+	"not": types.BasicFunction(notFunction, "negates the given argument"),
 
 	// comparisons
-	"eq?":   types.BasicFunction(eqFunction, ""),
-	"like?": types.BasicFunction(likeFunction, ""),
+	"eq?":   types.BasicFunction(eqFunction, "equality check: return true if both arguments are the same"),
+	"like?": types.BasicFunction(likeFunction, `like eq?, but does lossless type conversions so 1 == "1"`),
 
 	"lt?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a < b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a < b), nil },
+		"returns a < b",
 	),
 	"lte?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
+		"return a <= b",
 	),
 	"gt?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a > b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a > b), nil },
+		"returns a > b",
 	),
 	"gte?": makeNumberComparatorFunc(
 		func(a, b int64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
 		func(a, b float64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
+		"returns a >= b",
 	),
 
 	// types
-	"type-of":   types.BasicFunction(typeOfFunction, ""),
-	"to-string": types.BasicFunction(toStringFunction, ""),
-	"to-int":    types.BasicFunction(toIntFunction, ""),
-	"to-float":  types.BasicFunction(toFloatFunction, ""),
-	"to-bool":   types.BasicFunction(toBoolFunction, ""),
+	"type-of":   types.BasicFunction(typeOfFunction, `returns the type of a given value (e.g. "string" or "number")`),
+	"to-string": types.BasicFunction(toStringFunction, "try to convert the given argument losslessly to a string"),
+	"to-int":    types.BasicFunction(toIntFunction, "try to convert the given argument losslessly to an int64"),
+	"to-float":  types.BasicFunction(toFloatFunction, "try to convert the given argument losslessly to a float64"),
+	"to-bool":   types.BasicFunction(toBoolFunction, "try to convert the given argument losslessly to a bool"),
 
 	// hashes
-	"sha1":   types.BasicFunction(sha1Function, ""),
-	"sha256": types.BasicFunction(sha256Function, ""),
-	"sha512": types.BasicFunction(sha512Function, ""),
+	"sha1":   types.BasicFunction(sha1Function, "return the lowercase hex representation of the SHA-1 hash"),
+	"sha256": types.BasicFunction(sha256Function, "return the lowercase hex representation of the SHA-256 hash"),
+	"sha512": types.BasicFunction(sha512Function, "return the lowercase hex representation of the SHA-512 hash"),
 
 	// encoding
-	"to-base64":   types.BasicFunction(toBase64Function, ""),
-	"from-base64": types.BasicFunction(fromBase64Function, ""),
+	"to-base64":   types.BasicFunction(toBase64Function, "apply base64 encoding to the given string"),
+	"from-base64": types.BasicFunction(fromBase64Function, "decode a base64 encoded string"),
 
 	// dates & time
-	"now": types.BasicFunction(nowFunction, ""),
+	"now": types.BasicFunction(nowFunction, "returns the current date & time (UTC), formatted like a Go date"),
 }
