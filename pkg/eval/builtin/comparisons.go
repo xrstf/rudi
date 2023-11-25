@@ -83,7 +83,7 @@ type intProcessor func(left, right int64) (ast.Bool, error)
 type floatProcessor func(left, right float64) (ast.Bool, error)
 
 func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor) types.Function {
-	return func(ctx types.Context, args []ast.Expression) (any, error) {
+	return types.BasicFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
 		if size := len(args); size != 2 {
 			return nil, fmt.Errorf("expected 2 argument(s), got %d", size)
 		}
@@ -108,5 +108,5 @@ func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor) types.
 		rightFloat := numbers[1].ToFloat()
 
 		return floater(leftFloat, rightFloat)
-	}
+	}, "")
 }

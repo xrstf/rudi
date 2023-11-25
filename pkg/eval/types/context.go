@@ -74,7 +74,35 @@ func (c Context) WithVariable(name string, val any) Context {
 	}
 }
 
-type Function func(ctx Context, args []ast.Expression) (any, error)
+type Function interface {
+	Evaluate(ctx Context, args []ast.Expression) (any, error)
+	Description() string
+}
+
+type TupleFunction func(ctx Context, args []ast.Expression) (any, error)
+
+type basicFunc struct {
+	f    TupleFunction
+	desc string
+}
+
+func BasicFunction(f TupleFunction, description string) Function {
+	return basicFunc{
+		f:    f,
+		desc: description,
+	}
+}
+
+var _ Function = basicFunc{}
+
+func (f basicFunc) Evaluate(ctx Context, args []ast.Expression) (any, error) {
+	return f.f(ctx, args)
+}
+
+func (f basicFunc) Description() string {
+	return f.desc
+}
+
 type Functions map[string]Function
 
 func NewFunctions() Functions {

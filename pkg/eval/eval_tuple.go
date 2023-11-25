@@ -39,6 +39,12 @@ func EvalTuple(ctx types.Context, tup ast.Tuple) (types.Context, any, error) {
 	return resultCtx, result, nil
 }
 
+type BangHandler interface {
+	// All functions work fine with the default bang handler ("set!", "append!", ...), except
+	// for "delete!", which requires special handling to make it work as expected.
+	BangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error)
+}
+
 func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expression) (types.Context, any, error) {
 	funcName := fun.Name
 	function, ok := ctx.GetFunction(funcName)
@@ -63,7 +69,7 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 	}
 
 	// call the function
-	result, err := function(ctx, args)
+	result, err := function.Evaluate(ctx, args)
 	if err != nil {
 		return ctx, nil, fmt.Errorf("%s: %w", funcName, err)
 	}
@@ -72,6 +78,11 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 
 	// if desired, update the symbol's value
 	if updateSymbol != nil {
+		// "delete!" has a special behaviour for the bang modifier
+		if custom, ok := function.(BangHandler); ok {
+			return custom.BangHandler(ctx, *updateSymbol, result)
+		}
+
 		// We always return the computed value, no matter how deep we inject it
 		// into the symbol; but for setting the new variable/document, we need the
 		// _whole_ new value, which might be the result of combining the current +

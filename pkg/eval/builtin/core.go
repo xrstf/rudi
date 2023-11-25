@@ -223,7 +223,13 @@ func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (delete VAR:Variable)
 // (delete EXPR:PathExpression)
-func deleteFunction(ctx types.Context, args []ast.Expression) (any, error) {
+type deleteFunction struct{}
+
+func (deleteFunction) Description() string {
+	return "removes a key from an object or an item from a vector"
+}
+
+func (deleteFunction) Evaluate(ctx types.Context, args []ast.Expression) (any, error) {
 	if size := len(args); size != 1 {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
@@ -235,7 +241,7 @@ func deleteFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	// catch symbols that are technically invalid
 	if symbol.PathExpression == nil {
-		return nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
+		return nil, fmt.Errorf("argument #0: must be path expression, got %s", symbol.ExpressionName())
 	}
 
 	// pre-evaluate the path
@@ -263,6 +269,46 @@ func deleteFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	return types.Must(types.WrapNative(updatedValue)), nil
+}
+
+func (deleteFunction) BangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error) {
+	updatedValue := value
+
+	// if the symbol has a path to traverse, do so
+	if sym.PathExpression != nil {
+		// pre-evaluate the path expression
+		pathExpr, err := eval.EvalPathExpression(ctx, sym.PathExpression)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+		}
+
+		// get the current value of the symbol
+		var currentValue any
+
+		if sym.Variable != nil {
+			varName := string(*sym.Variable)
+
+			// a non-existing variable is fine, this is how you define new variables in the first place
+			currentValue, _ = ctx.GetVariable(varName)
+		} else {
+			currentValue = ctx.GetDocument().Data()
+		}
+
+		// apply the path expression
+		updatedValue, err = pathexpr.Delete(currentValue, pathexpr.FromEvaluatedPath(*pathExpr))
+		if err != nil {
+			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
+		}
+	}
+
+	if sym.Variable != nil {
+		varName := string(*sym.Variable)
+		ctx = ctx.WithVariable(varName, updatedValue)
+	} else {
+		ctx.GetDocument().Set(updatedValue)
+	}
+
+	return ctx, value, nil
 }
 
 // (empty? VALUE:any)

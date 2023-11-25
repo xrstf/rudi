@@ -42,7 +42,7 @@ func (tc *coreTestcase) Test(t *testing.T) {
 		}
 	} else if _, ok := tc.expected.(map[string]any); ok {
 		if !cmp.Equal(tc.expected, result) {
-			t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+			t.Fatalf("Expected %+v (%T), but got %+v (%T)", tc.expected, tc.expected, result, result)
 		}
 	} else {
 		if result != tc.expected {
@@ -330,6 +330,17 @@ func TestSetFunction(t *testing.T) {
 }
 
 func TestDeleteFunction(t *testing.T) {
+	testObjDocument := map[string]any{
+		"aString": "foo",
+		"aList":   []any{"first", int64(2), "third"},
+		"aBool":   true,
+		"anObject": map[string]any{
+			"key1": true,
+			"key2": nil,
+			"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+		},
+	}
+
 	testcases := []coreTestcase{
 		{
 			expr:    `(delete)`,
@@ -360,11 +371,6 @@ func TestDeleteFunction(t *testing.T) {
 			expected: nil,
 		},
 		{
-			expr:     `(delete .) .`,
-			document: map[string]any{"foo": "bar"},
-			expected: map[string]any{"foo": "bar"},
-		},
-		{
 			expr:     `(delete! .) .`,
 			document: map[string]any{"foo": "bar"},
 			expected: nil,
@@ -378,6 +384,16 @@ func TestDeleteFunction(t *testing.T) {
 		// can remove a key
 		{
 			expr:     `(delete .foo)`,
+			document: map[string]any{"foo": "bar"},
+			expected: map[string]any{},
+		},
+		{
+			expr:     `(delete .foo) .`,
+			document: map[string]any{"foo": "bar"},
+			expected: map[string]any{"foo": "bar"},
+		},
+		{
+			expr:     `(delete! .foo) .`,
 			document: map[string]any{"foo": "bar"},
 			expected: map[string]any{},
 		},
@@ -399,6 +415,16 @@ func TestDeleteFunction(t *testing.T) {
 			document: []any{"a", "b", "c"},
 			expected: []any{"a", "c"},
 		},
+		{
+			expr:     `(delete .[1]) .`,
+			document: []any{"a", "b", "c"},
+			expected: []any{"a", "b", "c"},
+		},
+		{
+			expr:     `(delete! .[1]) .`,
+			document: []any{"a", "b", "c"},
+			expected: []any{"a", "c"},
+		},
 		// vector bounds are checked
 		{
 			expr:     `(delete .[-1])`,
@@ -409,6 +435,73 @@ func TestDeleteFunction(t *testing.T) {
 			expr:     `(delete .[3])`,
 			document: []any{"a", "b", "c"},
 			invalid:  true,
+		},
+		// can delete sub keys
+		{
+			expr:     `(delete .aList[1])`,
+			document: testObjDocument,
+			expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+				},
+			},
+		},
+		{
+			expr:     `(delete .aList[1]) .`,
+			document: testObjDocument,
+			expected: testObjDocument,
+		},
+		{
+			expr:     `(delete! .aList[1]) .`,
+			document: testObjDocument,
+			expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+				},
+			},
+		},
+		{
+			expr:     `(delete .anObject.key3[1].foo)`,
+			document: testObjDocument,
+			expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", int64(2), "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{int64(9), map[string]any{}, int64(7)},
+				},
+			},
+		},
+		{
+			expr:     `(delete .anObject.key3[1].foo) .`,
+			document: testObjDocument,
+			expected: testObjDocument,
+		},
+		{
+			expr:     `(delete! .anObject.key3[1].foo) .`,
+			document: testObjDocument,
+			expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", int64(2), "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{int64(9), map[string]any{}, int64(7)},
+				},
+			},
 		},
 	}
 
