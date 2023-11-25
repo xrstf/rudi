@@ -49,20 +49,35 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	vector, ok := list.(ast.Vector)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a vector, but %T", list)
-	}
-
 	evaluated, err := evalArgs(ctx, args, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	result := vector.Clone()
-	result.Data = append(result.Data, evaluated...)
+	vector, ok := list.(ast.Vector)
+	if ok {
+		result := vector.Clone()
+		result.Data = append(result.Data, evaluated...)
 
-	return result, nil
+		return result, nil
+	}
+
+	str, ok := list.(ast.String)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", list)
+	}
+
+	suffix := ""
+	for i, arg := range evaluated {
+		argString, ok := arg.(ast.String)
+		if !ok {
+			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, list)
+		}
+
+		suffix += string(argString)
+	}
+
+	return ast.String(string(str) + suffix), nil
 }
 
 func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -75,29 +90,37 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	vector, ok := list.(ast.Vector)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a vector, but %T", list)
-	}
-
 	evaluated, err := evalArgs(ctx, args, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	wrapped, err := types.WrapNative(evaluated)
-	if err != nil {
-		panic("failed to wrap a []any, this should never happen")
+	vector, ok := list.(ast.Vector)
+	if ok {
+		vector = vector.Clone()
+		result := ast.Vector{
+			Data: append(evaluated, vector.Data...),
+		}
+
+		return result, nil
 	}
 
-	evaluatedVector, ok := wrapped.(ast.Vector)
+	str, ok := list.(ast.String)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a vector, but %T", list)
+		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", list)
 	}
 
-	evaluatedVector.Data = append(evaluatedVector.Data, vector.Data...)
+	prefix := ""
+	for i, arg := range evaluated {
+		argString, ok := arg.(ast.String)
+		if !ok {
+			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, list)
+		}
 
-	return evaluatedVector, nil
+		prefix += string(argString)
+	}
+
+	return ast.String(prefix + string(str)), nil
 }
 
 func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {

@@ -131,6 +131,22 @@ func TestAppendFunction(t *testing.T) {
 			expr:     `(append [] [])`,
 			expected: []any{[]any{}},
 		},
+		{
+			expr:     `(append [] "foo")`,
+			expected: []any{"foo"},
+		},
+		{
+			expr:    `(append "foo" [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(append "foo" "bar" [])`,
+			invalid: true,
+		},
+		{
+			expr:     `(append "foo" "bar" "test")`,
+			expected: "foobartest",
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -183,6 +199,22 @@ func TestPrependFunction(t *testing.T) {
 		{
 			expr:     `(prepend [] [])`,
 			expected: []any{[]any{}},
+		},
+		{
+			expr:     `(prepend [] "foo")`,
+			expected: []any{"foo"},
+		},
+		{
+			expr:    `(prepend "foo" [])`,
+			invalid: true,
+		},
+		{
+			expr:    `(prepend "foo" "bar" [])`,
+			invalid: true,
+		},
+		{
+			expr:     `(prepend "foo" "bar" "test")`,
+			expected: "bartestfoo",
 		},
 	}
 
