@@ -34,7 +34,7 @@ var Functions = types.Functions{
 	// strings
 	// "len": lenFunction is defined for lists, but works for strings as well
 	// "reverse" also works for strings
-	"concat":      types.BasicFunction(concatFunction, "concatenate items in a vector usig a common glue string"),
+	"concat":      types.BasicFunction(concatFunction, "concatenate items in a vector using a common glue string"),
 	"split":       fromStringFunc(splitFunction, 2, "split a string into a vector"),
 	"has-prefix?": fromStringFunc(hasPrefixFunction, 2, "returns true if the given string has the prefix"),
 	"has-suffix?": fromStringFunc(hasSuffixFunction, 2, "returns true if the given string has the suffix"),

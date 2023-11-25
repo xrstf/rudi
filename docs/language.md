@@ -1,11 +1,26 @@
 # The Rudi Language
 
 Rudi is a Lisp dialect. Each Rudi program consists of a series of statement, which are tuples
-(`( ... )`), which are executed in series.
+(`( ... )`), path expressions (`.foo.bar[0]`) or literal values (`{foo "bar"}`). Statements are
+separated by whitespace. Each of these statements is evaluated in sequence, with the result of the
+last statement being the result of the entire program.
+
+```lisp
+(set! .foo 42)
+(set! $var (+ .bar (len .users)))
+(map [1 2 3] [x] (+ $x $var))
+```
+
+Using path expressions or literal values as statements is usually only useful if your program ends
+with a literal (often a constructed object) or if you use a path expression to select a sub-value
+out of the global document.
+
+Most functions can return errors and if an error happens, program execution stops unless the error
+is caught using the `try` function.
 
 ## Data Types
 
-Rudi knows the following data types:
+Rudi knows the following data types, known as "literals":
 
 * Null (`null`)
 * Bool (`true` or `false`)
@@ -25,22 +40,23 @@ In addition to these literal data types, Rudi understands a number of expression
 
 ### Statements
 
-Statements are the top-level elements of an Rudi program and in fact just an alias for tuples. The
-term "statement" is simply used to denote a top-level tuple.
+Statements are the top-level elements of an Rudi program and this distinction is mostly useful
+internally to detect the top-level of a Rudi program. A statement can be a tuple (i.e. a function
+call), a symbol (a variable and/or path expression) or a literal value.
 
-```
-(do something)
-(do other things)
-(add this to that)
+```lisp
+(set! .foo 42)
+(set! $var (+ .bar (len .users)))
+(map [1 2 3] [x] (+ $x $var))
 ```
 
 ## Tuples
 
 A tuple always consists of the literal `(`, followed by one or more expressions, followed by a `)`.
-Between tuples, any amount of whitespace is allowed. Each of the expressions are separated from another
+Within tuples, any amount of whitespace is allowed. Each of the expressions are separated from another
 by whitespace.
 
-```
+```lisp
 (do something)
 (do other things)
 (add this to that)
@@ -50,16 +66,19 @@ Tuples represent "function calls". The first element of every tuple must be an *
 is an unquoted string that refers to a built-in function. For example, the `to-upper` function can be
 called by writing
 
-```
+```lisp
 (to-upper "foo")
 ```
 
 In general, any kind of expression can follow function names inside tuples. The number of expressions
 depends on the function (`to-upper` requires exactly 1 argument, `concat` takes 2 or more arguments).
+However there are special cases where only certain kinds of expressions are allowed, like on
+functions with the bang modifier, which must use a symbol as their first argument (like
+`(set! $var 42`).
 
 Since tuples are expressions, tuples can be nested:
 
-```
+```lisp
 (to-upper (to-lower "FOO"))
 ```
 
@@ -69,6 +88,54 @@ tuple (`"foo"`) would then be uppercased.
 Tuples (i.e. functions) can return any of the known data types (numbers, strings, ...), but not
 other expressions (a tuple cannot return an identifier, for example). This means the function name
 cannot by dynamic, you cannot do `((concat "-" "to" "upper") "foo")` to call `(to-upper "foo")`.
+
+### Bang Modifier
+
+Functions in Rudi are stateless, meaning they compute a value and return it, without any side
+effects. However that alone would be boring and not really helpful, so Rudi breaks the pure
+functional approach and allows side effects.
+
+For example, to set (define or update) a variable, the expression `(set $var 42)` would not do what
+you might think: _Within_ the tuple, the `set` will define the variable and the its value to `42`,
+but this will not affect the _next_ tuple after it. So for example the program `(set $var 42) $var`
+will error out because `$var` is not defined in the second statement.
+
+To "make changes stick", use the bang modifier (`!`): `(set! $var 42) $var` will actually return
+`42`. The bang modifier can be used on any function, as long as the first argument is a symbol
+(i.e. a variable or a bare path expression). If the modifier is used, the result of the function
+expression is updated in the symbol, so `(set! $var 42)` will first calculate the desired value
+(`42`, easy in this case) and then actually set the variable to that value.
+
+The difference is more obvious with other functions:
+
+```lisp
+(set! $var "foo")      # assign "foo" to $var
+
+(append $var "bar")    # returns a new string "foobar" without updating $var
+$var                   # will print "foo"
+
+(append! $var "bar")   # returns a new string "foobar" and updates $var
+$var                   # will print "foobar"
+```
+
+Since the bang modifier makes a function modify the first argument, expressions like
+`(append! "foo" "bar")` are not valid, as it's not clear where the intended side effect should go.
+
+The bang modifier can be used with path expressions to set deeper values:
+
+```lisp
+(set! $var {foo "bar"}) # {"foo": "bar"}
+(set! $var.foo "new")   # "new"
+$var                    # {"foo": "new"}
+
+(set! $var [1 2 3])    # [1 2 3]
+(append! $var 4)       # 4
+(set! $var[3] 5)       # 5
+$var                   # [1 2 3 5]
+```
+
+The bang modifier can be used with any function, though you will be hardpressed to find meaningful
+examples of `(if! .path.expr 42)` or `(eq?! .path 42)`.
 
 ## Symbols
 
@@ -80,19 +147,19 @@ Rudi has support for runtime variables. A variable holds any of the possible dat
 unique, case-sensitive name, like `$myVar`. Symbols are expressions and can therefore be used in
 most places:
 
-```
+```lisp
 (add $myVar 5)
 (concat "foo" [1 $var 2])
-(set $myVar (+ 1 4))
+(set! $myVar (+ 1 4))
 ```
 
 A path expression can follow a variable name, allowing easy access to sub fields:
 
-```
-(set $var [1, 2, 3])
+```lisp
+(set! $var [1, 2, 3])
 (print $var[0])
 
-(set $var {foo [1, 2, {foo "bar"}]})
+(set! $var {foo [1, 2, {foo "bar"}]})
 (print $var.foo[2].foo)
 ```
 
@@ -101,7 +168,9 @@ See further down for more details on path expressions.
 ### Global Document Access
 
 Rudi programs are meant to transform a document (usually an `Object`). To make it easy to access
-the document and sub fields within, path expressions can be used just like with variables:
+the document and sub fields within, you can reference the global document by a single dot (`.`),
+optionally (and often) with a path expression on it, like `.foo.bar`. So `.foo` would reference the
+field `"foo"` in the global document, whereas `$var.foo` is the field `"foo"` in the variable `$var`.
 
 Suppose a JSON document like
 
@@ -114,7 +183,94 @@ Suppose a JSON document like
 
 is being processed by an Rudi program, then you could write
 
+```lisp
+.foo
+.list[1]
 ```
-(print .foo)
-(print .list[1])
+
+to first select `"bar"`, then `2`. Bare path expressions work like variables, you can do anything
+you can do with variables, like:
+
+```lisp
+(append! .list 4)
+(to-upper! .foo)
+```
+
+### Path Expressions
+
+Rudi implements simple JSONPath-like expressions to allow descending into deeply nested objects.
+Each path consists of a series of steps, with each step being either an object step (e.g. `.foo`)
+or a vector step (e.g. `[42]`). Steps can be chained, like `.foo[42].bar.sub[1][2]`.
+
+Path steps can also be computed (`[(+ 1 42)]`), which allows to use more complex expressions to
+form steps, like `["string.with.dot"]` or even `[$var.index]`.
+
+There is one special case: Paths that start with a vector step on the global document: For a variable
+this would look like `$var[42]`, but for the global document this would be just `[42]`, which is
+indistinguishable from "a vector with 1 element, the number 42". To resolve this ambiguity, bare
+path expressions that start with a vector step must have a leading dot, like `.[42]`.
+
+Path expressions must be traversable, or else an error is returned: Trying to descend with `.foo`
+into a vector would result in an error, likewise using `[3]` to descend into a string is an error.
+Use the [`has?`](functions/core-has.md) and [`try`](functions/core-try.md) functions to deal with
+possibly misfitting path expressions.
+
+### Scopes
+
+In general, side effects (i.e. functions with bang modifier) affect all following sibling and child
+expressions, but not the parent. This is like doing
+
+```go
+foo := 42
+
+if condition {
+  foo := 7
+}
+
+println(foo) // prints 42
+```
+
+in Go. Variables are meant to be helpers and are so scoped to the scope where they are defined:
+
+```lisp
+(set! $var 42)
+$var             # 42
+
+# This set! function would set the value for the entire positive branch of the "if" tuple,
+# but it will not leak outside of the "if".
+
+(if true
+  (set! $var "new-value"))    # "new-value"
+$var                          # 42
+
+# ... but the new variable is valid in its scope.
+
+(if true
+  (do
+    (set! $var "new-value")
+    (append $var "-suffix"))) # "new-value-suffix"
+$var                          # 42
+```
+
+The exception from this rule is the global document. As the name implies, it is meant to be global
+and to allow for effective, readable Rudi code, there is only one document and it can be modified
+from anywhere.
+
+If a Rudi program was loaded with
+
+```json
+{
+   "foo": "bar",
+   "list": [1, 2, 3]
+}
+```
+
+then
+
+```lisp
+(if true (set! .foo "new-value"))    # "new-value"
+.foo                                 # "new-value"
+
+(if true (append! .list 4))    # 4
+.list                          # [1 2 3 4]
 ```
