@@ -11,38 +11,38 @@ import (
 var Functions = types.Functions{
 	// core
 	"if":      types.BasicFunction(ifFunction, "evaluate one of two expressions based on a condition"),
-	"do":      types.BasicFunction(doFunction, ""),
-	"has?":    types.BasicFunction(hasFunction, ""),
-	"default": types.BasicFunction(defaultFunction, ""),
-	"try":     types.BasicFunction(tryFunction, ""),
-	"set":     types.BasicFunction(setFunction, ""),
+	"do":      types.BasicFunction(doFunction, "eval a sequence of statements where only one expression is valid"),
+	"has?":    types.BasicFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value"),
+	"default": types.BasicFunction(defaultFunction, "returns the default value if the first argument is empty"),
+	"try":     types.BasicFunction(tryFunction, "returns the fallback if the first expression errors out"),
+	"set":     types.BasicFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)"),
 	"delete":  deleteFunction{},
-	"empty?":  types.BasicFunction(isEmptyFunction, ""),
+	"empty?":  types.BasicFunction(isEmptyFunction, "returns true when the given value is empty-ish (0, false, null, \"\", ...)"),
 
 	// math
-	"+": types.BasicFunction(sumFunction, ""),
-	"-": types.BasicFunction(subFunction, ""),
-	"*": types.BasicFunction(multiplyFunction, ""),
-	"/": types.BasicFunction(divideFunction, ""),
+	"+": types.BasicFunction(sumFunction, "returns the sum of all of its arguments"),
+	"-": types.BasicFunction(subFunction, "returns arg1 - arg2 - .. - argN"),
+	"*": types.BasicFunction(multiplyFunction, "returns the product of all of its arguments"),
+	"/": types.BasicFunction(divideFunction, "returns arg1 / arg2 / .. / argN"),
 
 	// math aliases to make bang functions nicer (sum! vs +!)
-	"add":  types.BasicFunction(sumFunction, ""),
-	"sub":  types.BasicFunction(subFunction, ""),
-	"mult": types.BasicFunction(multiplyFunction, ""),
-	"div":  types.BasicFunction(divideFunction, ""),
+	"add":  types.BasicFunction(sumFunction, "alias for +"),
+	"sub":  types.BasicFunction(subFunction, "alias for -"),
+	"mult": types.BasicFunction(multiplyFunction, "alias for *"),
+	"div":  types.BasicFunction(divideFunction, "alias for div"),
 
 	// strings
 	// "len": lenFunction is defined for lists, but works for strings as well
 	// "reverse" also works for strings
-	"concat":      types.BasicFunction(concatFunction, ""),
-	"split":       fromStringFunc(splitFunction, 2),
-	"has-prefix?": fromStringFunc(hasPrefixFunction, 2),
-	"has-suffix?": fromStringFunc(hasSuffixFunction, 2),
-	"trim-prefix": fromStringFunc(trimPrefixFunction, 2),
-	"trim-suffix": fromStringFunc(trimSuffixFunction, 2),
-	"to-lower":    fromStringFunc(toLowerFunction, 1),
-	"to-upper":    fromStringFunc(toUpperFunction, 1),
-	"trim":        fromStringFunc(trimFunction, 1),
+	"concat":      types.BasicFunction(concatFunction, "concatenate items in a vector usig a common glue string"),
+	"split":       fromStringFunc(splitFunction, 2, "split a string into a vector"),
+	"has-prefix?": fromStringFunc(hasPrefixFunction, 2, "returns true if the given string has the prefix"),
+	"has-suffix?": fromStringFunc(hasSuffixFunction, 2, "returns true if the given string has the suffix"),
+	"trim-prefix": fromStringFunc(trimPrefixFunction, 2, "removes the prefix from the string, if it exists"),
+	"trim-suffix": fromStringFunc(trimSuffixFunction, 2, "removes the suffix from the string, if it exists"),
+	"to-lower":    fromStringFunc(toLowerFunction, 1, "returns the lowercased version of the given string"),
+	"to-upper":    fromStringFunc(toUpperFunction, 1, "returns the uppercased version of the given string"),
+	"trim":        fromStringFunc(trimFunction, 1, "returns the given whitespace with leading/trailing whitespace removed"),
 
 	// lists
 	"len":       types.BasicFunction(lenFunction, ""),
