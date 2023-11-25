@@ -23,8 +23,8 @@ is caught using the `try` function.
 Rudi knows the following data types, known as "literals":
 
 * Null (`null`)
-* Bool (`true` or `false`)
-* Number (int64 like `42` or float64 like `42.42`)
+* Bools (`true` or `false`)
+* Numbers (int64 like `42` or float64 like `42.42`)
 * Strings (`"i am a string"`)
 * Vectors (`[1 2 3]`, items are whitespace separated, but commas can also be used, like `[1, 2, 3]`;
   each element of a vector can be any type of expression, e.g. `[1 (+ 1 2)]` to create `[1 3]`)
@@ -38,7 +38,67 @@ In addition to these literal data types, Rudi understands a number of expression
 
 ## Expressions
 
-### Statements
+### Null
+
+Nulls are the empty value and are always written as `null`, like in JSON. Nulls equal each other,
+so `(eq? null null)` is true.
+
+### Bool
+
+Booleans are the thruth values of `true` (positive) and `false` (negative).
+
+### Number
+
+Numbers are either 64-bit integers (int64) or 64-bit floating-points (float64). Whole numbers are
+`0` or `183732627` or `-17`. Floating point numbers are integers followed by a decimal fraction, like
+`0.4` or `-42.341`.
+
+Integers and floats are not directly comparable, convert the int to a float to perform comparisons.
+Even `0` is not equal to `0.0` without conversion.
+
+### String
+
+Strings are lists of characters, like `"hello world"`. There is no separate type in Rudi for single
+bytes. Strings can be empty (`""`) and leading/trailing whitespace is kept (`"  foo  "` will not be
+trimmed automatically). Use `\"` to write a literal `"` inside a string, use `\\` to write a literal
+`\` (e.g. `"C:\\dos\\run"`).
+
+### Vector
+
+Vectors are an ordered list of items. A vector starts with the literal `[` followed by a whitespace
+separated list of expressions, followed by a literal `]`. Vectors can be empty (`[]`). Instead of
+whitespace, commas can also be used, e.g. `[1,2,3]`.
+
+The items in a vector do not need to share the same datatype, so `[1 "foo" true]` (number, string,
+number) is valid.
+
+### Object
+
+Objects are unordered sets of key-value pairs. They always begin with a literal `{`, followed by an
+arbitrary number of key-value pairs. Key and value are each any possible expressions, with limitations
+listed below. Object declarations end with a literal `}`, for example:
+
+```lisp
+{"foo" "bar" "secondkey" "secondvalue"}
+```
+
+```lisp
+{
+  (to-upper "foo") (+ 1 2)
+}
+```
+
+Keys and values are separated by whitespace (not with a `:` like in JSON). Likewise, key-value pairs
+are separated from each other by whitespace. In effect, each object declaration needs to have an
+even number of expression in it.
+
+Empty objects are permitted (`{}`).
+
+Note that objects are internally unordered and functions like [map](functions/lists-map.md) or
+[range](functions/lists-range.md) will have a random iteration order. Due to the fact that Go's
+JSON encoder sorts keys alphabetically when writing JSON, this should rarely be of concern.
+
+### Statement
 
 Statements are the top-level elements of an Rudi program and this distinction is mostly useful
 internally to detect the top-level of a Rudi program. A statement can be a tuple (i.e. a function
@@ -50,7 +110,7 @@ call), a symbol (a variable and/or path expression) or a literal value.
 (map [1 2 3] [x] (+ $x $var))
 ```
 
-## Tuples
+### Tuple
 
 A tuple always consists of the literal `(`, followed by one or more expressions, followed by a `)`.
 Within tuples, any amount of whitespace is allowed. Each of the expressions are separated from another
@@ -137,15 +197,16 @@ $var                   # [1 2 3 5]
 The bang modifier can be used with any function, though you will be hardpressed to find meaningful
 examples of `(if! .path.expr 42)` or `(eq?! .path 42)`.
 
-## Symbols
+### Symbol
 
 Symbols are either variables or bare path expressions that reference the global document.
 
-### Variables
+#### Variables
 
-Rudi has support for runtime variables. A variable holds any of the possible data types and has a
-unique, case-sensitive name, like `$myVar`. Symbols are expressions and can therefore be used in
-most places:
+Rudi has support for runtime variables. A variable begins with the literal `$`, followed by a
+case-sensitive name, like `$myVar`. Variables hold any of the possible data types.
+
+Symbols are expressions and can therefore be used in most places:
 
 ```lisp
 (add $myVar 5)
@@ -165,7 +226,7 @@ A path expression can follow a variable name, allowing easy access to sub fields
 
 See further down for more details on path expressions.
 
-### Global Document Access
+#### Global Document Access
 
 Rudi programs are meant to transform a document (usually an `Object`). To make it easy to access
 the document and sub fields within, you can reference the global document by a single dot (`.`),
@@ -196,26 +257,7 @@ you can do with variables, like:
 (to-upper! .foo)
 ```
 
-### Path Expressions
-
-Rudi implements simple JSONPath-like expressions to allow descending into deeply nested objects.
-Each path consists of a series of steps, with each step being either an object step (e.g. `.foo`)
-or a vector step (e.g. `[42]`). Steps can be chained, like `.foo[42].bar.sub[1][2]`.
-
-Path steps can also be computed (`[(+ 1 42)]`), which allows to use more complex expressions to
-form steps, like `["string.with.dot"]` or even `[$var.index]`.
-
-There is one special case: Paths that start with a vector step on the global document: For a variable
-this would look like `$var[42]`, but for the global document this would be just `[42]`, which is
-indistinguishable from "a vector with 1 element, the number 42". To resolve this ambiguity, bare
-path expressions that start with a vector step must have a leading dot, like `.[42]`.
-
-Path expressions must be traversable, or else an error is returned: Trying to descend with `.foo`
-into a vector would result in an error, likewise using `[3]` to descend into a string is an error.
-Use the [`has?`](functions/core-has.md) and [`try`](functions/core-try.md) functions to deal with
-possibly misfitting path expressions.
-
-### Scopes
+#### Scopes
 
 In general, side effects (i.e. functions with bang modifier) affect all following sibling and child
 expressions, but not the parent. This is like doing
@@ -274,3 +316,36 @@ then
 (if true (append! .list 4))    # 4
 .list                          # [1 2 3 4]
 ```
+
+### Path Expression
+
+Rudi implements simple JSONPath-like expressions to allow descending into deeply nested objects.
+Each path consists of a series of steps, with each step being either an object step (e.g. `.foo`)
+or a vector step (e.g. `[42]`). Steps can be chained, like `.foo[42].bar.sub[1][2]`.
+
+Path steps can also be computed (`[(+ 1 42)]`), which allows to use more complex expressions to
+form steps, like `["string.with.dot"]` or even `[$var.index]`.
+
+There is one special case: Paths that start with a vector step on the global document: For a variable
+this would look like `$var[42]`, but for the global document this would be just `[42]`, which is
+indistinguishable from "a vector with 1 element, the number 42". To resolve this ambiguity, bare
+path expressions that start with a vector step must have a leading dot, like `.[42]`.
+
+Path expressions must be traversable, or else an error is returned: Trying to descend with `.foo`
+into a vector would result in an error, likewise using `[3]` to descend into a string is an error.
+Use the [`has?`](functions/core-has.md) and [`try`](functions/core-try.md) functions to deal with
+possibly misfitting path expressions.
+
+Path expressions can be used on
+
+* Symbols (`$var.foo` or `.document.key`)
+* Vector nodes (`[1 2 3][1]`, first step of the path must be a vector step, i.e. `[1 2].foo` is invalid)
+* Object nodes (`{foo "bar"}.foo`, first step of the path must be an object step, i.e. `{foo "bar"}[0]`
+  is invalid)
+* Tuples (`(map $obj to-upper).key`, requires that the tuple evaluated to a vector or object that
+  can be traversed, otherwise an error is returned (e.g. `(+ 1 2).key` is invalid))
+
+The evaluated value of any of these expressions is always _with_ the path expression applied, so
+for example in `(+ (process $obj).userCount 32)` the `+` function will see 2 arguments like
+`(+ $userCount 32)` because when processing the `process` tuple, the path expression on it is also
+evaluated already.
