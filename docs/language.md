@@ -92,6 +92,9 @@ Keys and values are separated by whitespace (not with a `:` like in JSON). Likew
 are separated from each other by whitespace. In effect, each object declaration needs to have an
 even number of expression in it.
 
+As a convenience feature, identifiers are also allowed as object keys and will, in this special
+instance, be converted to strings, so `{foo "bar"}` is equivalent to `{"foo" "bar"}`.
+
 Empty objects are permitted (`{}`).
 
 Note that objects are internally unordered and functions like [map](functions/lists-map.md) or

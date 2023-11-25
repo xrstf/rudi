@@ -16,11 +16,12 @@ type Topic struct {
 	CliNames    []string
 	Group       string
 	Description string
-	filename    string
+	IsFunction  bool
+	Filename    string
 }
 
 func (t *Topic) Content() ([]byte, error) {
-	return embeddedFS.ReadFile(t.filename)
+	return embeddedFS.ReadFile(t.Filename)
 }
 
 func Topics() []Topic {
@@ -29,7 +30,7 @@ func Topics() []Topic {
 			CliNames:    []string{"language", "lang", "rudi"},
 			Group:       "General",
 			Description: "A short introduction to the Rudi language",
-			filename:    "language.md",
+			Filename:    "language.md",
 		},
 	}
 
@@ -56,13 +57,25 @@ func Topics() []Topic {
 
 		topics = append(topics, Topic{
 			CliNames:    []string{funcName, sanitized},
-			Group:       group + " Functions",
+			Group:       ucFirst(group) + " Functions",
 			Description: function.Description(),
-			filename:    filename,
+			Filename:    filename,
+			IsFunction:  true,
 		})
 	}
 
 	return topics
+}
+
+func ucFirst(s string) string {
+	if len(s) < 2 {
+		return strings.ToUpper(s)
+	}
+
+	first := string(s[0])
+	tail := string(s[1:])
+
+	return strings.ToUpper(first) + tail
 }
 
 // Function names are global in Rudi; however the docs is logically split

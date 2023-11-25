@@ -1,4 +1,4 @@
-# Rudi Functions
+# Rudi Standard Library
 
 Rudi ships with a set of built-in functions. When embedding Rudi, this set can
 be extended or overwritten as desired to inject custom functions. It is not

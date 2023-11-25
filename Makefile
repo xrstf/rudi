@@ -14,11 +14,15 @@ GO_BUILD_FLAGS ?= -v -ldflags '$(GO_LDFLAGS)'
 GO_TEST_FLAGS ?=
 
 .PHONY: all
-all: clean generate build test
+all: clean generate build docs test
 
 .PHONY: generate
 generate:
 	pigeon pkg/lang/grammar/rudi.peg > pkg/lang/parser/generated.go
+
+.PHONY: docs
+docs:
+	go run hack/docs-toc/main.go
 
 .PHONY: clean
 clean:
