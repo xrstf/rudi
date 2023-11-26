@@ -6,232 +6,220 @@ package builtin
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
-type stringsTestcase struct {
-	expr     string
-	expected any
-	invalid  bool
-}
-
-func (tc *stringsTestcase) Test(t *testing.T) {
-	t.Helper()
-
-	result, err := runExpression(t, tc.expr, nil, nil)
-	if err != nil {
-		if !tc.invalid {
-			t.Fatalf("Failed to run %s: %v", tc.expr, err)
-		}
-
-		return
-	}
-
-	if tc.invalid {
-		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
-	}
-
-	if !cmp.Equal(result, tc.expected) {
-		t.Fatalf("Did not receive expected output:\n%s", cmp.Diff(tc.expected, result))
-	}
-}
-
 func TestConcatFunction(t *testing.T) {
-	testcases := []stringsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(concat)`,
-			invalid: true,
+			Expression: `(concat)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat "foo")`,
-			invalid: true,
+			Expression: `(concat "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat [] "foo")`,
-			invalid: true,
+			Expression: `(concat [] "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat {} "foo")`,
-			invalid: true,
+			Expression: `(concat {} "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat "g" {})`,
-			invalid: true,
+			Expression: `(concat "g" {})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat "g" [{}])`,
-			invalid: true,
+			Expression: `(concat "g" [{}])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat "g" [["foo"]])`,
-			invalid: true,
+			Expression: `(concat "g" [["foo"]])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat "-" "foo" 1)`,
-			invalid: true,
+			Expression: `(concat "-" "foo" 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(concat true "foo" "bar")`,
-			invalid: true,
+			Expression: `(concat true "foo" "bar")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(concat "g" "foo")`,
-			expected: "foo",
+			Expression: `(concat "g" "foo")`,
+			Expected:   ast.String("foo"),
 		},
 		{
-			expr:     `(concat "-" "foo" "bar" "test")`,
-			expected: "foo-bar-test",
+			Expression: `(concat "-" "foo" "bar" "test")`,
+			Expected:   ast.String("foo-bar-test"),
 		},
 		{
-			expr:     `(concat "" "foo" "bar")`,
-			expected: "foobar",
+			Expression: `(concat "" "foo" "bar")`,
+			Expected:   ast.String("foobar"),
 		},
 		{
-			expr:     `(concat "" ["foo" "bar"])`,
-			expected: "foobar",
+			Expression: `(concat "" ["foo" "bar"])`,
+			Expected:   ast.String("foobar"),
 		},
 		{
-			expr:     `(concat "-" ["foo" "bar"] "test" ["suffix"])`,
-			expected: "foo-bar-test-suffix",
+			Expression: `(concat "-" ["foo" "bar"] "test" ["suffix"])`,
+			Expected:   ast.String("foo-bar-test-suffix"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestSplitFunction(t *testing.T) {
-	testcases := []stringsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(split)`,
-			invalid: true,
+			Expression: `(split)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(split "foo")`,
-			invalid: true,
+			Expression: `(split "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(split [] "foo")`,
-			invalid: true,
+			Expression: `(split [] "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(split {} "foo")`,
-			invalid: true,
+			Expression: `(split {} "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(split "g" {})`,
-			invalid: true,
+			Expression: `(split "g" {})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(split "g" [{}])`,
-			invalid: true,
+			Expression: `(split "g" [{}])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(split "" "")`,
-			expected: []any{},
+			Expression: `(split "" "")`,
+			Expected: ast.Vector{
+				Data: []any{},
+			},
 		},
 		{
-			expr:     `(split "g" "")`,
-			expected: []any{""},
+			Expression: `(split "g" "")`,
+			Expected: ast.Vector{
+				Data: []any{ast.String("")},
+			},
 		},
 		{
-			expr:     `(split "g" "foo")`,
-			expected: []any{"foo"},
+			Expression: `(split "g" "foo")`,
+			Expected: ast.Vector{
+				Data: []any{ast.String("foo")},
+			},
 		},
 		{
-			expr:     `(split "-" "foo-bar-test-")`,
-			expected: []any{"foo", "bar", "test", ""},
+			Expression: `(split "-" "foo-bar-test-")`,
+			Expected: ast.Vector{
+				Data: []any{ast.String("foo"), ast.String("bar"), ast.String("test"), ast.String("")},
+			},
 		},
 		{
-			expr:     `(split "" "foobar")`,
-			expected: []any{"f", "o", "o", "b", "a", "r"},
+			Expression: `(split "" "foobar")`,
+			Expected: ast.Vector{
+				Data: []any{ast.String("f"), ast.String("o"), ast.String("o"), ast.String("b"), ast.String("a"), ast.String("r")},
+			},
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestToUpperFunction(t *testing.T) {
-	testcases := []stringsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-upper)`,
-			invalid: true,
+			Expression: `(to-upper)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-upper "too" "many")`,
-			invalid: true,
+			Expression: `(to-upper "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-upper true)`,
-			invalid: true,
+			Expression: `(to-upper true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-upper [])`,
-			invalid: true,
+			Expression: `(to-upper [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-upper {})`,
-			invalid: true,
+			Expression: `(to-upper {})`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-upper "")`,
-			expected: "",
+			Expression: `(to-upper "")`,
+			Expected:   ast.String(""),
 		},
 		{
-			expr:     `(to-upper " TeSt ")`,
-			expected: " TEST ",
+			Expression: `(to-upper " TeSt ")`,
+			Expected:   ast.String(" TEST "),
 		},
 		{
-			expr:     `(to-upper " test ")`,
-			expected: " TEST ",
+			Expression: `(to-upper " test ")`,
+			Expected:   ast.String(" TEST "),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestToLowerFunction(t *testing.T) {
-	testcases := []stringsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-lower)`,
-			invalid: true,
+			Expression: `(to-lower)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-lower "too" "many")`,
-			invalid: true,
+			Expression: `(to-lower "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-lower true)`,
-			invalid: true,
+			Expression: `(to-lower true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-lower [])`,
-			invalid: true,
+			Expression: `(to-lower [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-lower {})`,
-			invalid: true,
+			Expression: `(to-lower {})`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-lower "")`,
-			expected: "",
+			Expression: `(to-lower "")`,
+			Expected:   ast.String(""),
 		},
 		{
-			expr:     `(to-lower " TeSt ")`,
-			expected: " test ",
+			Expression: `(to-lower " TeSt ")`,
+			Expected:   ast.String(" test "),
 		},
 		{
-			expr:     `(to-lower " TEST ")`,
-			expected: " test ",
+			Expression: `(to-lower " TEST ")`,
+			Expected:   ast.String(" test "),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

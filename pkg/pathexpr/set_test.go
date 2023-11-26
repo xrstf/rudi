@@ -119,7 +119,7 @@ func TestSet(t *testing.T) {
 			dest:     map[string]any{"foo": "bar", "deeper": []any{1, 2, map[string]any{"deep": "value"}}},
 			path:     Path{"deeper", 2, "deep"},
 			newValue: "new-value",
-			expected: map[string]any{"foo": "bar", "deeper": []any{int64(1), int64(2), map[string]any{"deep": "new-value"}}},
+			expected: map[string]any{"foo": "bar", "deeper": []any{1, 2, map[string]any{"deep": "new-value"}}},
 		},
 		{
 			name:     "sub slice key can be updated",
@@ -133,7 +133,7 @@ func TestSet(t *testing.T) {
 			dest:     map[string]any{"foo": "bar", "deeper": []any{1, 2, map[string]any{"deep": "value"}}},
 			path:     Path{"deeper", 2},
 			newValue: "new-value",
-			expected: map[string]any{"foo": "bar", "deeper": []any{int64(1), int64(2), "new-value"}},
+			expected: map[string]any{"foo": "bar", "deeper": []any{1, 2, "new-value"}},
 		},
 	}
 

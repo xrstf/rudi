@@ -6,34 +6,29 @@ package test
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/equality"
-	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
 func TestEvalVectorNode(t *testing.T) {
-	testcases := []struct {
-		input    ast.VectorNode
-		expected ast.Literal
-		invalid  bool
-	}{
+	testcases := []testutil.Testcase{
 		// []
 		{
-			input:    ast.VectorNode{},
-			expected: ast.Vector{},
+			AST:      ast.VectorNode{},
+			Expected: ast.Vector{},
 		},
 		// [identifier]
 		{
-			input: ast.VectorNode{
+			AST: ast.VectorNode{
 				Expressions: []ast.Expression{
 					ast.Identifier{Name: "identifier"},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// [true "foo" (eval "evaled")]
 		{
-			input: ast.VectorNode{
+			AST: ast.VectorNode{
 				Expressions: []ast.Expression{
 					ast.Bool(true),
 					ast.String("foo"),
@@ -45,7 +40,7 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			expected: ast.Vector{
+			Expected: ast.Vector{
 				Data: []any{
 					true,
 					ast.String("foo"),
@@ -55,7 +50,7 @@ func TestEvalVectorNode(t *testing.T) {
 		},
 		// [true "foo"][1]
 		{
-			input: ast.VectorNode{
+			AST: ast.VectorNode{
 				Expressions: []ast.Expression{
 					ast.Bool(true),
 					ast.String("foo"),
@@ -66,11 +61,11 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			expected: ast.String("foo"),
+			Expected: ast.String("foo"),
 		},
 		// ["foo"][1]
 		{
-			input: ast.VectorNode{
+			AST: ast.VectorNode{
 				Expressions: []ast.Expression{
 					ast.String("foo"),
 				},
@@ -80,11 +75,11 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// ["foo"].ident
 		{
-			input: ast.VectorNode{
+			AST: ast.VectorNode{
 				Expressions: []ast.Expression{
 					ast.String("foo"),
 				},
@@ -94,11 +89,11 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// ["foo"][1.2]
 		{
-			input: ast.VectorNode{
+			AST: ast.VectorNode{
 				Expressions: []ast.Expression{
 					ast.String("foo"),
 				},
@@ -108,45 +103,12 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.input.String(), func(t *testing.T) {
-			doc, err := eval.NewDocument(nil)
-			if err != nil {
-				t.Fatalf("Failed to create test document: %v", err)
-			}
-
-			ctx := eval.NewContext(doc, nil, dummyFunctions)
-
-			_, value, err := eval.EvalVectorNode(ctx, testcase.input)
-			if err != nil {
-				if !testcase.invalid {
-					t.Fatalf("Failed to run: %v", err)
-				}
-
-				return
-			}
-
-			if testcase.invalid {
-				t.Fatalf("Should not have been able to run, but got: %v (%T)", value, value)
-			}
-
-			returned, ok := value.(ast.Literal)
-			if !ok {
-				t.Fatalf("EvalVectorNode returned unexpected type %T", value)
-			}
-
-			equal, err := equality.StrictEqual(testcase.expected, returned)
-			if err != nil {
-				t.Fatalf("Could not compare result: %v", err)
-			}
-
-			if !equal {
-				t.Fatal("Result does not match expectation.")
-			}
-		})
+		testcase.Functions = dummyFunctions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

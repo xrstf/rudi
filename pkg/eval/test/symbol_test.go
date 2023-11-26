@@ -6,10 +6,9 @@ package test
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/equality"
-	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
 func makeSymbol(name string, path *ast.PathExpression) ast.Symbol {
@@ -26,63 +25,57 @@ func makeSymbol(name string, path *ast.PathExpression) ast.Symbol {
 }
 
 func TestEvalSymbol(t *testing.T) {
-	testcases := []struct {
-		input     ast.Symbol
-		expected  ast.Literal
-		variables types.Variables
-		document  any
-		invalid   bool
-	}{
+	testcases := []testutil.Testcase{
 		// <utterly invalid Symbol>
 		{
-			input:   ast.Symbol{},
-			invalid: true,
+			AST:     ast.Symbol{},
+			Invalid: true,
 		},
 		// $undefined
 		{
-			input:   makeSymbol("undefined", nil),
-			invalid: true,
+			AST:     makeSymbol("undefined", nil),
+			Invalid: true,
 		},
 		// $var
 		{
-			input: makeSymbol("var", nil),
-			variables: types.Variables{
+			AST: makeSymbol("var", nil),
+			Variables: types.Variables{
 				"var": ast.String("foo"),
 			},
-			expected: ast.String("foo"),
+			Expected: ast.String("foo"),
 		},
 		// $native
 		{
-			input: makeSymbol("native", nil),
-			variables: types.Variables{
+			AST: makeSymbol("native", nil),
+			Variables: types.Variables{
 				"native": "foo",
 			},
-			expected: ast.String("foo"),
+			Expected: ast.String("foo"),
 		},
 		// $var.foo
 		{
-			input: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
-			variables: types.Variables{
+			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
+			Variables: types.Variables{
 				"var": map[string]any{
 					"foo": ast.String("foobar"),
 				},
 			},
-			expected: ast.String("foobar"),
+			Expected: ast.String("foobar"),
 		},
 		// $aVector.foo
 		{
-			input: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
-			variables: types.Variables{
+			AST: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
+			Variables: types.Variables{
 				"var": ast.Vector{
 					Data: []any{ast.String("first")},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// $var[1]
 		{
-			input: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
-			variables: types.Variables{
+			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
+			Variables: types.Variables{
 				"var": ast.Vector{
 					Data: []any{
 						ast.String("first"),
@@ -90,58 +83,25 @@ func TestEvalSymbol(t *testing.T) {
 					},
 				},
 			},
-			expected: ast.String("second"),
+			Expected: ast.String("second"),
 		},
 		// $aString[1]
 		{
-			input: makeSymbol("aString", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
-			variables: types.Variables{
+			AST: makeSymbol("aString", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
+			Variables: types.Variables{
 				"var": ast.String("bar"),
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// .
 		{
-			input:    makeSymbol("", &ast.PathExpression{}),
-			expected: ast.Null{},
+			AST:      makeSymbol("", &ast.PathExpression{}),
+			Expected: ast.Null{},
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.input.String(), func(t *testing.T) {
-			doc, err := eval.NewDocument(testcase.document)
-			if err != nil {
-				t.Fatalf("Failed to create test document: %v", err)
-			}
-
-			ctx := eval.NewContext(doc, testcase.variables, dummyFunctions)
-
-			_, value, err := eval.EvalSymbol(ctx, testcase.input)
-			if err != nil {
-				if !testcase.invalid {
-					t.Fatalf("Failed to run: %v", err)
-				}
-
-				return
-			}
-
-			if testcase.invalid {
-				t.Fatalf("Should not have been able to run, but got: %v (%T)", value, value)
-			}
-
-			returned, ok := value.(ast.Literal)
-			if !ok {
-				t.Fatalf("EvalSymbol returned unexpected type %T", value)
-			}
-
-			equal, err := equality.StrictEqual(testcase.expected, returned)
-			if err != nil {
-				t.Fatalf("Could not compare result: %v", err)
-			}
-
-			if !equal {
-				t.Fatal("Result does not match expectation.")
-			}
-		})
+		testcase.Functions = dummyFunctions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

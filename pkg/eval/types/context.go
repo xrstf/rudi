@@ -238,46 +238,18 @@ func UnwrapType(val any) (any, error) {
 	case float64:
 		return asserted, nil
 	case ast.Vector:
-		return unwrapVector(&asserted)
+		return asserted.Data, nil
 	case *ast.Vector:
-		return unwrapVector(asserted)
+		return asserted.Data, nil
 	case []any:
-		return unwrapVector(&ast.Vector{Data: asserted})
+		return asserted, nil
 	case ast.Object:
-		return unwrapObject(&asserted)
+		return asserted.Data, nil
 	case *ast.Object:
-		return unwrapObject(asserted)
+		return asserted.Data, nil
 	case map[string]any:
-		return unwrapObject(&ast.Object{Data: asserted})
+		return asserted, nil
 	default:
 		return nil, fmt.Errorf("cannot unwrap %v (%T)", val, val)
 	}
-}
-
-func unwrapVector(v *ast.Vector) ([]any, error) {
-	result := make([]any, len(v.Data))
-	for i, item := range v.Data {
-		unwrappedItem, err := UnwrapType(item)
-		if err != nil {
-			return nil, err
-		}
-
-		result[i] = unwrappedItem
-	}
-
-	return result, nil
-}
-
-func unwrapObject(o *ast.Object) (map[string]any, error) {
-	result := map[string]any{}
-	for key, value := range o.Data {
-		unwrappedValue, err := UnwrapType(value)
-		if err != nil {
-			return nil, err
-		}
-
-		result[key] = unwrappedValue
-	}
-
-	return result, nil
 }

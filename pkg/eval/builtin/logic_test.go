@@ -5,234 +5,213 @@ package builtin
 
 import (
 	"testing"
+
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
-type logicTestcase struct {
-	expr     string
-	expected any
-	invalid  bool
-}
-
-func (tc *logicTestcase) Test(t *testing.T) {
-	t.Helper()
-
-	result, err := runExpression(t, tc.expr, nil, nil)
-	if err != nil {
-		if !tc.invalid {
-			t.Fatalf("Failed to run %s: %v", tc.expr, err)
-		}
-
-		return
-	}
-
-	if tc.invalid {
-		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
-	}
-
-	if result != tc.expected {
-		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
-	}
-}
-
 func TestAndFunction(t *testing.T) {
-	testcases := []logicTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(and)`,
-			invalid: true,
+			Expression: `(and)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and 1)`,
-			invalid: true,
+			Expression: `(and 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and 1.1)`,
-			invalid: true,
+			Expression: `(and 1.1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and null)`,
-			invalid: true,
+			Expression: `(and null)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and "")`,
-			invalid: true,
+			Expression: `(and "")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and "nonempty")`,
-			invalid: true,
+			Expression: `(and "nonempty")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and {})`,
-			invalid: true,
+			Expression: `(and {})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and {foo "bar"})`,
-			invalid: true,
+			Expression: `(and {foo "bar"})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and [])`,
-			invalid: true,
+			Expression: `(and [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(and ["bar"])`,
-			invalid: true,
+			Expression: `(and ["bar"])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(and true)`,
-			expected: true,
+			Expression: `(and true)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(and false)`,
-			expected: false,
+			Expression: `(and false)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(and true false)`,
-			expected: false,
+			Expression: `(and true false)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(and true true)`,
-			expected: true,
+			Expression: `(and true true)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(and (eq? 1 1) true)`,
-			expected: true,
+			Expression: `(and (eq? 1 1) true)`,
+			Expected:   ast.Bool(true),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestOrFunction(t *testing.T) {
-	testcases := []logicTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(or)`,
-			invalid: true,
+			Expression: `(or)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or 1)`,
-			invalid: true,
+			Expression: `(or 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or 1.1)`,
-			invalid: true,
+			Expression: `(or 1.1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or null)`,
-			invalid: true,
+			Expression: `(or null)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or "")`,
-			invalid: true,
+			Expression: `(or "")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or "nonempty")`,
-			invalid: true,
+			Expression: `(or "nonempty")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or {})`,
-			invalid: true,
+			Expression: `(or {})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or {foo "bar"})`,
-			invalid: true,
+			Expression: `(or {foo "bar"})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or [])`,
-			invalid: true,
+			Expression: `(or [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(or ["bar"])`,
-			invalid: true,
+			Expression: `(or ["bar"])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(or true)`,
-			expected: true,
+			Expression: `(or true)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(or false)`,
-			expected: false,
+			Expression: `(or false)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(or true false)`,
-			expected: true,
+			Expression: `(or true false)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(or true true)`,
-			expected: true,
+			Expression: `(or true true)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(or (eq? 1 1) true)`,
-			expected: true,
+			Expression: `(or (eq? 1 1) true)`,
+			Expected:   ast.Bool(true),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestNotFunction(t *testing.T) {
-	testcases := []logicTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(not)`,
-			invalid: true,
+			Expression: `(not)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not true true)`,
-			invalid: true,
+			Expression: `(not true true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not 1)`,
-			invalid: true,
+			Expression: `(not 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not 1.1)`,
-			invalid: true,
+			Expression: `(not 1.1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not null)`,
-			invalid: true,
+			Expression: `(not null)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not "")`,
-			invalid: true,
+			Expression: `(not "")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not "nonempty")`,
-			invalid: true,
+			Expression: `(not "nonempty")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not {})`,
-			invalid: true,
+			Expression: `(not {})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not {foo "bar"})`,
-			invalid: true,
+			Expression: `(not {foo "bar"})`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not [])`,
-			invalid: true,
+			Expression: `(not [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(not ["bar"])`,
-			invalid: true,
+			Expression: `(not ["bar"])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(not false)`,
-			expected: true,
+			Expression: `(not false)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(not true)`,
-			expected: false,
+			Expression: `(not true)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(not (not (not (not true))))`,
-			expected: true,
+			Expression: `(not (not (not (not true))))`,
+			Expected:   ast.Bool(true),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

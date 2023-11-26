@@ -6,25 +6,20 @@ package test
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/equality"
-	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
 func TestEvalObjectNode(t *testing.T) {
-	testcases := []struct {
-		input    ast.ObjectNode
-		expected ast.Literal
-		invalid  bool
-	}{
+	testcases := []testutil.Testcase{
 		// {}
 		{
-			input:    ast.ObjectNode{},
-			expected: ast.Object{},
+			AST:      ast.ObjectNode{},
+			Expected: ast.Object{},
 		},
 		// {foo "bar"}
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Identifier{Name: "foo"},
@@ -32,7 +27,7 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			expected: ast.Object{
+			Expected: ast.Object{
 				Data: map[string]any{
 					"foo": ast.String("bar"),
 				},
@@ -40,7 +35,7 @@ func TestEvalObjectNode(t *testing.T) {
 		},
 		// {(eval "evaled") (eval "also evaled")}
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key: ast.Tuple{
@@ -58,7 +53,7 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			expected: ast.Object{
+			Expected: ast.Object{
 				Data: map[string]any{
 					"evaled": ast.String("also evaled"),
 				},
@@ -66,7 +61,7 @@ func TestEvalObjectNode(t *testing.T) {
 		},
 		// {foo "bar"}.foo
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Identifier{Name: "foo"},
@@ -79,11 +74,11 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			expected: ast.String("bar"),
+			Expected: ast.String("bar"),
 		},
 		// {foo bar}
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Identifier{Name: "foo"},
@@ -91,11 +86,11 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// {true "bar"}
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Bool(true),
@@ -103,11 +98,11 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// {null "bar"}
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Null{},
@@ -115,11 +110,11 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 		// {1 "bar"}
 		{
-			input: ast.ObjectNode{
+			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Number{Value: 1},
@@ -127,45 +122,12 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			invalid: true,
+			Invalid: true,
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.input.String(), func(t *testing.T) {
-			doc, err := eval.NewDocument(nil)
-			if err != nil {
-				t.Fatalf("Failed to create test document: %v", err)
-			}
-
-			ctx := eval.NewContext(doc, nil, dummyFunctions)
-
-			_, value, err := eval.EvalObjectNode(ctx, testcase.input)
-			if err != nil {
-				if !testcase.invalid {
-					t.Fatalf("Failed to run: %v", err)
-				}
-
-				return
-			}
-
-			if testcase.invalid {
-				t.Fatalf("Should not have been able to run, but got: %v (%T)", value, value)
-			}
-
-			returned, ok := value.(ast.Literal)
-			if !ok {
-				t.Fatalf("EvalObjectNode returned unexpected type %T", value)
-			}
-
-			equal, err := equality.StrictEqual(testcase.expected, returned)
-			if err != nil {
-				t.Fatalf("Could not compare result: %v", err)
-			}
-
-			if !equal {
-				t.Fatal("Result does not match expectation.")
-			}
-		})
+		testcase.Functions = dummyFunctions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

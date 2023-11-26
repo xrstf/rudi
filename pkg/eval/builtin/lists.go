@@ -183,6 +183,7 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	var result any
+	result = ast.Null{}
 
 	// list over vector elements
 	if sourceVector, ok := source.(ast.Vector); ok {

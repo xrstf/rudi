@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/deepcopy"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/pathexpr"
@@ -107,6 +108,11 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 				currentValue, _ = ctx.GetVariable(varName)
 			} else {
 				currentValue = ctx.GetDocument().Data()
+			}
+
+			currentValue, err = deepcopy.Clone(currentValue)
+			if err != nil {
+				return ctx, nil, err
 			}
 
 			// apply the path expression

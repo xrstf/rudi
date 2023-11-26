@@ -5,340 +5,321 @@ package builtin
 
 import (
 	"testing"
+
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
-type typesTestcase struct {
-	expr     string
-	expected any
-	invalid  bool
-}
-
-func (tc *typesTestcase) Test(t *testing.T) {
-	t.Helper()
-
-	result, err := runExpression(t, tc.expr, nil, nil)
-	if err != nil {
-		if !tc.invalid {
-			t.Fatalf("Failed to run %s: %v", tc.expr, err)
-		}
-
-		return
-	}
-
-	if tc.invalid {
-		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
-	}
-
-	if result != tc.expected {
-		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
-	}
-}
-
 func TestToStringFunction(t *testing.T) {
-	testcases := []typesTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-string)`,
-			invalid: true,
+			Expression: `(to-string)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-string "too" "many")`,
-			invalid: true,
+			Expression: `(to-string "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-string "foo")`,
-			expected: "foo",
+			Expression: `(to-string "foo")`,
+			Expected:   ast.String("foo"),
 		},
 		{
-			expr:     `(to-string 1)`,
-			expected: "1",
+			Expression: `(to-string 1)`,
+			Expected:   ast.String("1"),
 		},
 		{
-			expr:     `(to-string (+ 1 3))`,
-			expected: "4",
+			Expression: `(to-string (+ 1 3))`,
+			Expected:   ast.String("4"),
 		},
 		{
-			expr:     `(to-string 1.5)`,
-			expected: "1.5",
+			Expression: `(to-string 1.5)`,
+			Expected:   ast.String("1.5"),
 		},
 		{
-			expr:     `(to-string 1e3)`,
-			expected: "1000",
+			Expression: `(to-string 1e3)`,
+			Expected:   ast.String("1000"),
 		},
 		{
-			expr:     `(to-string true)`,
-			expected: "true",
+			Expression: `(to-string true)`,
+			Expected:   ast.String("true"),
 		},
 		{
-			expr:     `(to-string null)`,
-			expected: "null",
+			Expression: `(to-string null)`,
+			Expected:   ast.String("null"),
 		},
 		{
-			expr:    `(to-string [])`,
-			invalid: true,
+			Expression: `(to-string [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-string {})`,
-			invalid: true,
+			Expression: `(to-string {})`,
+			Invalid:    true,
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestToIntFunction(t *testing.T) {
-	testcases := []typesTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-int)`,
-			invalid: true,
+			Expression: `(to-int)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-int "too" "many")`,
-			invalid: true,
+			Expression: `(to-int "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-int 1)`,
-			expected: int64(1),
+			Expression: `(to-int 1)`,
+			Expected:   ast.Number{Value: int64(1)},
 		},
 		{
-			expr:     `(to-int "42")`,
-			expected: int64(42),
+			Expression: `(to-int "42")`,
+			Expected:   ast.Number{Value: int64(42)},
 		},
 		{
-			expr:     `(to-int (+ 1 3))`,
-			expected: int64(4),
+			Expression: `(to-int (+ 1 3))`,
+			Expected:   ast.Number{Value: int64(4)},
 		},
 		{
-			expr:    `(to-int 1.5)`,
-			invalid: true, // should this be allowed?
+			Expression: `(to-int 1.5)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-int "1.5")`,
-			invalid: true, // should this be allowed?
+			Expression: `(to-int "1.5")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-int true)`,
-			expected: int64(1),
+			Expression: `(to-int true)`,
+			Expected:   ast.Number{Value: int64(1)},
 		},
 		{
-			expr:     `(to-int false)`,
-			expected: int64(0),
+			Expression: `(to-int false)`,
+			Expected:   ast.Number{Value: int64(0)},
 		},
 		{
-			expr:     `(to-int null)`,
-			expected: int64(0),
+			Expression: `(to-int null)`,
+			Expected:   ast.Number{Value: int64(0)},
 		},
 		{
-			expr:    `(to-int [])`,
-			invalid: true,
+			Expression: `(to-int [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-int {})`,
-			invalid: true,
+			Expression: `(to-int {})`,
+			Invalid:    true,
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestToFloatFunction(t *testing.T) {
-	testcases := []typesTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-float)`,
-			invalid: true,
+			Expression: `(to-float)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-float "too" "many")`,
-			invalid: true,
+			Expression: `(to-float "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-float 1)`,
-			expected: float64(1),
+			Expression: `(to-float 1)`,
+			Expected:   ast.Number{Value: float64(1)},
 		},
 		{
-			expr:     `(to-float (+ 1 3))`,
-			expected: float64(4),
+			Expression: `(to-float (+ 1 3))`,
+			Expected:   ast.Number{Value: float64(4)},
 		},
 		{
-			expr:     `(to-float 1.5)`,
-			expected: float64(1.5),
+			Expression: `(to-float 1.5)`,
+			Expected:   ast.Number{Value: float64(1.5)},
 		},
 		{
-			expr:     `(to-float "3")`,
-			expected: float64(3),
+			Expression: `(to-float "3")`,
+			Expected:   ast.Number{Value: float64(3)},
 		},
 		{
-			expr:     `(to-float "1.5")`,
-			expected: float64(1.5),
+			Expression: `(to-float "1.5")`,
+			Expected:   ast.Number{Value: float64(1.5)},
 		},
 		{
-			expr:     `(to-float true)`,
-			expected: float64(1),
+			Expression: `(to-float true)`,
+			Expected:   ast.Number{Value: float64(1)},
 		},
 		{
-			expr:     `(to-float false)`,
-			expected: float64(0),
+			Expression: `(to-float false)`,
+			Expected:   ast.Number{Value: float64(0)},
 		},
 		{
-			expr:     `(to-float null)`,
-			expected: float64(0),
+			Expression: `(to-float null)`,
+			Expected:   ast.Number{Value: float64(0)},
 		},
 		{
-			expr:    `(to-float [])`,
-			invalid: true,
+			Expression: `(to-float [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-float {})`,
-			invalid: true,
+			Expression: `(to-float {})`,
+			Invalid:    true,
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestToBoolFunction(t *testing.T) {
-	testcases := []typesTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-bool)`,
-			invalid: true,
+			Expression: `(to-bool)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-bool "too" "many")`,
-			invalid: true,
+			Expression: `(to-bool "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-bool 1)`,
-			expected: true,
+			Expression: `(to-bool 1)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(to-bool 0)`,
-			expected: false,
+			Expression: `(to-bool 0)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(to-bool (+ 1 3))`,
-			expected: true,
+			Expression: `(to-bool (+ 1 3))`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(to-bool 1.5)`,
-			expected: true,
+			Expression: `(to-bool 1.5)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(to-bool 0.0)`,
-			expected: false,
+			Expression: `(to-bool 0.0)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(to-bool "3")`,
-			expected: true,
+			Expression: `(to-bool "3")`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(to-bool true)`,
-			expected: true,
+			Expression: `(to-bool true)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(to-bool false)`,
-			expected: false,
+			Expression: `(to-bool false)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(to-bool null)`,
-			expected: false,
+			Expression: `(to-bool null)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(to-bool [])`,
-			expected: false,
+			Expression: `(to-bool [])`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(to-bool [0])`,
-			expected: true,
+			Expression: `(to-bool [0])`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(to-bool {})`,
-			expected: false,
+			Expression: `(to-bool {})`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(to-bool {foo "bar"})`,
-			expected: true,
+			Expression: `(to-bool {foo "bar"})`,
+			Expected:   ast.Bool(true),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestTypeOfFunction(t *testing.T) {
-	testcases := []typesTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(type-of)`,
-			invalid: true,
+			Expression: `(type-of)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(type-of "too" "many")`,
-			invalid: true,
+			Expression: `(type-of "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(type-of 1)`,
-			expected: "number",
+			Expression: `(type-of 1)`,
+			Expected:   ast.String("number"),
 		},
 		{
-			expr:     `(type-of 0)`,
-			expected: "number",
+			Expression: `(type-of 0)`,
+			Expected:   ast.String("number"),
 		},
 		{
-			expr:     `(type-of (+ 1 3))`,
-			expected: "number",
+			Expression: `(type-of (+ 1 3))`,
+			Expected:   ast.String("number"),
 		},
 		{
-			expr:     `(type-of 1.5)`,
-			expected: "number",
+			Expression: `(type-of 1.5)`,
+			Expected:   ast.String("number"),
 		},
 		{
-			expr:     `(type-of 0.0)`,
-			expected: "number",
+			Expression: `(type-of 0.0)`,
+			Expected:   ast.String("number"),
 		},
 		{
-			expr:     `(type-of "3")`,
-			expected: "string",
+			Expression: `(type-of "3")`,
+			Expected:   ast.String("string"),
 		},
 		{
-			expr:     `(type-of true)`,
-			expected: "bool",
+			Expression: `(type-of true)`,
+			Expected:   ast.String("bool"),
 		},
 		{
-			expr:     `(type-of false)`,
-			expected: "bool",
+			Expression: `(type-of false)`,
+			Expected:   ast.String("bool"),
 		},
 		{
-			expr:     `(type-of null)`,
-			expected: "null",
+			Expression: `(type-of null)`,
+			Expected:   ast.String("null"),
 		},
 		{
-			expr:     `(type-of [])`,
-			expected: "vector",
+			Expression: `(type-of [])`,
+			Expected:   ast.String("vector"),
 		},
 		{
-			expr:     `(type-of (append [] "test"))`,
-			expected: "vector",
+			Expression: `(type-of (append [] "test"))`,
+			Expected:   ast.String("vector"),
 		},
 		{
-			expr:     `(type-of [0])`,
-			expected: "vector",
+			Expression: `(type-of [0])`,
+			Expected:   ast.String("vector"),
 		},
 		{
-			expr:     `(type-of {})`,
-			expected: "object",
+			Expression: `(type-of {})`,
+			Expected:   ast.String("object"),
 		},
 		{
-			expr:     `(type-of {foo "bar"})`,
-			expected: "object",
+			Expression: `(type-of {foo "bar"})`,
+			Expected:   ast.String("object"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

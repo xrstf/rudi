@@ -6,47 +6,24 @@ package test
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
 func TestEvalString(t *testing.T) {
-	testcases := []struct {
-		input    ast.String
-		expected ast.String
-	}{
+	testcases := []testutil.Testcase{
 		{
-			input:    ast.String(""),
-			expected: ast.String(""),
+			AST:      ast.String(""),
+			Expected: ast.String(""),
 		},
 		{
-			input:    ast.String("foo"),
-			expected: ast.String("foo"),
+			AST:      ast.String("foo"),
+			Expected: ast.String("foo"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.input.String(), func(t *testing.T) {
-			doc, err := eval.NewDocument(nil)
-			if err != nil {
-				t.Fatalf("Failed to create test document: %v", err)
-			}
-
-			ctx := eval.NewContext(doc, nil, nil)
-
-			_, value, err := eval.EvalString(ctx, testcase.input)
-			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
-			}
-
-			returned, ok := value.(ast.String)
-			if !ok {
-				t.Fatalf("EvalString returned unexpected type %T", value)
-			}
-
-			if !returned.Equal(testcase.expected) {
-				t.Fatal("Result does not match expectation.")
-			}
-		})
+		testcase.Functions = dummyFunctions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

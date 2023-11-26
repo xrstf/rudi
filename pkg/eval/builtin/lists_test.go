@@ -6,515 +6,495 @@ package builtin
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
-type listsTestcase struct {
-	expr     string
-	expected any
-	invalid  bool
-}
-
-func (tc *listsTestcase) Test(t *testing.T) {
-	t.Helper()
-
-	result, err := runExpression(t, tc.expr, nil, nil)
-	if err != nil {
-		if !tc.invalid {
-			t.Fatalf("Failed to run %s: %v", tc.expr, err)
-		}
-
-		return
-	}
-
-	if tc.invalid {
-		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
-	}
-
-	if !cmp.Equal(result, tc.expected) {
-		t.Fatalf("Did not receive expected output:\n%s", cmp.Diff(tc.expected, result))
-	}
-}
-
 func TestLenFunction(t *testing.T) {
-	testcases := []listsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(len)`,
-			invalid: true,
+			Expression: `(len)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(len true)`,
-			invalid: true,
+			Expression: `(len true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(len 1)`,
-			invalid: true,
+			Expression: `(len 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(len null)`,
-			invalid: true,
+			Expression: `(len null)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(len [] [])`,
-			invalid: true,
+			Expression: `(len [] [])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(len "")`,
-			expected: int64(0),
+			Expression: `(len "")`,
+			Expected:   ast.Number{Value: int64(0)},
 		},
 		{
-			expr:     `(len " foo ")`,
-			expected: int64(5),
+			Expression: `(len " foo ")`,
+			Expected:   ast.Number{Value: int64(5)},
 		},
 		{
-			expr:     `(len [])`,
-			expected: int64(0),
+			Expression: `(len [])`,
+			Expected:   ast.Number{Value: int64(0)},
 		},
 		{
-			expr:     `(len [1 2 3])`,
-			expected: int64(3),
+			Expression: `(len [1 2 3])`,
+			Expected:   ast.Number{Value: int64(3)},
 		},
 		{
-			expr:     `(len {})`,
-			expected: int64(0),
+			Expression: `(len {})`,
+			Expected:   ast.Number{Value: int64(0)},
 		},
 		{
-			expr:     `(len {foo "bar" hello "world"})`,
-			expected: int64(2),
+			Expression: `(len {foo "bar" hello "world"})`,
+			Expected:   ast.Number{Value: int64(2)},
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestAppendFunction(t *testing.T) {
-	testcases := []listsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(append)`,
-			invalid: true,
+			Expression: `(append)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append [])`,
-			invalid: true,
+			Expression: `(append [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append true 1)`,
-			invalid: true,
+			Expression: `(append true 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append 1 1)`,
-			invalid: true,
+			Expression: `(append 1 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append null 1)`,
-			invalid: true,
+			Expression: `(append null 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append {} 1)`,
-			invalid: true,
+			Expression: `(append {} 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append {} 1)`,
-			invalid: true,
+			Expression: `(append {} 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(append [] 1)`,
-			expected: []any{int64(1)},
+			Expression: `(append [] 1)`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
 		},
 		{
-			expr:     `(append [1 2] 3 "foo")`,
-			expected: []any{int64(1), int64(2), int64(3), "foo"},
+			Expression: `(append [1 2] 3 "foo")`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}, ast.Number{Value: 2}, ast.Number{Value: 3}, ast.String("foo")}},
 		},
 		{
-			expr:     `(append [] [])`,
-			expected: []any{[]any{}},
+			Expression: `(append [] [])`,
+			Expected:   ast.Vector{Data: []any{ast.Vector{Data: []any{}}}},
 		},
 		{
-			expr:     `(append [] "foo")`,
-			expected: []any{"foo"},
+			Expression: `(append [] "foo")`,
+			Expected:   ast.Vector{Data: []any{ast.String("foo")}},
 		},
 		{
-			expr:    `(append "foo" [])`,
-			invalid: true,
+			Expression: `(append "foo" [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(append "foo" "bar" [])`,
-			invalid: true,
+			Expression: `(append "foo" "bar" [])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(append "foo" "bar" "test")`,
-			expected: "foobartest",
+			Expression: `(append "foo" "bar" "test")`,
+			Expected:   ast.String("foobartest"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestPrependFunction(t *testing.T) {
-	testcases := []listsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(prepend)`,
-			invalid: true,
+			Expression: `(prepend)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend [])`,
-			invalid: true,
+			Expression: `(prepend [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend true 1)`,
-			invalid: true,
+			Expression: `(prepend true 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend 1 1)`,
-			invalid: true,
+			Expression: `(prepend 1 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend null 1)`,
-			invalid: true,
+			Expression: `(prepend null 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend {} 1)`,
-			invalid: true,
+			Expression: `(prepend {} 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend {} 1)`,
-			invalid: true,
+			Expression: `(prepend {} 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(prepend [] 1)`,
-			expected: []any{int64(1)},
+			Expression: `(prepend [] 1)`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
 		},
 		{
-			expr:     `(prepend [1] 2)`,
-			expected: []any{int64(2), int64(1)},
+			Expression: `(prepend [1] 2)`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 2}, ast.Number{Value: 1}}},
 		},
 		{
-			expr:     `(prepend [1 2] 3 "foo")`,
-			expected: []any{int64(3), "foo", int64(1), int64(2)},
+			Expression: `(prepend [1 2] 3 "foo")`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 3}, ast.String("foo"), ast.Number{Value: 1}, ast.Number{Value: 2}}},
 		},
 		{
-			expr:     `(prepend [] [])`,
-			expected: []any{[]any{}},
+			Expression: `(prepend [] [])`,
+			Expected:   ast.Vector{Data: []any{ast.Vector{Data: []any{}}}},
 		},
 		{
-			expr:     `(prepend [] "foo")`,
-			expected: []any{"foo"},
+			Expression: `(prepend [] "foo")`,
+			Expected:   ast.Vector{Data: []any{ast.String("foo")}},
 		},
 		{
-			expr:    `(prepend "foo" [])`,
-			invalid: true,
+			Expression: `(prepend "foo" [])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(prepend "foo" "bar" [])`,
-			invalid: true,
+			Expression: `(prepend "foo" "bar" [])`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(prepend "foo" "bar" "test")`,
-			expected: "bartestfoo",
+			Expression: `(prepend "foo" "bar" "test")`,
+			Expected:   ast.String("bartestfoo"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestReverseFunction(t *testing.T) {
-	testcases := []listsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(reverse)`,
-			invalid: true,
+			Expression: `(reverse)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(reverse "too" "many")`,
-			invalid: true,
+			Expression: `(reverse "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(reverse 1)`,
-			invalid: true,
+			Expression: `(reverse 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(reverse true)`,
-			invalid: true,
+			Expression: `(reverse true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(reverse null)`,
-			invalid: true,
+			Expression: `(reverse null)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(reverse {})`,
-			invalid: true,
+			Expression: `(reverse {})`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(reverse "")`,
-			expected: "",
+			Expression: `(reverse "")`,
+			Expected:   ast.String(""),
 		},
 		{
-			expr:     `(reverse (concat "" "f" "oo"))`,
-			expected: "oof",
+			Expression: `(reverse (concat "" "f" "oo"))`,
+			Expected:   ast.String("oof"),
 		},
 		{
-			expr:     `(reverse "abcd")`,
-			expected: "dcba",
+			Expression: `(reverse "abcd")`,
+			Expected:   ast.String("dcba"),
 		},
 		{
-			expr:     `(reverse (reverse "abcd"))`,
-			expected: "abcd",
+			Expression: `(reverse (reverse "abcd"))`,
+			Expected:   ast.String("abcd"),
 		},
 		{
-			expr:     `(reverse [])`,
-			expected: []any{},
+			Expression: `(reverse [])`,
+			Expected:   ast.Vector{Data: []any{}},
 		},
 		{
-			expr:     `(reverse [1])`,
-			expected: []any{int64(1)},
+			Expression: `(reverse [1])`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
 		},
 		{
-			expr:     `(reverse [1 2 3])`,
-			expected: []any{int64(3), int64(2), int64(1)},
+			Expression: `(reverse [1 2 3])`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 3}, ast.Number{Value: 2}, ast.Number{Value: 1}}},
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestRangeFunction(t *testing.T) {
-	testcases := []listsTestcase{
+	testcases := []testutil.Testcase{
 		{
 			// missing everything
-			expr:    `(range)`,
-			invalid: true,
+			Expression: `(range)`,
+			Invalid:    true,
 		},
 		{
 			// missing naming vector
-			expr:    `(range [1 2 3])`,
-			invalid: true,
+			Expression: `(range [1 2 3])`,
+			Invalid:    true,
 		},
 		{
 			// missing naming vector
-			expr:    `(range [1 2 3] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range [1 2 3] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// naming vector must be 1 or 2 elements long
-			expr:    `(range [1 2 3] [] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range [1 2 3] [] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// naming vector must be 1 or 2 elements long
-			expr:    `(range [1 2 3] [a b c] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range [1 2 3] [a b c] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// do not allow numbers in the naming vector
-			expr:    `(range [1 2 3] [1 2] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range [1 2 3] [1 2] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// do not allow strings in naming vector
-			expr:    `(range [1 2 3] ["foo" "bar"] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range [1 2 3] ["foo" "bar"] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// cannot range over non-vectors/objects
-			expr:    `(range "invalid" [a] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range "invalid" [a] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// cannot range over non-vectors/objects
-			expr:    `(range 5 [a] (+ 1 2))`,
-			invalid: true,
+			Expression: `(range 5 [a] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// single simple expression
-			expr:     `(range [1 2 3] [a] (+ 1 2))`,
-			expected: int64(3),
+			Expression: `(range [1 2 3] [a] (+ 1 2))`,
+			Expected:   ast.Number{Value: int64(3)},
 		},
 		{
 			// multiple expressions that use a common context
-			expr:     `(range [1 2 3] [a] (set! $foo $a) (+ $foo 3))`,
-			expected: int64(6),
+			Expression: `(range [1 2 3] [a] (set! $foo $a) (+ $foo 3))`,
+			Expected:   ast.Number{Value: int64(6)},
 		},
 		{
 			// count iterations
-			expr:     `(range [1 2 3] [loop-var] (set! $counter (+ (default (try $counter) 0) 1)))`,
-			expected: int64(3),
+			Expression: `(range [1 2 3] [loop-var] (set! $counter (+ (default (try $counter) 0) 1)))`,
+			Expected:   ast.Number{Value: int64(3)},
 		},
 		{
 			// value is bound to desired variable
-			expr:     `(range [1 2 3] [a] $a)`,
-			expected: int64(3),
+			Expression: `(range [1 2 3] [a] $a)`,
+			Expected:   ast.Number{Value: int64(3)},
 		},
 		{
 			// support loop index variable
-			expr:     `(range [1 2 3] [idx var] $idx)`,
-			expected: int64(2),
+			Expression: `(range [1 2 3] [idx var] $idx)`,
+			Expected:   ast.Number{Value: int64(2)},
 		},
 		{
 			// support loop index variable
-			expr:     `(range [1 2 3] [idx var] $var)`,
-			expected: int64(3),
+			Expression: `(range [1 2 3] [idx var] $var)`,
+			Expected:   ast.Number{Value: int64(3)},
 		},
 		{
 			// variables do not leak outside the range
-			expr:    `(range [1 2 3] [idx var] $idx) (+ $var 0)`,
-			invalid: true,
+			Expression: `(range [1 2 3] [idx var] $idx) (+ $var 0)`,
+			Invalid:    true,
 		},
 		{
 			// variables do not leak outside the range
-			expr:    `(range [1 2 3] [idx var] $idx) (+ $idx 0)`,
-			invalid: true,
+			Expression: `(range [1 2 3] [idx var] $idx) (+ $idx 0)`,
+			Invalid:    true,
 		},
 		{
 			// support ranging over objects
-			expr:     `(range {} [key value] $key)`,
-			expected: nil,
+			Expression: `(range {} [key value] $key)`,
+			Expected:   ast.Null{},
 		},
 		{
-			expr:     `(range {foo "bar"} [key value] $key)`,
-			expected: "foo",
+			Expression: `(range {foo "bar"} [key value] $key)`,
+			Expected:   ast.String("foo"),
 		},
 		{
-			expr:     `(range {foo "bar"} [key value] $value)`,
-			expected: "bar",
+			Expression: `(range {foo "bar"} [key value] $value)`,
+			Expected:   ast.String("bar"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestMapFunction(t *testing.T) {
-	testcases := []listsTestcase{
+	testcases := []testutil.Testcase{
 		{
 			// missing everything
-			expr:    `(map)`,
-			invalid: true,
+			Expression: `(map)`,
+			Invalid:    true,
 		},
 		{
 			// missing function identifier
-			expr:    `(map [1 2 3])`,
-			invalid: true,
+			Expression: `(map [1 2 3])`,
+			Invalid:    true,
 		},
 		{
 			// missing naming vector
-			expr:    `(map [1 2 3] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map [1 2 3] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// naming vector must be 1 or 2 elements long
-			expr:    `(map [1 2 3] [] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map [1 2 3] [] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// naming vector must be 1 or 2 elements long
-			expr:    `(map [1 2 3] [a b c] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map [1 2 3] [a b c] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// do not allow numbers in the naming vector
-			expr:    `(map [1 2 3] [1 2] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map [1 2 3] [1 2] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// do not allow strings in naming vector
-			expr:    `(map [1 2 3] ["foo" "bar"] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map [1 2 3] ["foo" "bar"] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// cannot map non-vectors/objects
-			expr:    `(map "invalid" [a] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map "invalid" [a] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// cannot map non-vectors/objects
-			expr:    `(map 5 [a] (+ 1 2))`,
-			invalid: true,
+			Expression: `(map 5 [a] (+ 1 2))`,
+			Invalid:    true,
 		},
 		{
 			// single simple expression
-			expr:     `(map ["foo" "bar"] to-upper)`,
-			expected: []any{"FOO", "BAR"},
+			Expression: `(map ["foo" "bar"] to-upper)`,
+			Expected:   ast.Vector{Data: []any{ast.String("FOO"), ast.String("BAR")}},
 		},
 		{
-			expr:     `(map {foo "bar"} to-upper)`,
-			expected: map[string]any{"foo": "BAR"},
+			Expression: `(map {foo "bar"} to-upper)`,
+			Expected:   ast.Object{Data: map[string]any{"foo": ast.String("BAR")}},
 		},
 		{
 			// type safety still applies
-			expr:    `(map [1] to-upper)`,
-			invalid: true,
+			Expression: `(map [1] to-upper)`,
+			Invalid:    true,
 		},
 		{
 			// eval expression with variable
-			expr:     `(map [1 2 3] [val] (+ $val 3))`,
-			expected: []any{int64(4), int64(5), int64(6)},
+			Expression: `(map [1 2 3] [val] (+ $val 3))`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 4}, ast.Number{Value: 5}, ast.Number{Value: 6}}},
 		},
 		{
 			// eval with loop index
-			expr:     `(map ["foo" "bar"] [idx _] $idx)`,
-			expected: []any{int64(0), int64(1)},
+			Expression: `(map ["foo" "bar"] [idx _] $idx)`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 0}, ast.Number{Value: 1}}},
 		},
 		{
 			// last expression controls the result
-			expr:     `(map [1 2 3] [val] (+ $val 3) "foo")`,
-			expected: []any{"foo", "foo", "foo"},
+			Expression: `(map [1 2 3] [val] (+ $val 3) "foo")`,
+			Expected:   ast.Vector{Data: []any{ast.String("foo"), ast.String("foo"), ast.String("foo")}},
 		},
 		{
 			// multiple expressions that use a common context
-			expr:     `(map [1 2 3] [val] (set! $foo $val) (+ $foo 3))`,
-			expected: []any{int64(4), int64(5), int64(6)},
+			Expression: `(map [1 2 3] [val] (set! $foo $val) (+ $foo 3))`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 4}, ast.Number{Value: 5}, ast.Number{Value: 6}}},
 		},
 		{
 			// context is even shared across elements
-			expr:     `(map ["foo" "bar"] [_] (set! $counter (+ (try $counter 0) 1)))`,
-			expected: []any{int64(1), int64(2)},
+			Expression: `(map ["foo" "bar"] [_] (set! $counter (+ (try $counter 0) 1)))`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}, ast.Number{Value: 2}}},
 		},
 		{
 			// variables do not leak outside the range
-			expr:    `(map [1 2 3] [idx var] $idx) (+ $var 0)`,
-			invalid: true,
+			Expression: `(map [1 2 3] [idx var] $idx) (+ $var 0)`,
+			Invalid:    true,
 		},
 		{
 			// variables do not leak outside the range
-			expr:    `(map [1 2 3] [idx var] $idx) (+ $idx 0)`,
-			invalid: true,
+			Expression: `(map [1 2 3] [idx var] $idx) (+ $idx 0)`,
+			Invalid:    true,
 		},
 		// do not modify the source
 		{
-			expr:     `(set! $foo [1 2 3]) (map $foo [_ __] "bar")`,
-			expected: []any{"bar", "bar", "bar"},
+			Expression: `(set! $foo [1 2 3]) (map $foo [_ __] "bar")`,
+			Expected:   ast.Vector{Data: []any{ast.String("bar"), ast.String("bar"), ast.String("bar")}},
 		},
 		{
-			expr:     `(set! $foo [1 2 3]) (map $foo [_ __] "bar") $foo`,
-			expected: []any{int64(1), int64(2), int64(3)},
+			Expression: `(set! $foo [1 2 3]) (map $foo [_ __] "bar") $foo`,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}, ast.Number{Value: 2}, ast.Number{Value: 3}}},
 		},
 		{
-			expr:     `(set! $foo {foo "bar"}) (map $foo [_ __] "new-value") $foo`,
-			expected: map[string]any{"foo": "bar"},
+			Expression: `(set! $foo {foo "bar"}) (map $foo [_ __] "new-value") $foo`,
+			Expected:   ast.Object{Data: map[string]any{"foo": ast.String("bar")}},
 		},
 		{
-			expr:     `(set! $foo ["foo" "bar"]) (map $foo to-upper)`,
-			expected: []any{"FOO", "BAR"},
+			Expression: `(set! $foo ["foo" "bar"]) (map $foo to-upper)`,
+			Expected:   ast.Vector{Data: []any{ast.String("FOO"), ast.String("BAR")}},
 		},
 		{
-			expr:     `(set! $foo ["foo" "bar"]) (map $foo to-upper) $foo`,
-			expected: []any{"foo", "bar"},
+			Expression: `(set! $foo ["foo" "bar"]) (map $foo to-upper) $foo`,
+			Expected:   ast.Vector{Data: []any{ast.String("foo"), ast.String("bar")}},
 		},
 		{
-			expr:     `(set! $foo {foo "bar"}) (map $foo to-upper) $foo`,
-			expected: map[string]any{"foo": "bar"},
+			Expression: `(set! $foo {foo "bar"}) (map $foo to-upper) $foo`,
+			Expected:   ast.Object{Data: map[string]any{"foo": ast.String("bar")}},
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

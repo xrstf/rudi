@@ -5,130 +5,108 @@ package builtin
 
 import (
 	"testing"
+
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
 
-type encodingTestcase struct {
-	expr     string
-	expected string
-	invalid  bool
-}
-
-func (tc *encodingTestcase) Test(t *testing.T) {
-	t.Helper()
-
-	result, err := runExpression(t, tc.expr, nil, nil)
-	if err != nil {
-		if !tc.invalid {
-			t.Fatalf("Failed to run %s: %v", tc.expr, err)
-		}
-
-		return
-	}
-
-	if tc.invalid {
-		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
-	}
-
-	if result != tc.expected {
-		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
-	}
-}
-
 func TestToBase64Function(t *testing.T) {
-	testcases := []encodingTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(to-base64)`,
-			invalid: true,
+			Expression: `(to-base64)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-base64 "too" "many")`,
-			invalid: true,
+			Expression: `(to-base64 "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-base64 true)`,
-			invalid: true,
+			Expression: `(to-base64 true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-base64 1)`,
-			invalid: true,
+			Expression: `(to-base64 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(to-base64 null)`,
-			invalid: true,
+			Expression: `(to-base64 null)`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(to-base64 "")`,
-			expected: "",
+			Expression: `(to-base64 "")`,
+			Expected:   ast.String(""),
 		},
 		{
-			expr:     `(to-base64 " ")`,
-			expected: "IA==",
+			Expression: `(to-base64 " ")`,
+			Expected:   ast.String("IA=="),
 		},
 		{
-			expr:     `(to-base64 (concat "" "f" "o" "o"))`,
-			expected: "Zm9v",
+			Expression: `(to-base64 (concat "" "f" "o" "o"))`,
+			Expected:   ast.String("Zm9v"),
 		},
 		{
-			expr:     `(to-base64 "test")`,
-			expected: "dGVzdA==",
+			Expression: `(to-base64 "test")`,
+			Expected:   ast.String("dGVzdA=="),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestFromBase64Function(t *testing.T) {
-	testcases := []encodingTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(from-base64)`,
-			invalid: true,
+			Expression: `(from-base64)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(from-base64 "too" "many")`,
-			invalid: true,
+			Expression: `(from-base64 "too" "many")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(from-base64 true)`,
-			invalid: true,
+			Expression: `(from-base64 true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(from-base64 1)`,
-			invalid: true,
+			Expression: `(from-base64 1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(from-base64 null)`,
-			invalid: true,
+			Expression: `(from-base64 null)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(from-base64 "definitely-not-base64")`,
-			invalid: true,
+			Expression: `(from-base64 "definitely-not-base64")`,
+			Invalid:    true,
 		},
 		{
 			// should be able to recover
-			expr:     `(try (from-base64 "definitely-not-base64") "fallback")`,
-			expected: "fallback",
+			Expression: `(try (from-base64 "definitely-not-base64") "fallback")`,
+			Expected:   ast.String("fallback"),
 		},
 		{
-			expr:     `(from-base64 "")`,
-			expected: "",
+			Expression: `(from-base64 "")`,
+			Expected:   ast.String(""),
 		},
 		{
-			expr:     `(from-base64 "IA==")`,
-			expected: " ",
+			Expression: `(from-base64 "IA==")`,
+			Expected:   ast.String(" "),
 		},
 		{
-			expr:     `(from-base64 (concat "" "Z" "m" "9" "v"))`,
-			expected: "foo",
+			Expression: `(from-base64 (concat "" "Z" "m" "9" "v"))`,
+			Expected:   ast.String("foo"),
 		},
 		{
-			expr:     `(from-base64 "dGVzdA==")`,
-			expected: "test",
+			Expression: `(from-base64 "dGVzdA==")`,
+			Expected:   ast.String("test"),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

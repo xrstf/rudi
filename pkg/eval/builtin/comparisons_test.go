@@ -6,35 +6,10 @@ package builtin
 import (
 	"fmt"
 	"testing"
+
+	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/testutil"
 )
-
-type comparisonsTestcase struct {
-	expr     string
-	expected any
-	document any
-	invalid  bool
-}
-
-func (tc *comparisonsTestcase) Test(t *testing.T) {
-	t.Helper()
-
-	result, err := runExpression(t, tc.expr, tc.document, nil)
-	if err != nil {
-		if !tc.invalid {
-			t.Fatalf("Failed to run %s: %v", tc.expr, err)
-		}
-
-		return
-	}
-
-	if tc.invalid {
-		t.Fatalf("Should not have been able to run %s, but got: %v", tc.expr, result)
-	}
-
-	if result != tc.expected {
-		t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
-	}
-}
 
 type flippedTestcases struct {
 	left     string
@@ -44,23 +19,25 @@ type flippedTestcases struct {
 	invalid  bool
 }
 
-func genFlippedExpressions(fun string, testcases []flippedTestcases) []comparisonsTestcase {
-	result := []comparisonsTestcase{}
+func genFlippedExpressions(fun string, testcases []flippedTestcases) []testutil.Testcase {
+	result := []testutil.Testcase{}
 
 	for _, tc := range testcases {
 		result = append(
 			result,
-			comparisonsTestcase{
-				expr:     fmt.Sprintf(`(%s %s %s)`, fun, tc.left, tc.right),
-				invalid:  tc.invalid,
-				expected: tc.expected,
-				document: tc.document,
+			testutil.Testcase{
+				Expression:       fmt.Sprintf(`(%s %s %s)`, fun, tc.left, tc.right),
+				Invalid:          tc.invalid,
+				Expected:         tc.expected,
+				Document:         tc.document,
+				ExpectedDocument: tc.document,
 			},
-			comparisonsTestcase{
-				expr:     fmt.Sprintf(`(%s %s %s)`, fun, tc.right, tc.left),
-				invalid:  tc.invalid,
-				expected: tc.expected,
-				document: tc.document,
+			testutil.Testcase{
+				Expression:       fmt.Sprintf(`(%s %s %s)`, fun, tc.right, tc.left),
+				Invalid:          tc.invalid,
+				Expected:         tc.expected,
+				Document:         tc.document,
+				ExpectedDocument: tc.document,
 			},
 		)
 	}
@@ -70,7 +47,7 @@ func genFlippedExpressions(fun string, testcases []flippedTestcases) []compariso
 
 func TestEqFunction(t *testing.T) {
 	testDoc := map[string]any{
-		"int":    int(4),
+		"int":    int64(4),
 		"float":  float64(1.2),
 		"bool":   true,
 		"string": "foo",
@@ -81,26 +58,26 @@ func TestEqFunction(t *testing.T) {
 		},
 	}
 
-	syntax := []comparisonsTestcase{
+	syntax := []testutil.Testcase{
 		{
-			expr:    `(eq?)`,
-			invalid: true,
+			Expression: `(eq?)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(eq? true)`,
-			invalid: true,
+			Expression: `(eq? true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(eq? "too" "many" "args")`,
-			invalid: true,
+			Expression: `(eq? "too" "many" "args")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(eq? identifier "foo")`,
-			invalid: true,
+			Expression: `(eq? identifier "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(eq? "foo" identifier)`,
-			invalid: true,
+			Expression: `(eq? "foo" identifier)`,
+			Invalid:    true,
 		},
 	}
 
@@ -108,39 +85,39 @@ func TestEqFunction(t *testing.T) {
 		{
 			left:     `true`,
 			right:    `true`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `true`,
 			right:    `false`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `true`,
 			right:    `.bool`,
-			expected: true,
+			expected: ast.Bool(true),
 			document: testDoc,
 		},
 		{
 			left:     `1`,
 			right:    `1`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `1`,
 			right:    `2`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `.int`,
 			right:    `4`,
-			expected: true,
+			expected: ast.Bool(true),
 			document: testDoc,
 		},
 		{
 			left:     `1`,
 			right:    `1.0`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:    `1`,
@@ -155,107 +132,108 @@ func TestEqFunction(t *testing.T) {
 		{
 			left:     `"foo"`,
 			right:    `"foo"`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `.string`,
 			right:    `"foo"`,
-			expected: true,
+			expected: ast.Bool(true),
 			document: testDoc,
 		},
 		{
 			left:     `"foo"`,
 			right:    `"bar"`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `"foo"`,
 			right:    `"Foo"`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `"foo"`,
 			right:    `" foo"`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `[]`,
 			right:    `[]`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `[]`,
 			right:    `[1]`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `[1]`,
 			right:    `[1]`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `[1 [2] {foo "bar"}]`,
 			right:    `[1 [2] {foo "bar"}]`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `[1 [2] {foo "bar"}]`,
 			right:    `[1 [2] {foo "baz"}]`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `{}`,
 			right:    `{}`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `{}`,
 			right:    `{foo "bar"}`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `{foo "bar"}`,
 			right:    `{foo "bar"}`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `{foo "bar"}`,
 			right:    `{foo "baz"}`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `{foo "bar" l [1 2]}`,
 			right:    `{foo "bar" l [1 2]}`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 	})
 
 	for _, testcase := range append(syntax, flipped...) {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestLikeFunction(t *testing.T) {
-	syntax := []comparisonsTestcase{
+	syntax := []testutil.Testcase{
 		{
-			expr:    `(like?)`,
-			invalid: true,
+			Expression: `(like?)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(like? true)`,
-			invalid: true,
+			Expression: `(like? true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(like? "too" "many" "args")`,
-			invalid: true,
+			Expression: `(like? "too" "many" "args")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(like? identifier "foo")`,
-			invalid: true,
+			Expression: `(like? identifier "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(like? "foo" identifier)`,
-			invalid: true,
+			Expression: `(like? "foo" identifier)`,
+			Invalid:    true,
 		},
 	}
 
@@ -263,206 +241,208 @@ func TestLikeFunction(t *testing.T) {
 		{
 			left:     `1`,
 			right:    `1`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `1`,
 			right:    `"1"`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `1`,
 			right:    `1.0`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `1`,
 			right:    `"1.0"`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `1`,
 			right:    `"2.0"`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `1`,
 			right:    `true`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `1`,
 			right:    `2`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `false`,
 			right:    `null`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `false`,
 			right:    `"null"`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `0`,
 			right:    `null`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `0.0`,
 			right:    `null`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `""`,
 			right:    `null`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `false`,
 			right:    `0`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `false`,
 			right:    `""`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `false`,
 			right:    `[]`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `false`,
 			right:    `{}`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `false`,
 			right:    `"false"`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `true`,
 			right:    `{foo "bar"}`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `"foo"`,
 			right:    `"bar"`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `true`,
 			right:    `[""]`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `{}`,
 			right:    `[]`,
-			expected: true,
+			expected: ast.Bool(true),
 		},
 		{
 			left:     `{}`,
 			right:    `[1]`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 		{
 			left:     `{foo "bar"}`,
 			right:    `[]`,
-			expected: false,
+			expected: ast.Bool(false),
 		},
 	})
 
 	for _, testcase := range append(syntax, testcases...) {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }
 
 func TestLtFunction(t *testing.T) {
-	testcases := []comparisonsTestcase{
+	testcases := []testutil.Testcase{
 		{
-			expr:    `(lt?)`,
-			invalid: true,
+			Expression: `(lt?)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? true)`,
-			invalid: true,
+			Expression: `(lt? true)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? "too" "many" "args")`,
-			invalid: true,
+			Expression: `(lt? "too" "many" "args")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? identifier "foo")`,
-			invalid: true,
+			Expression: `(lt? identifier "foo")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? "foo" identifier)`,
-			invalid: true,
+			Expression: `(lt? "foo" identifier)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? 3 "strings")`,
-			invalid: true,
+			Expression: `(lt? 3 "strings")`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? 3 3.1)`,
-			invalid: true,
+			Expression: `(lt? 3 3.1)`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? 3 [1 2 3])`,
-			invalid: true,
+			Expression: `(lt? 3 [1 2 3])`,
+			Invalid:    true,
 		},
 		{
-			expr:    `(lt? 3 {foo "bar"})`,
-			invalid: true,
+			Expression: `(lt? 3 {foo "bar"})`,
+			Invalid:    true,
 		},
 		{
-			expr:     `(lt? 3 3)`,
-			expected: false,
+			Expression: `(lt? 3 3)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(lt? 2 (+ 1 2))`,
-			expected: true,
+			Expression: `(lt? 2 (+ 1 2))`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(lt? 2 3)`,
-			expected: true,
+			Expression: `(lt? 2 3)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(lt? -3 2)`,
-			expected: true,
+			Expression: `(lt? -3 2)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(lt? -3 -5)`,
-			expected: false,
+			Expression: `(lt? -3 -5)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(lt? 3.4 3.4)`,
-			expected: false,
+			Expression: `(lt? 3.4 3.4)`,
+			Expected:   ast.Bool(false),
 		},
 		{
-			expr:     `(lt? 2.4 (+ 1.4 2))`,
-			expected: true,
+			Expression: `(lt? 2.4 (+ 1.4 2))`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(lt? 2.4 3.4)`,
-			expected: true,
+			Expression: `(lt? 2.4 3.4)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(lt? -3.4 2.4)`,
-			expected: true,
+			Expression: `(lt? -3.4 2.4)`,
+			Expected:   ast.Bool(true),
 		},
 		{
-			expr:     `(lt? -3.4 -5.4)`,
-			expected: false,
+			Expression: `(lt? -3.4 -5.4)`,
+			Expected:   ast.Bool(false),
 		},
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.expr, testcase.Test)
+		testcase.Functions = Functions
+		t.Run(testcase.String(), testcase.Run)
 	}
 }

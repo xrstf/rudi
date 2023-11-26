@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/deepcopy"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
@@ -179,7 +180,7 @@ func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	_, result, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		if len(args) == 1 {
-			return nil, nil
+			return ast.Null{}, nil
 		}
 
 		_, result, err = eval.EvalExpression(ctx, args[1])
@@ -260,6 +261,13 @@ func (deleteFunction) Evaluate(ctx types.Context, args []ast.Expression) (any, e
 		currentValue, _ = ctx.GetVariable(varName)
 	} else {
 		currentValue = ctx.GetDocument().Data()
+	}
+
+	// we need to operate on a _copy_ of the value and then, if need be, rely on the BangHandler
+	// to make the actual deletion happen and stick.
+	currentValue, err = deepcopy.Clone(currentValue)
+	if err != nil {
+		return nil, fmt.Errorf("invalid current value: %w", err)
 	}
 
 	// delete the desired path in the value
