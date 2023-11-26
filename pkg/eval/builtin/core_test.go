@@ -181,7 +181,7 @@ func TestSetFunction(t *testing.T) {
 			Variables:  testVariables(),
 			Expected: ast.Object{Data: map[string]any{
 				"aString": "foo",
-				"aList":   []any{"first", ast.String("new value"), "third"},
+				"aList":   []any{"first", "new value", "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
@@ -278,7 +278,7 @@ func TestSetFunction(t *testing.T) {
 			Document:   testObjDocument(),
 			Expected:   ast.String("new-value"),
 			ExpectedDocument: map[string]any{
-				"aString": ast.String("new-value"),
+				"aString": "new-value",
 				"aList":   []any{"first", int64(2), "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
@@ -302,8 +302,7 @@ func TestSetFunction(t *testing.T) {
 					"key2": nil,
 					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
 				},
-				// TODO: Should we generally try to put native values in objects and vectors?
-				"newKey": ast.String("new-value"),
+				"newKey": "new-value",
 			},
 		},
 		// update vectors
@@ -313,7 +312,7 @@ func TestSetFunction(t *testing.T) {
 			Expected:   ast.String("new-value"),
 			ExpectedDocument: map[string]any{
 				"aString": "foo",
-				"aList":   []any{"first", ast.String("new-value"), "third"},
+				"aList":   []any{"first", "new-value", "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,

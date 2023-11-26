@@ -277,7 +277,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 			},
 			Expected: ast.String("value"),
 			ExpectedVariables: types.Variables{
-				"myvar": ast.String("value"),
+				"myvar": "value",
 			},
 		},
 		// (set! .hello "value")
@@ -295,7 +295,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 			},
 			Document:         map[string]any{"hello": "world", "hei": "verden"},
 			Expected:         ast.String("value"),
-			ExpectedDocument: map[string]any{"hello": ast.String("value"), "hei": "verden"},
+			ExpectedDocument: map[string]any{"hello": "value", "hei": "verden"},
 		},
 		// (set! $val.key "value")
 		{
@@ -315,7 +315,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 			},
 			Expected: ast.String("value"),
 			ExpectedVariables: types.Variables{
-				"val": map[string]any{"foo": "bar", "key": ast.String("value")},
+				"val": map[string]any{"foo": "bar", "key": "value"},
 			},
 		},
 		// (set! .hei (set! .hello "value"))
@@ -343,7 +343,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 			},
 			Document:         map[string]any{"hello": "world", "hei": "verden"},
 			Expected:         ast.String("value"),
-			ExpectedDocument: map[string]any{"hello": ast.String("value"), "hei": ast.String("value")},
+			ExpectedDocument: map[string]any{"hello": "value", "hei": "value"},
 		},
 	}
 

@@ -84,11 +84,13 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 			return custom.BangHandler(ctx, *updateSymbol, result)
 		}
 
-		// We always return the computed value, no matter how deep we inject it
-		// into the symbol; but for setting the new variable/document, we need the
-		// _whole_ new value, which might be the result of combining the current +
-		// setting a value deep somewhere.
-		updatedValue := result
+		// We always return the computed value, no matter how deep we inject it into the symbol;
+		// but for setting the new variable/document, we need the _whole_ new value, which might be
+		// the result of combining the current + setting a value deep somewhere.
+		// We store unwrapped, native Go types in variables, assuming that they and especially the
+		// global document are later post-processed outside of Rudi and keeping the data "clean" is
+		// being a good neighbour.
+		unwrappedResult := types.Must(types.UnwrapType(result))
 
 		// if the symbol has a path to traverse, do so
 		if updateSymbol.PathExpression != nil {
@@ -116,7 +118,7 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 			}
 
 			// apply the path expression
-			updatedValue, err = pathexpr.Set(currentValue, pathexpr.FromEvaluatedPath(*pathExpr), result)
+			unwrappedResult, err = pathexpr.Set(currentValue, pathexpr.FromEvaluatedPath(*pathExpr), unwrappedResult)
 			if err != nil {
 				return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 			}
@@ -124,9 +126,9 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 
 		if updateSymbol.Variable != nil {
 			varName := string(*updateSymbol.Variable)
-			resultCtx = resultCtx.WithVariable(varName, updatedValue)
+			resultCtx = resultCtx.WithVariable(varName, unwrappedResult)
 		} else {
-			ctx.GetDocument().Set(updatedValue)
+			ctx.GetDocument().Set(unwrappedResult)
 		}
 	}
 
