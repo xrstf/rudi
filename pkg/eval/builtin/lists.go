@@ -24,16 +24,16 @@ func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	if str, ok := list.(ast.String); ok {
+	if vector, err := ctx.Coalesce().ToVector(list); err == nil {
+		return ast.Number{Value: int64(len(vector))}, nil
+	}
+
+	if obj, err := ctx.Coalesce().ToObject(list); err == nil {
+		return ast.Number{Value: int64(len(obj))}, nil
+	}
+
+	if str, err := ctx.Coalesce().ToString(list); err == nil {
 		return ast.Number{Value: int64(len(str))}, nil
-	}
-
-	if vector, ok := list.(ast.Vector); ok {
-		return ast.Number{Value: int64(len(vector.Data))}, nil
-	}
-
-	if obj, ok := list.(ast.Object); ok {
-		return ast.Number{Value: int64(len(obj.Data))}, nil
 	}
 
 	return nil, errors.New("argument is neither a string, vector nor object")
@@ -44,7 +44,7 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
 
-	_, list, err := eval.EvalExpression(ctx, args[0])
+	_, acc, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -54,24 +54,24 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	vector, ok := list.(ast.Vector)
-	if ok {
-		result := vector.Clone()
+	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
+		result := ast.Vector{}
+		result.Data = append(result.Data, vector...)
 		result.Data = append(result.Data, evaluated...)
 
 		return result, nil
 	}
 
-	str, ok := list.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", list)
+	str, err := ctx.Coalesce().ToString(acc)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", acc)
 	}
 
 	suffix := ""
 	for i, arg := range evaluated {
-		argString, ok := arg.(ast.String)
-		if !ok {
-			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, list)
+		argString, err := ctx.Coalesce().ToString(arg)
+		if err != nil {
+			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, arg)
 		}
 
 		suffix += string(argString)
@@ -85,7 +85,7 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
 	}
 
-	_, list, err := eval.EvalExpression(ctx, args[0])
+	_, acc, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -95,26 +95,23 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	vector, ok := list.(ast.Vector)
-	if ok {
-		vector = vector.Clone()
-		result := ast.Vector{
-			Data: append(evaluated, vector.Data...),
-		}
+	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
+		result := ast.Vector{Data: evaluated}
+		result.Data = append(result.Data, vector...)
 
 		return result, nil
 	}
 
-	str, ok := list.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", list)
+	str, err := ctx.Coalesce().ToString(acc)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", acc)
 	}
 
 	prefix := ""
 	for i, arg := range evaluated {
-		argString, ok := arg.(ast.String)
-		if !ok {
-			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, list)
+		argString, err := ctx.Coalesce().ToString(arg)
+		if err != nil {
+			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, arg)
 		}
 
 		prefix += string(argString)
@@ -128,15 +125,14 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("expected 1 argument, got %d", size)
 	}
 
-	_, list, err := eval.EvalExpression(ctx, args[0])
+	_, value, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	strVal, ok := list.(ast.String)
-	if ok {
+	if str, err := ctx.Coalesce().ToString(value); err == nil {
 		// thank you https://stackoverflow.com/a/10030772
-		result := []rune(strVal)
+		result := []rune(str)
 		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
 			result[i], result[j] = result[j], result[i]
 		}
@@ -144,9 +140,12 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return ast.String(result), nil
 	}
 
-	vector, ok := list.(ast.Vector)
-	if ok {
-		result := vector.Clone()
+	if vector, err := ctx.Coalesce().ToVector(value); err == nil {
+		result := ast.Vector{
+			// clone original data
+			Data: append([]any{}, vector...),
+		}
+
 		for i, j := 0, len(result.Data)-1; i < j; i, j = i+1, j-1 {
 			result.Data[i], result.Data[j] = result.Data[j], result.Data[i]
 		}
@@ -154,7 +153,7 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return result, nil
 	}
 
-	return nil, fmt.Errorf("argument is neither a vector nor a string, but %T", list)
+	return nil, fmt.Errorf("argument is neither a vector nor a string, but %T", value)
 }
 
 // (range VECTOR [item] expr+)
@@ -186,8 +185,8 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	result = ast.Null{}
 
 	// list over vector elements
-	if sourceVector, ok := source.(ast.Vector); ok {
-		for i, item := range sourceVector.Data {
+	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
+		for i, item := range sourceVector {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(loopVarName, item)
 			if loopIndexName != "" {
@@ -206,8 +205,8 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// list over object elements
-	if sourceObject, ok := source.(ast.Object); ok {
-		for key, value := range sourceObject.Data {
+	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
+		for key, value := range sourceObject {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(loopVarName, value)
 			if loopIndexName != "" {
@@ -248,15 +247,14 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	var lit ast.Literal
-	if vec, ok := source.(ast.Vector); ok {
-		lit = vec
-	}
-	if obj, ok := source.(ast.Object); ok {
-		lit = obj
+	if vec, err := ctx.Coalesce().ToVector(source); err == nil {
+		lit = ast.Vector{Data: vec}
+	} else if obj, err := ctx.Coalesce().ToObject(source); err == nil {
+		lit = ast.Object{Data: obj}
 	}
 
 	if lit == nil {
-		return nil, fmt.Errorf("argument #0: expected Vector or Object, got %T", source)
+		return nil, fmt.Errorf("argument #0: expected vector or object, got %T", source)
 	}
 
 	// handle plain function calls
@@ -288,12 +286,12 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// list over vector elements
-	if sourceVector, ok := source.(ast.Vector); ok {
+	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
 		output := ast.Vector{
-			Data: make([]any, len(sourceVector.Data)),
+			Data: make([]any, len(sourceVector)),
 		}
 
-		for i, item := range sourceVector.Data {
+		for i, item := range sourceVector {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(valueVarName, item)
 			if indexVarName != "" {
@@ -313,12 +311,12 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// list over object elements
-	if sourceObject, ok := source.(ast.Object); ok {
+	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
 		output := ast.Object{
 			Data: map[string]any{},
 		}
 
-		for key, value := range sourceObject.Data {
+		for key, value := range sourceObject {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(valueVarName, value)
 			if indexVarName != "" {
@@ -360,12 +358,12 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{wrapped})
 	}
 
-	if vector, ok := source.(ast.Vector); ok {
+	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
 		output := ast.Vector{
-			Data: make([]any, len(vector.Data)),
+			Data: make([]any, len(vector)),
 		}
 
-		for i, item := range vector.Data {
+		for i, item := range vector {
 			var (
 				result any
 				err    error
@@ -382,12 +380,12 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 		return output, nil
 	}
 
-	if object, ok := source.(ast.Object); ok {
+	if object, err := ctx.Coalesce().ToObject(source); err == nil {
 		output := ast.Object{
 			Data: map[string]any{},
 		}
 
-		for key, value := range object.Data {
+		for key, value := range object {
 			var (
 				result any
 				err    error
@@ -428,11 +426,10 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	var lit ast.Literal
-	if vec, ok := source.(ast.Vector); ok {
-		lit = vec
-	}
-	if obj, ok := source.(ast.Object); ok {
-		lit = obj
+	if vec, err := ctx.Coalesce().ToVector(source); err == nil {
+		lit = ast.Vector{Data: vec}
+	} else if obj, err := ctx.Coalesce().ToObject(source); err == nil {
+		lit = ast.Object{Data: obj}
 	}
 
 	if lit == nil {
@@ -464,26 +461,21 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			}
 		}
 
-		native, err := types.UnwrapType(result)
+		valid, err := ctx.Coalesce().ToBool(result)
 		if err != nil {
-			return ctx, false, err
-		}
-
-		valid, ok := native.(bool)
-		if !ok {
-			return ctx, false, fmt.Errorf("expression did not return Bool but %T", result)
+			return ctx, false, fmt.Errorf("expression: %w", err)
 		}
 
 		return ctx, valid, nil
 	}
 
 	// list over vector elements
-	if sourceVector, ok := source.(ast.Vector); ok {
+	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
 		output := ast.Vector{
 			Data: []any{},
 		}
 
-		for i, item := range sourceVector.Data {
+		for i, item := range sourceVector {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(valueVarName, item)
 			if indexVarName != "" {
@@ -497,7 +489,7 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			}
 
 			if result {
-				output.Data = append(output.Data, sourceVector.Data[i])
+				output.Data = append(output.Data, sourceVector[i])
 			}
 		}
 
@@ -505,12 +497,12 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// list over object elements
-	if sourceObject, ok := source.(ast.Object); ok {
+	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
 		output := ast.Object{
 			Data: map[string]any{},
 		}
 
-		for key, value := range sourceObject.Data {
+		for key, value := range sourceObject {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(valueVarName, value)
 			if indexVarName != "" {
@@ -557,25 +549,20 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 			return ctx, false, err
 		}
 
-		native, err := types.UnwrapType(result)
+		valid, err := ctx.Coalesce().ToBool(result)
 		if err != nil {
-			return ctx, false, err
-		}
-
-		valid, ok := native.(bool)
-		if !ok {
-			return ctx, false, fmt.Errorf("expression did not return Bool but %T", result)
+			return ctx, false, fmt.Errorf("expression: %w", err)
 		}
 
 		return ctx, valid, nil
 	}
 
-	if vector, ok := source.(ast.Vector); ok {
+	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
 		output := ast.Vector{
 			Data: []any{},
 		}
 
-		for i, item := range vector.Data {
+		for i, item := range vector {
 			var (
 				result bool
 				err    error
@@ -587,19 +574,19 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 			}
 
 			if result {
-				output.Data = append(output.Data, vector.Data[i])
+				output.Data = append(output.Data, vector[i])
 			}
 		}
 
 		return output, nil
 	}
 
-	if object, ok := source.(ast.Object); ok {
+	if object, err := ctx.Coalesce().ToObject(source); err == nil {
 		output := ast.Object{
 			Data: map[string]any{},
 		}
 
-		for key, value := range object.Data {
+		for key, value := range object {
 			var (
 				result bool
 				err    error
@@ -672,19 +659,12 @@ func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	haystack, ok := arguments[0].(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a literal, but %T", arguments[0])
-	}
+	haystack := arguments[0]
+	needle := arguments[1]
 
-	needle, ok := arguments[1].(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a literal, but %T", arguments[1])
-	}
-
-	if str, ok := haystack.(ast.String); ok {
-		if strNeedle, ok := needle.(ast.String); ok {
-			contains := strings.Contains(string(str), string(strNeedle))
+	if strHaystack, err := ctx.Coalesce().ToString(haystack); err == nil {
+		if strNeedle, err := ctx.Coalesce().ToString(needle); err == nil {
+			contains := strings.Contains(strHaystack, strNeedle)
 
 			return ast.Bool(contains), nil
 		}
@@ -692,14 +672,19 @@ func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #1: expected string, got %T", needle)
 	}
 
-	if vec, ok := haystack.(ast.Vector); ok {
-		for _, val := range vec.Data {
+	if vec, err := ctx.Coalesce().ToVector(haystack); err == nil {
+		needleLiteral, err := types.WrapNative(needle)
+		if err != nil {
+			return nil, fmt.Errorf("cannot compare with %T: %w", needle, err)
+		}
+
+		for _, val := range vec {
 			valLiteral, err := types.WrapNative(val)
 			if err != nil {
 				return nil, fmt.Errorf("cannot compare with %T: %w", val, err)
 			}
 
-			equal, err := equality.StrictEqual(valLiteral, needle)
+			equal, err := equality.StrictEqual(valLiteral, needleLiteral)
 			if err == nil && equal {
 				return ast.Bool(true), nil
 			}

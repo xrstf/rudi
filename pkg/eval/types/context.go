@@ -6,6 +6,7 @@ package types
 import (
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
@@ -36,9 +37,10 @@ type Context struct {
 	document  *Document
 	funcs     Functions
 	variables Variables
+	coalescer coalescing.Coalescer
 }
 
-func NewContext(doc Document, variables Variables, funcs Functions) Context {
+func NewContext(doc Document, variables Variables, funcs Functions, coalescer coalescing.Coalescer) Context {
 	if funcs == nil {
 		funcs = NewFunctions()
 	}
@@ -47,11 +49,22 @@ func NewContext(doc Document, variables Variables, funcs Functions) Context {
 		variables = NewVariables()
 	}
 
+	if coalescer == nil {
+		coalescer = coalescing.NewStrict()
+	}
+
 	return Context{
 		document:  &doc,
 		funcs:     funcs,
 		variables: variables,
+		coalescer: coalescer,
 	}
+}
+
+// Coalesce is named this way to make the frequent calls read fluently
+// (for example "ctx.Coalesce().ToBool(...)").
+func (c Context) Coalesce() coalescing.Coalescer {
+	return c.coalescer
 }
 
 func (c Context) GetDocument() *Document {
@@ -71,6 +84,7 @@ func (c Context) WithVariable(name string, val any) Context {
 		document:  c.document,
 		funcs:     c.funcs,
 		variables: c.variables.With(name, val),
+		coalescer: c.coalescer,
 	}
 }
 

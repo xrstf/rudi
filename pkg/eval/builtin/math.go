@@ -22,9 +22,9 @@ func evalNumericalExpressions(ctx types.Context, args []ast.Expression) (values 
 			return nil, false, fmt.Errorf("argument #%d: %w", i, err)
 		}
 
-		num, ok := evaluated.(ast.Number)
-		if !ok {
-			return nil, false, fmt.Errorf("argument #%d is not a number, but %T", i, evaluated)
+		num, err := ctx.Coalesce().ToNumber(evaluated)
+		if err != nil {
+			return nil, false, fmt.Errorf("argument #%d: %w", i, err)
 		}
 
 		values[i] = num

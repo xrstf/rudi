@@ -33,6 +33,22 @@ func TestEvalObjectNode(t *testing.T) {
 				},
 			},
 		},
+		// {null "bar"}
+		{
+			AST: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key:   ast.Null{},
+						Value: ast.String("bar"),
+					},
+				},
+			},
+			Expected: ast.Object{
+				Data: map[string]any{
+					"": ast.String("bar"),
+				},
+			},
+		},
 		// {(eval "evaled") (eval "also evaled")}
 		{
 			AST: ast.ObjectNode{
@@ -56,6 +72,53 @@ func TestEvalObjectNode(t *testing.T) {
 			Expected: ast.Object{
 				Data: map[string]any{
 					"evaled": ast.String("also evaled"),
+				},
+			},
+		},
+		// {{foo "bar"} "test"}
+		{
+			AST: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key: ast.ObjectNode{
+							Data: []ast.KeyValuePair{
+								{
+									Key:   ast.Identifier{Name: "foo"},
+									Value: ast.String("bar"),
+								},
+							},
+						},
+						Value: ast.String("test"),
+					},
+				},
+			},
+			Invalid: true,
+		},
+		// {{foo "bar"}.foo "test"}
+		{
+			AST: ast.ObjectNode{
+				Data: []ast.KeyValuePair{
+					{
+						Key: ast.ObjectNode{
+							Data: []ast.KeyValuePair{
+								{
+									Key:   ast.Identifier{Name: "foo"},
+									Value: ast.String("bar"),
+								},
+							},
+							PathExpression: &ast.PathExpression{
+								Steps: []ast.Expression{
+									ast.Identifier{Name: "foo"},
+								},
+							},
+						},
+						Value: ast.String("test"),
+					},
+				},
+			},
+			Expected: ast.Object{
+				Data: map[string]any{
+					"bar": ast.String("test"),
 				},
 			},
 		},
@@ -94,18 +157,6 @@ func TestEvalObjectNode(t *testing.T) {
 				Data: []ast.KeyValuePair{
 					{
 						Key:   ast.Bool(true),
-						Value: ast.String("bar"),
-					},
-				},
-			},
-			Invalid: true,
-		},
-		// {null "bar"}
-		{
-			AST: ast.ObjectNode{
-				Data: []ast.KeyValuePair{
-					{
-						Key:   ast.Null{},
 						Value: ast.String("bar"),
 					},
 				},

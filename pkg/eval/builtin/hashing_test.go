@@ -29,8 +29,9 @@ func TestSha1Function(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			// strict coalescing allows null to turn into ""
 			Expression: `(sha1 null)`,
-			Invalid:    true,
+			Expected:   ast.String("da39a3ee5e6b4b0d3255bfef95601890afd80709"),
 		},
 		{
 			Expression: `(sha1 "")`,
@@ -71,8 +72,9 @@ func TestSha256Function(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			// strict coalescing allows null to turn into ""
 			Expression: `(sha256 null)`,
-			Invalid:    true,
+			Expected:   ast.String("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
 		},
 		{
 			Expression: `(sha256 "")`,
@@ -113,8 +115,9 @@ func TestSha512Function(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			// strict coalescing allows null to turn into ""
 			Expression: `(sha512 null)`,
-			Invalid:    true,
+			Expected:   ast.String("cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"),
 		},
 		{
 			Expression: `(sha512 "")`,

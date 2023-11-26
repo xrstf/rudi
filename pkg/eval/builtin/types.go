@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
@@ -24,7 +24,8 @@ func toStringFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	coalesced, err := coalescing.ToString(value)
+	// this function purposefully always uses humane coalescing
+	coalesced, err := coalescing.NewHumane().ToString(value)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,8 @@ func toIntFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	coalesced, err := coalescing.ToInt64(value)
+	// this function purposefully always uses humane coalescing
+	coalesced, err := coalescing.NewHumane().ToInt64(value)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,8 @@ func toFloatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	coalesced, err := coalescing.ToFloat64(value)
+	// this function purposefully always uses humane coalescing
+	coalesced, err := coalescing.NewHumane().ToFloat64(value)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +84,8 @@ func toBoolFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	coalesced, err := coalescing.ToBool(value)
+	// this function purposefully always uses humane coalescing
+	coalesced, err := coalescing.NewHumane().ToBool(value)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +104,7 @@ func typeOfFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	// EvalExpression() will return a number or bool, but those do count as expressions
-	expr, ok := value.(ast.Expression)
+	expr, ok := value.(ast.Literal)
 	if !ok {
 		return nil, fmt.Errorf("expected expression, but got %T", value)
 	}

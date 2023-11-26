@@ -36,12 +36,7 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 				return ctx, nil, errors.New("cannot use bang modifier in object keys")
 			}
 
-			key = ast.String(asserted.Name)
-		// do not even evaluate vectors and objects, as they can never be valid object keys
-		case ast.ObjectNode:
-			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.ExpressionName())
-		case ast.VectorNode:
-			return ctx, nil, fmt.Errorf("cannot use %s as an object key", asserted.ExpressionName())
+			key = asserted.Name
 		default:
 			// Just like with arrays, use a growing context during the object evaluation,
 			// in case someone wants to define a variable here... for some reason.
@@ -51,9 +46,9 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 			}
 		}
 
-		keyString, ok := key.(ast.String)
-		if !ok {
-			return ctx, nil, fmt.Errorf("object key must be string, but got %T", key)
+		keyString, err := ctx.Coalesce().ToString(key)
+		if err != nil {
+			return ctx, nil, fmt.Errorf("object key: %w", err)
 		}
 
 		innerCtx, value, err = EvalExpression(innerCtx, pair.Value)
@@ -61,7 +56,7 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}
 
-		result.Data[string(keyString)] = value
+		result.Data[keyString] = value
 	}
 
 	if obj.PathExpression != nil {

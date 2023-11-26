@@ -25,12 +25,13 @@ func TestLenFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(len null)`,
+			Expression: `(len [] [])`,
 			Invalid:    true,
 		},
 		{
-			Expression: `(len [] [])`,
-			Invalid:    true,
+			// strict coalescing allows null to turn into [] or "", both have len=0
+			Expression: `(len null)`,
+			Expected:   ast.Number{Value: int64(0)},
 		},
 		{
 			Expression: `(len "")`,
@@ -83,16 +84,15 @@ func TestAppendFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			Expression: `(append {} 1)`,
+			Invalid:    true,
+		},
+		{
+			// strict coalescing allows null to turn into [] (null could also be "",
+			// which would result in "1", but append/prepend prefer the first arg
+			// to be a vector)
 			Expression: `(append null 1)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(append {} 1)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(append {} 1)`,
-			Invalid:    true,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
 		},
 		{
 			Expression: `(append [] 1)`,
@@ -149,16 +149,15 @@ func TestPrependFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			Expression: `(prepend {} 1)`,
+			Invalid:    true,
+		},
+		{
+			// strict coalescing allows null to turn into [] (null could also be "",
+			// which would result in "1", but append/prepend prefer the first arg
+			// to be a vector)
 			Expression: `(prepend null 1)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(prepend {} 1)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(prepend {} 1)`,
-			Invalid:    true,
+			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
 		},
 		{
 			Expression: `(prepend [] 1)`,
@@ -219,12 +218,13 @@ func TestReverseFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(reverse null)`,
+			Expression: `(reverse {})`,
 			Invalid:    true,
 		},
 		{
-			Expression: `(reverse {})`,
-			Invalid:    true,
+			// strict coalescing allows null to turn into ""
+			Expression: `(reverse null)`,
+			Expected:   ast.String(""),
 		},
 		{
 			Expression: `(reverse "")`,

@@ -26,7 +26,7 @@ type Program interface {
 	// to get the default set of functions in Rudi.
 	// When no error occurs, Run() returns both the final document value and the
 	// result of the final expression. Otherwise an error is returned.
-	Run(data any, variables Variables, funcs Functions) (document any, result any, err error)
+	Run(data any, variables Variables, funcs Functions, coalescer Coalescer) (document any, result any, err error)
 
 	// RunContext is like Run(), but uses a pre-setup Context and returns the
 	// bare final context instead of its document's value. The result is still
@@ -71,13 +71,13 @@ func Parse(name, script string) (Program, error) {
 // to get the default set of functions in Rudi.
 // When no error occurs, Run() returns both the final document value and the
 // result of the final expression. Otherwise an error is returned.
-func (p *rudiProgram) Run(data any, variables Variables, funcs Functions) (document any, result any, err error) {
+func (p *rudiProgram) Run(data any, variables Variables, funcs Functions, coalescer Coalescer) (document any, result any, err error) {
 	doc, err := NewDocument(data)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot process %T: %w", data, err)
 	}
 
-	ctx := NewContext(doc, variables, funcs)
+	ctx := NewContext(doc, variables, funcs, coalescer)
 
 	finalCtx, unwrappedResult, err := p.RunContext(ctx)
 	if err != nil {

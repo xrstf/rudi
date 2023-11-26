@@ -27,9 +27,9 @@ func hashFunc(ctx types.Context, args []ast.Expression, h hash.Hash) (any, error
 		return nil, err
 	}
 
-	str, ok := value.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument is not string, but %T", value)
+	str, err := ctx.Coalesce().ToString(value)
+	if err != nil {
+		return nil, err
 	}
 
 	if _, err := io.WriteString(h, string(str)); err != nil {

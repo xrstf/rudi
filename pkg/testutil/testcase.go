@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/equality"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
@@ -22,13 +23,16 @@ type Testcase struct {
 	Expression string
 	AST        ast.Expression
 
-	Document          any
-	Variables         types.Variables
-	Functions         types.Functions
+	Document  any
+	Variables types.Variables
+	Functions types.Functions
+	Coalescer coalescing.Coalescer
+
 	Expected          any
 	ExpectedDocument  any
 	ExpectedVariables types.Variables
-	Invalid           bool
+
+	Invalid bool
 }
 
 func (tc *Testcase) String() string {
@@ -69,12 +73,12 @@ func (tc *Testcase) eval(t *testing.T) (types.Context, any, error) {
 		t.Fatal("Must use either AST or Expression as test input.")
 	}
 
-	doc, err := eval.NewDocument(tc.Document)
+	doc, err := types.NewDocument(tc.Document)
 	if err != nil {
 		log.Fatalf("Failed to create parser document: %v", err)
 	}
 
-	progContext := eval.NewContext(doc, tc.Variables, tc.Functions)
+	progContext := types.NewContext(doc, tc.Variables, tc.Functions, tc.Coalescer)
 
 	if tc.Expression != "" {
 		prog := strings.NewReader(tc.Expression)

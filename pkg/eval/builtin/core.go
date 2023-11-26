@@ -9,7 +9,7 @@ import (
 
 	"go.xrstf.de/rudi/pkg/deepcopy"
 	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/coalescing"
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/pathexpr"
@@ -26,9 +26,9 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("condition: %w", err)
 	}
 
-	success, ok := condition.(ast.Bool)
-	if !ok {
-		return nil, fmt.Errorf("condition is not bool, but %T", condition)
+	success, err := ctx.Coalesce().ToBool(condition)
+	if err != nil {
+		return nil, fmt.Errorf("condition: %w", err)
 	}
 
 	if success {
@@ -154,12 +154,13 @@ func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	isEmpty, err := coalescing.IsEmpty(result)
+	// this function purposefully always uses humane coalescing
+	boolified, err := coalescing.NewHumane().ToBool(result)
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	if !isEmpty {
+	if boolified {
 		return result, nil
 	}
 
@@ -330,10 +331,11 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	empty, err := coalescing.IsEmpty(result)
+	// this function purposefully always uses humane coalescing
+	boolified, err := coalescing.NewHumane().ToBool(result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	return ast.Bool(empty), nil
+	return ast.Bool(!boolified), nil
 }

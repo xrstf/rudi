@@ -29,8 +29,9 @@ func TestToBase64Function(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			// strict coalescing allows null to turn into ""
 			Expression: `(to-base64 null)`,
-			Invalid:    true,
+			Expected:   ast.String(""),
 		},
 		{
 			Expression: `(to-base64 "")`,
@@ -75,12 +76,14 @@ func TestFromBase64Function(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(from-base64 null)`,
+			Expression: `(from-base64 "definitely-not-base64")`,
 			Invalid:    true,
 		},
 		{
-			Expression: `(from-base64 "definitely-not-base64")`,
-			Invalid:    true,
+			// strict coalescing allows null to turn into ""
+			Expression: `(from-base64 null)`,
+			Expected:   ast.String(""),
+
 		},
 		{
 			// should be able to recover

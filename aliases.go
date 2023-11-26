@@ -4,6 +4,7 @@
 package rudi
 
 import (
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/builtin"
 	"go.xrstf.de/rudi/pkg/eval/types"
 )
@@ -24,9 +25,19 @@ type Function = types.Function
 // Document is the global document that is being processed by a Rudi script.
 type Document = types.Document
 
+// Coalescer is responsible for type handling and equality rules. Build your own
+// or use any of the predefined versions:
+//
+//   - coalescing.NewStrict() – mostly strict, but allows nulls to be converted
+//     and allows ints to become floats
+//   - coalescing.NewPedantic() – even more strict, allows absolutely no conversions
+//   - coalescing.NewHumane() – gentle type handling that allows lossless
+//     conversions like 1 => "1" or allowing (false == nil).
+type Coalescer = coalescing.Coalescer
+
 // NewContext wraps the document, variables and functions into a Context.
-func NewContext(doc Document, variables Variables, funcs Functions) Context {
-	return types.NewContext(doc, variables, funcs)
+func NewContext(doc Document, variables Variables, funcs Functions, coalescer Coalescer) Context {
+	return types.NewContext(doc, variables, funcs, coalescer)
 }
 
 // NewFunctions returns an empty set of runtime functions.

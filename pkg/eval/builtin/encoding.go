@@ -23,9 +23,9 @@ func toBase64Function(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	str, ok := value.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument is not string, but %T", value)
+	str, err := ctx.Coalesce().ToString(value)
+	if err != nil {
+		return nil, err
 	}
 
 	encoded := base64.StdEncoding.EncodeToString([]byte(str))
@@ -44,14 +44,14 @@ func fromBase64Function(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	str, ok := value.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("argument is not string, but %T", value)
+	str, err := ctx.Coalesce().ToString(value)
+	if err != nil {
+		return nil, err
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(string(str))
 	if err != nil {
-		return nil, fmt.Errorf("argument is not valid base64: %w", err)
+		return nil, fmt.Errorf("not valid base64: %w", err)
 	}
 
 	return ast.String(string(decoded)), nil

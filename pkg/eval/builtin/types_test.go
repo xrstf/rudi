@@ -46,7 +46,7 @@ func TestToStringFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-string null)`,
-			Expected:   ast.String("null"),
+			Expected:   ast.String(""),
 		},
 		{
 			Expression: `(to-string [])`,

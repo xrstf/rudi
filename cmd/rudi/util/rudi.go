@@ -27,7 +27,7 @@ func SetupRudiContext(files []any) (rudi.Context, error) {
 	vars := rudi.NewVariables().
 		Set("files", files)
 
-	ctx := rudi.NewContext(document, vars, rudi.NewBuiltInFunctions())
+	ctx := rudi.NewContext(document, vars, rudi.NewBuiltInFunctions(), nil)
 
 	return ctx, nil
 }

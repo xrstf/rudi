@@ -19,12 +19,12 @@ func nowFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	_, format, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
+		return nil, err
 	}
 
-	formatString, ok := format.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("format is not string, but %T", format)
+	formatString, err := ctx.Coalesce().ToString(format)
+	if err != nil {
+		return nil, err
 	}
 
 	formatted := time.Now().Format(string(formatString))

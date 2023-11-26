@@ -23,9 +23,9 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	glueString, ok := glue.(ast.String)
-	if !ok {
-		return nil, fmt.Errorf("glue is not string, but %T", glue)
+	glueString, err := ctx.Coalesce().ToString(glue)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
 	values, err := evalArgs(ctx, args, 1)
@@ -35,10 +35,10 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	parts := []string{}
 	for i, value := range values {
-		vector, ok := value.(ast.Vector)
-		if !ok {
-			part, ok := value.(ast.String)
-			if !ok {
+		vector, err := ctx.Coalesce().ToVector(value)
+		if err != nil {
+			part, err := ctx.Coalesce().ToString(value)
+			if err != nil {
 				return nil, fmt.Errorf("argument #%d is neither vector nor string, but %T", i+1, value)
 			}
 
@@ -46,10 +46,10 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			continue
 		}
 
-		for j, item := range vector.Data {
-			part, ok := item.(ast.String)
-			if !ok {
-				return nil, fmt.Errorf("argument #%d.%d is not a string, but %T", i+1, j, item)
+		for j, item := range vector {
+			part, err := ctx.Coalesce().ToString(item)
+			if err != nil {
+				return nil, fmt.Errorf("argument #%d.%d: %w", i+1, j, err)
 			}
 
 			parts = append(parts, string(part))
@@ -74,9 +74,9 @@ func fromStringFunc(f genericStringFunc, expectedArgs int, desc string) types.Fu
 
 		stringValues := make([]string, len(values))
 		for i, value := range values {
-			strValue, ok := value.(ast.String)
-			if !ok {
-				return nil, fmt.Errorf("argument #%d is not a string, but %T", i, value)
+			strValue, err := ctx.Coalesce().ToString(value)
+			if err != nil {
+				return nil, fmt.Errorf("argument #%d: %w", i, err)
 			}
 
 			stringValues[i] = string(strValue)

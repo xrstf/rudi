@@ -33,6 +33,9 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 * **Variables** can be pre-defined or set at runtime.
 * **JSONPath** expressions are first-class citizens and make referring to the current JSON document
   a breeze.
+* **Optional Type Safety**: Choose between pedantic, strict or humane typing for your programs.
+  Strict allows nearly no type conversions, humane allows for things like `1` (int) turning into
+  `"1"` (string) when needed.
 
 ## Installation
 
@@ -92,8 +95,9 @@ import (
 const script = `(set! .foo 42) (+ $myvar 42 .foo)`
 
 func main() {
-   // Rudi programs are meant to manipulate a document (path expressions like ".foo" resolve within
-   // that document). The document can be anything, but is most often a JSON object.
+   // Rudi programs are meant to manipulate a document (path expressions like
+   // ".foo" resolve within that document). The document can be anything,
+   // but is most often a JSON object.
    documentData := map[string]any{"foo": 9000}
 
    // parse the script (the name is used when generating error strings)
@@ -103,15 +107,21 @@ func main() {
    }
 
    // evaluate the program;
-   // this returns an evaluated value, which is the result of the last expression that was evaluated,
-   // plus the final document state (the updatedData) after the script has finished.
+   // this returns an evaluated value, which is the result of the last expression
+   // that was evaluated, plus the final document state (the updatedData) after
+   // the script has finished.
    updatedData, result, err := program.Run(
       documentData,
       // setup the set of variables available by default in the script
       rudi.NewVariables().Set("myvar", 42),
-      // Likewise, setup the functions available (note that this includes functions like "if" and "and",
-      // so running with an empty function set is generally not advisable).
+      // Likewise, setup the functions available (note that this includes
+      // functions like "if" and "and", so running with an empty function set
+      // is generally not advisable).
       rudi.NewBuiltInFunctions(),
+      // decide what kind of type strictness you would like; pedantic, strict
+      // or humane; choose your own adventure (strict is default if you use nil
+      // here; humane allows conversions like 1 == "1").
+      coalescing.NewStrict(),
    )
    if err != nil {
       log.Fatalf("Script failed: %v", err)

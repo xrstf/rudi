@@ -25,10 +25,6 @@ func TestAndFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(and null)`,
-			Invalid:    true,
-		},
-		{
 			Expression: `(and "")`,
 			Invalid:    true,
 		},
@@ -58,6 +54,10 @@ func TestAndFunction(t *testing.T) {
 		},
 		{
 			Expression: `(and false)`,
+			Expected:   ast.Bool(false),
+		},
+		{
+			Expression: `(and null)`,
 			Expected:   ast.Bool(false),
 		},
 		{
@@ -95,10 +95,6 @@ func TestOrFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(or null)`,
-			Invalid:    true,
-		},
-		{
 			Expression: `(or "")`,
 			Invalid:    true,
 		},
@@ -128,6 +124,10 @@ func TestOrFunction(t *testing.T) {
 		},
 		{
 			Expression: `(or false)`,
+			Expected:   ast.Bool(false),
+		},
+		{
+			Expression: `(or null)`,
 			Expected:   ast.Bool(false),
 		},
 		{
@@ -169,10 +169,6 @@ func TestNotFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(not null)`,
-			Invalid:    true,
-		},
-		{
 			Expression: `(not "")`,
 			Invalid:    true,
 		},
@@ -203,6 +199,10 @@ func TestNotFunction(t *testing.T) {
 		{
 			Expression: `(not true)`,
 			Expected:   ast.Bool(false),
+		},
+		{
+			Expression: `(not null)`,
+			Expected:   ast.Bool(true),
 		},
 		{
 			Expression: `(not (not (not (not true))))`,

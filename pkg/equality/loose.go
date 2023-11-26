@@ -6,7 +6,7 @@ package equality
 import (
 	"fmt"
 
-	"go.xrstf.de/rudi/pkg/eval/coalescing"
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )

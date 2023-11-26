@@ -130,28 +130,28 @@ func formatFloat(f float64) string {
 	return strings.TrimSuffix(formatted, ".")
 }
 
-func IsEmpty(val any) (bool, error) {
-	switch v := val.(type) {
-	case bool:
-		return !v, nil
-	case int64:
-		return v == 0, nil
-	case float64:
-		return v == 0, nil
-	case nil:
-		return true, nil
-	case string:
-		return len(v) == 0, nil
-	case []any:
-		return len(v) == 0, nil
-	case map[string]any:
-		return len(v) == 0, nil
-	default:
-		lit, ok := val.(ast.Literal)
-		if !ok {
-			return false, fmt.Errorf("cannot determine emptiness oT %s", val)
-		}
+// func IsEmpty(val any) (bool, error) {
+// 	switch v := val.(type) {
+// 	case bool:
+// 		return !v, nil
+// 	case int64:
+// 		return v == 0, nil
+// 	case float64:
+// 		return v == 0, nil
+// 	case nil:
+// 		return true, nil
+// 	case string:
+// 		return len(v) == 0, nil
+// 	case []any:
+// 		return len(v) == 0, nil
+// 	case map[string]any:
+// 		return len(v) == 0, nil
+// 	default:
+// 		lit, ok := val.(ast.Literal)
+// 		if !ok {
+// 			return false, fmt.Errorf("cannot determine emptiness oT %s", val)
+// 		}
 
-		return IsEmpty(lit.LiteralValue())
-	}
-}
+// 		return IsEmpty(lit.LiteralValue())
+// 	}
+// }
