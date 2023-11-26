@@ -71,7 +71,7 @@ func nullishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, equa
 		b = left
 	}
 
-	bValue, err := coalescing.ToBool(b)
+	bValue, err := coalescing.NewHumane().ToBool(b)
 	if err != nil {
 		return matched, false, ErrIncompatibleTypes
 	}
@@ -106,7 +106,7 @@ func boolishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, equa
 		b = left
 	}
 
-	bValue, err := coalescing.ToBool(b)
+	bValue, err := coalescing.NewHumane().ToBool(b)
 	if err != nil {
 		return matched, false, ErrIncompatibleTypes
 	}
@@ -141,7 +141,7 @@ func numberishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, eq
 		b = left
 	}
 
-	bValue, err := coalescing.ToFloat64(b)
+	bValue, err := coalescing.NewHumane().ToFloat64(b)
 	if err != nil {
 		return matched, false, ErrIncompatibleTypes
 	}
@@ -176,7 +176,7 @@ func stringishEqualEnough(left ast.Literal, right ast.Literal) (matched bool, eq
 		b = left
 	}
 
-	bValue, err := coalescing.ToString(b)
+	bValue, err := coalescing.NewHumane().ToString(b)
 	if err != nil {
 		return matched, false, ErrIncompatibleTypes
 	}

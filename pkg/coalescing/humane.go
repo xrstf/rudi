@@ -144,6 +144,15 @@ func (humane) ToString(val any) (string, error) {
 	}
 }
 
+func formatFloat(f float64) string {
+	formatted := fmt.Sprintf("%f", f)
+	for strings.HasSuffix(formatted, "0") {
+		formatted = strings.TrimSuffix(formatted, "0")
+	}
+
+	return strings.TrimSuffix(formatted, ".")
+}
+
 func (humane) ToVector(val any) ([]any, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
