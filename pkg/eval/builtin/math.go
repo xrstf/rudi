@@ -54,7 +54,7 @@ func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			sum += val
 		}
 
-		return ast.Number{Value: sum}, nil
+		return sum, nil
 	}
 
 	sum := float64(0)
@@ -62,7 +62,7 @@ func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		sum += num.ToFloat()
 	}
 
-	return ast.Number{Value: sum}, nil
+	return sum, nil
 }
 
 func subFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -82,7 +82,7 @@ func subFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			difference -= val
 		}
 
-		return ast.Number{Value: difference}, nil
+		return difference, nil
 	}
 
 	difference := values[0].ToFloat()
@@ -90,7 +90,7 @@ func subFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		difference -= num.ToFloat()
 	}
 
-	return ast.Number{Value: difference}, nil
+	return difference, nil
 }
 
 func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -110,7 +110,7 @@ func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			product *= factor
 		}
 
-		return ast.Number{Value: product}, nil
+		return product, nil
 	}
 
 	product := float64(1)
@@ -118,7 +118,7 @@ func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		product *= num.ToFloat()
 	}
 
-	return ast.Number{Value: product}, nil
+	return product, nil
 }
 
 func divideFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -141,5 +141,5 @@ func divideFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		result /= divisor
 	}
 
-	return ast.Number{Value: result}, nil
+	return result, nil
 }

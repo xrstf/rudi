@@ -40,35 +40,25 @@ func TestEvalSymbol(t *testing.T) {
 		{
 			AST: makeSymbol("var", nil),
 			Variables: types.Variables{
-				"var": ast.String("foo"),
+				"var": "foo",
 			},
-			Expected: ast.String("foo"),
-		},
-		// $native
-		{
-			AST: makeSymbol("native", nil),
-			Variables: types.Variables{
-				"native": "foo",
-			},
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 		// $var.foo
 		{
 			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
 			Variables: types.Variables{
 				"var": map[string]any{
-					"foo": ast.String("foobar"),
+					"foo": "foobar",
 				},
 			},
-			Expected: ast.String("foobar"),
+			Expected: "foobar",
 		},
 		// $aVector.foo
 		{
 			AST: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
 			Variables: types.Variables{
-				"var": ast.Vector{
-					Data: []any{ast.String("first")},
-				},
+				"aVector": []any{"first"},
 			},
 			Invalid: true,
 		},
@@ -76,27 +66,25 @@ func TestEvalSymbol(t *testing.T) {
 		{
 			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
 			Variables: types.Variables{
-				"var": ast.Vector{
-					Data: []any{
-						ast.String("first"),
-						ast.String("second"),
-					},
+				"var": []any{
+					"first",
+					"second",
 				},
 			},
-			Expected: ast.String("second"),
+			Expected: "second",
 		},
 		// $aString[1]
 		{
 			AST: makeSymbol("aString", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
 			Variables: types.Variables{
-				"var": ast.String("bar"),
+				"aString": "bar",
 			},
 			Invalid: true,
 		},
 		// .
 		{
 			AST:      makeSymbol("", &ast.PathExpression{}),
-			Expected: ast.Null{},
+			Expected: nil,
 		},
 	}
 

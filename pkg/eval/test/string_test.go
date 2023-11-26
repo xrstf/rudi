@@ -14,11 +14,11 @@ func TestEvalString(t *testing.T) {
 	testcases := []testutil.Testcase{
 		{
 			AST:      ast.String(""),
-			Expected: ast.String(""),
+			Expected: "",
 		},
 		{
 			AST:      ast.String("foo"),
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 	}
 

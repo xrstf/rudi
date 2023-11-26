@@ -66,7 +66,7 @@ from GitHub.
     Examples:
 
     * `rudi '.foo' myfile.json`
-    * `rudi '(set .foo "bar") (set .users 42) .' myfile.json`
+    * `rudi '(set! .foo "bar") (set! .users 42) .' myfile.json`
     * `rudi --script convert.rudi myfile.json`
 
 `rudi` has extensive help built right into it, try running `rudi help` to get started.
@@ -118,7 +118,7 @@ func main() {
       // functions like "if" and "and", so running with an empty function set
       // is generally not advisable).
       rudi.NewBuiltInFunctions(),
-      // decide what kind of type strictness you would like; pedantic, strict
+      // Decide what kind of type strictness you would like; pedantic, strict
       // or humane; choose your own adventure (strict is default if you use nil
       // here; humane allows conversions like 1 == "1").
       coalescing.NewStrict(),

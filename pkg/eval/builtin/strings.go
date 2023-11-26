@@ -56,7 +56,7 @@ func concatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		}
 	}
 
-	return ast.String(strings.Join(parts, string(glueString))), nil
+	return strings.Join(parts, string(glueString)), nil
 }
 
 type genericStringFunc func(ctx types.Context, args []string) (any, error)
@@ -89,59 +89,61 @@ func fromStringFunc(f genericStringFunc, expectedArgs int, desc string) types.Fu
 // (split SEP:String SOURCE:String)
 func splitFunction(ctx types.Context, args []string) (any, error) {
 	parts := strings.Split(args[1], args[0])
+
+	// to []any
 	result := make([]any, len(parts))
 	for i, part := range parts {
-		result[i] = ast.String(part)
+		result[i] = part
 	}
 
-	return ast.Vector{Data: result}, nil
+	return result, nil
 }
 
 // (has-suffix SOURCE:String SUFFIX:String)
 func hasSuffixFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.HasSuffix(args[0], args[1])
 
-	return ast.Bool(result), nil
+	return result, nil
 }
 
 // (has-prefix SOURCE:String PREFIX:String)
 func hasPrefixFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.HasPrefix(args[0], args[1])
 
-	return ast.Bool(result), nil
+	return result, nil
 }
 
 // (trim-suffix SOURCE:String SUFFIX:String)
 func trimSuffixFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.TrimSuffix(args[0], args[1])
 
-	return ast.String(result), nil
+	return result, nil
 }
 
 // (trim-prefix SOURCE:String PREFIX:String)
 func trimPrefixFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.TrimPrefix(args[0], args[1])
 
-	return ast.String(result), nil
+	return result, nil
 }
 
 // (to-lower SOURCE:String)
 func toLowerFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.ToLower(args[0])
 
-	return ast.String(result), nil
+	return result, nil
 }
 
 // (to-upper SOURCE:String)
 func toUpperFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.ToUpper(args[0])
 
-	return ast.String(result), nil
+	return result, nil
 }
 
 // (trim SOURCE:String)
 func trimFunction(ctx types.Context, args []string) (any, error) {
 	result := strings.TrimSpace(args[0])
 
-	return ast.String(result), nil
+	return result, nil
 }

@@ -15,7 +15,7 @@ func TestEvalVectorNode(t *testing.T) {
 		// []
 		{
 			AST:      ast.VectorNode{},
-			Expected: ast.Vector{},
+			Expected: []any{},
 		},
 		// [identifier]
 		{
@@ -40,12 +40,10 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Vector{
-				Data: []any{
-					true,
-					ast.String("foo"),
-					ast.String("evaled"),
-				},
+			Expected: []any{
+				true,
+				"foo",
+				"evaled",
 			},
 		},
 		// [true "foo"][1]
@@ -61,7 +59,7 @@ func TestEvalVectorNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 		// ["foo"][1]
 		{

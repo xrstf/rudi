@@ -6,7 +6,6 @@ package builtin
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -38,23 +37,23 @@ func TestSumFunction(t *testing.T) {
 		},
 		{
 			Expression: `(+ 1 2)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			Expression: `(+ 1 -2 5)`,
-			Expected:   ast.Number{Value: int64(4)},
+			Expected:   int64(4),
 		},
 		{
 			Expression: `(+ 1 1.5)`,
-			Expected:   ast.Number{Value: float64(2.5)},
+			Expected:   float64(2.5),
 		},
 		{
 			Expression: `(+ 1 1.5 (+ 1 2))`,
-			Expected:   ast.Number{Value: float64(5.5)},
+			Expected:   float64(5.5),
 		},
 		{
 			Expression: `(+ 0 0.0 -5.6)`,
-			Expected:   ast.Number{Value: float64(-5.6)},
+			Expected:   float64(-5.6),
 		},
 	}
 
@@ -88,23 +87,23 @@ func TestMinusFunction(t *testing.T) {
 		},
 		{
 			Expression: `(- 1 2)`,
-			Expected:   ast.Number{Value: int64(-1)},
+			Expected:   int64(-1),
 		},
 		{
 			Expression: `(- 1 -2 5)`,
-			Expected:   ast.Number{Value: int64(-2)},
+			Expected:   int64(-2),
 		},
 		{
 			Expression: `(- 1 1.5)`,
-			Expected:   ast.Number{Value: float64(-0.5)},
+			Expected:   float64(-0.5),
 		},
 		{
 			Expression: `(- 1 1.5 (- 1 2))`,
-			Expected:   ast.Number{Value: float64(0.5)},
+			Expected:   float64(0.5),
 		},
 		{
 			Expression: `(- 0 0.0 -5.6)`,
-			Expected:   ast.Number{Value: float64(5.6)},
+			Expected:   float64(5.6),
 		},
 	}
 
@@ -138,23 +137,23 @@ func TestMultiplyFunction(t *testing.T) {
 		},
 		{
 			Expression: `(* 1 2)`,
-			Expected:   ast.Number{Value: int64(2)},
+			Expected:   int64(2),
 		},
 		{
 			Expression: `(* 1 -2 5)`,
-			Expected:   ast.Number{Value: int64(-10)},
+			Expected:   int64(-10),
 		},
 		{
 			Expression: `(* 2 -1.5)`,
-			Expected:   ast.Number{Value: float64(-3.0)},
+			Expected:   float64(-3.0),
 		},
 		{
 			Expression: `(* 1 1.5 (* 1 2))`,
-			Expected:   ast.Number{Value: float64(3.0)},
+			Expected:   float64(3.0),
 		},
 		{
 			Expression: `(* 0 0.0 -5.6)`,
-			Expected:   ast.Number{Value: float64(0)},
+			Expected:   float64(0),
 		},
 	}
 
@@ -188,19 +187,19 @@ func TestDivideFunction(t *testing.T) {
 		},
 		{
 			Expression: `(/ 1 2)`,
-			Expected:   ast.Number{Value: float64(0.5)},
+			Expected:   float64(0.5),
 		},
 		{
 			Expression: `(/ 1 -2 5)`,
-			Expected:   ast.Number{Value: float64(-0.1)},
+			Expected:   float64(-0.1),
 		},
 		{
 			Expression: `(/ 2 -1.5)`,
-			Expected:   ast.Number{Value: float64(-1.33333333333333333333)},
+			Expected:   float64(-1.33333333333333333333),
 		},
 		{
 			Expression: `(/ 1 1.5 (/ 1 2))`,
-			Expected:   ast.Number{Value: float64(1.33333333333333333333)},
+			Expected:   float64(1.33333333333333333333),
 		},
 		{
 			Expression: `(/ 0 0.0 -5.6)`,

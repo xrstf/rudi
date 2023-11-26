@@ -143,11 +143,8 @@ func assertResultValue(t *testing.T, expected any, actual any) {
 func assertDocument(t *testing.T, expected any, ctx types.Context) {
 	resultDoc := ctx.GetDocument().Data()
 
-	unwrappedDoc, err := types.UnwrapType(resultDoc)
-	if err != nil {
-		t.Errorf("Failed to unwrap document: %v", err)
-	} else if !cmp.Equal(expected, unwrappedDoc) {
-		t.Errorf("Resulting document does not match expectation:\n\n%s\n", renderDiff(expected, unwrappedDoc))
+	if !cmp.Equal(expected, resultDoc) {
+		t.Errorf("Resulting document does not match expectation:\n\n%s\n", renderDiff(expected, resultDoc))
 	}
 }
 

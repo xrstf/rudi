@@ -17,7 +17,7 @@ func EvalProgram(ctx types.Context, p *ast.Program) (types.Context, any, error) 
 	}
 
 	if len(p.Statements) == 0 {
-		return ctx, ast.Null{}, nil
+		return ctx, nil, nil
 	}
 
 	innerCtx := ctx

@@ -81,7 +81,7 @@ func TestEvalTuple(t *testing.T) {
 					ast.String("foo"),
 				},
 			},
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 		// (eval {foo "bar"}).foo
 		{
@@ -103,7 +103,7 @@ func TestEvalTuple(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.String("bar"),
+			Expected: "bar",
 		},
 		// (eval {foo "bar"})[1]
 		{
@@ -145,7 +145,7 @@ func TestEvalTuple(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Number{Value: 2},
+			Expected: 2,
 		},
 		// (eval [1 2]).invalid
 		{
@@ -251,7 +251,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 					ast.String("value"),
 				},
 			},
-			Expected:         ast.String("value"),
+			Expected:         "value",
 			ExpectedDocument: "value",
 		},
 		// (set! . "value")
@@ -263,7 +263,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 					ast.String("value"),
 				},
 			},
-			Expected:         ast.String("value"),
+			Expected:         "value",
 			ExpectedDocument: "value",
 		},
 		// (set! $val "value")
@@ -275,7 +275,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 					ast.String("value"),
 				},
 			},
-			Expected: ast.String("value"),
+			Expected: "value",
 			ExpectedVariables: types.Variables{
 				"myvar": "value",
 			},
@@ -294,7 +294,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 				},
 			},
 			Document:         map[string]any{"hello": "world", "hei": "verden"},
-			Expected:         ast.String("value"),
+			Expected:         "value",
 			ExpectedDocument: map[string]any{"hello": "value", "hei": "verden"},
 		},
 		// (set! $val.key "value")
@@ -313,7 +313,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 			Variables: types.Variables{
 				"val": map[string]any{"foo": "bar", "key": 42},
 			},
-			Expected: ast.String("value"),
+			Expected: "value",
 			ExpectedVariables: types.Variables{
 				"val": map[string]any{"foo": "bar", "key": "value"},
 			},
@@ -342,7 +342,7 @@ func TestEvalTupleBangModifier(t *testing.T) {
 				},
 			},
 			Document:         map[string]any{"hello": "world", "hei": "verden"},
-			Expected:         ast.String("value"),
+			Expected:         "value",
 			ExpectedDocument: map[string]any{"hello": "value", "hei": "value"},
 		},
 	}

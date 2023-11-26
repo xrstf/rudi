@@ -5,7 +5,6 @@ package builtin
 
 import (
 	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 var Functions = types.Functions{
@@ -64,23 +63,23 @@ var Functions = types.Functions{
 	"like?": types.BasicFunction(likeFunction, `like eq?, but does lossless type conversions so 1 == "1"`),
 
 	"lt?": makeNumberComparatorFunc(
-		func(a, b int64) (ast.Bool, error) { return ast.Bool(a < b), nil },
-		func(a, b float64) (ast.Bool, error) { return ast.Bool(a < b), nil },
+		func(a, b int64) (bool, error) { return a < b, nil },
+		func(a, b float64) (bool, error) { return a < b, nil },
 		"returns a < b",
 	),
 	"lte?": makeNumberComparatorFunc(
-		func(a, b int64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
-		func(a, b float64) (ast.Bool, error) { return ast.Bool(a <= b), nil },
+		func(a, b int64) (bool, error) { return a <= b, nil },
+		func(a, b float64) (bool, error) { return a <= b, nil },
 		"return a <= b",
 	),
 	"gt?": makeNumberComparatorFunc(
-		func(a, b int64) (ast.Bool, error) { return ast.Bool(a > b), nil },
-		func(a, b float64) (ast.Bool, error) { return ast.Bool(a > b), nil },
+		func(a, b int64) (bool, error) { return a > b, nil },
+		func(a, b float64) (bool, error) { return a > b, nil },
 		"returns a > b",
 	),
 	"gte?": makeNumberComparatorFunc(
-		func(a, b int64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
-		func(a, b float64) (ast.Bool, error) { return ast.Bool(a >= b), nil },
+		func(a, b int64) (bool, error) { return a >= b, nil },
+		func(a, b float64) (bool, error) { return a >= b, nil },
 		"returns a >= b",
 	),
 

@@ -6,8 +6,6 @@ package pathexpr
 import (
 	"errors"
 	"fmt"
-
-	"go.xrstf.de/rudi/pkg/eval/types"
 )
 
 func removeSliceItem(slice []any, index int) []any {
@@ -17,11 +15,6 @@ func removeSliceItem(slice []any, index int) []any {
 func Delete(dest any, path Path) (any, error) {
 	if len(path) == 0 {
 		return nil, nil
-	}
-
-	target, err := types.UnwrapType(dest)
-	if err != nil {
-		return nil, fmt.Errorf("cannot descend into %T", dest)
 	}
 
 	thisStep := path[0]
@@ -35,7 +28,7 @@ func Delete(dest any, path Path) (any, error) {
 				return nil, fmt.Errorf("index %d out of bounds", index)
 			}
 
-			if slice, ok := target.([]any); ok {
+			if slice, ok := dest.([]any); ok {
 				if index >= len(slice) {
 					return nil, fmt.Errorf("index %d out of bounds", index)
 				}
@@ -43,17 +36,17 @@ func Delete(dest any, path Path) (any, error) {
 				return removeSliceItem(slice, index), nil
 			}
 
-			return nil, fmt.Errorf("cannot delete index from %T", target)
+			return nil, fmt.Errorf("cannot delete index from %T", dest)
 		}
 
 		// .key
 		if key, ok := toStringStep(thisStep); ok {
-			if object, ok := target.(map[string]any); ok {
+			if object, ok := dest.(map[string]any); ok {
 				delete(object, key)
 				return object, nil
 			}
 
-			return nil, fmt.Errorf("cannot delete key from %T", target)
+			return nil, fmt.Errorf("cannot delete key from %T", dest)
 		}
 
 		return nil, fmt.Errorf("can only remove object keys or slice items, not %T", thisStep)
@@ -65,7 +58,7 @@ func Delete(dest any, path Path) (any, error) {
 			return nil, fmt.Errorf("index %d out of bounds", index)
 		}
 
-		if slice, ok := target.([]any); ok {
+		if slice, ok := dest.([]any); ok {
 			if index >= len(slice) {
 				return nil, fmt.Errorf("index %d out of bounds", index)
 			}
@@ -82,12 +75,12 @@ func Delete(dest any, path Path) (any, error) {
 			return slice, nil
 		}
 
-		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, target)
+		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, dest)
 	}
 
 	// .key
 	if key, ok := toStringStep(thisStep); ok {
-		if object, ok := target.(map[string]any); ok {
+		if object, ok := dest.(map[string]any); ok {
 			// getting the empty value for non-existing keys is fine
 			existingValue := object[key]
 
@@ -101,7 +94,7 @@ func Delete(dest any, path Path) (any, error) {
 			return object, nil
 		}
 
-		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, target)
+		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, dest)
 	}
 
 	return nil, errors.New("invalid path step: neither key nor index")

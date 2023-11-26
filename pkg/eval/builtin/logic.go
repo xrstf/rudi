@@ -31,7 +31,7 @@ func andFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		result = result && bool(part)
 	}
 
-	return ast.Bool(result), nil
+	return result, nil
 }
 
 func orFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -54,7 +54,7 @@ func orFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		result = result || bool(part)
 	}
 
-	return ast.Bool(result), nil
+	return result, nil
 }
 
 func notFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -72,5 +72,5 @@ func notFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	return ast.Bool(!arg), nil
+	return !arg, nil
 }

@@ -24,3 +24,13 @@ func evalArgs(ctx types.Context, args []ast.Expression, argShift int) ([]any, er
 
 	return values, nil
 }
+
+func checkIterable(ctx types.Context, val any) error {
+	if _, err := ctx.Coalesce().ToVector(val); err != nil {
+		if _, err := ctx.Coalesce().ToObject(val); err != nil {
+			return fmt.Errorf("expected vector or object, got %T", val)
+		}
+	}
+
+	return nil
+}

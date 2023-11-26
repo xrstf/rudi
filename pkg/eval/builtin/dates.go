@@ -29,5 +29,5 @@ func nowFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	formatted := time.Now().Format(string(formatString))
 
-	return ast.String(formatted), nil
+	return formatted, nil
 }

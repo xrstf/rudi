@@ -6,7 +6,6 @@ package builtin
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -22,31 +21,31 @@ func TestToStringFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-string "foo")`,
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(to-string 1)`,
-			Expected:   ast.String("1"),
+			Expected:   "1",
 		},
 		{
 			Expression: `(to-string (+ 1 3))`,
-			Expected:   ast.String("4"),
+			Expected:   "4",
 		},
 		{
 			Expression: `(to-string 1.5)`,
-			Expected:   ast.String("1.5"),
+			Expected:   "1.5",
 		},
 		{
 			Expression: `(to-string 1e3)`,
-			Expected:   ast.String("1000"),
+			Expected:   "1000",
 		},
 		{
 			Expression: `(to-string true)`,
-			Expected:   ast.String("true"),
+			Expected:   "true",
 		},
 		{
 			Expression: `(to-string null)`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(to-string [])`,
@@ -76,15 +75,15 @@ func TestToIntFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-int 1)`,
-			Expected:   ast.Number{Value: int64(1)},
+			Expected:   int64(1),
 		},
 		{
 			Expression: `(to-int "42")`,
-			Expected:   ast.Number{Value: int64(42)},
+			Expected:   int64(42),
 		},
 		{
 			Expression: `(to-int (+ 1 3))`,
-			Expected:   ast.Number{Value: int64(4)},
+			Expected:   int64(4),
 		},
 		{
 			Expression: `(to-int 1.5)`,
@@ -96,15 +95,15 @@ func TestToIntFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-int true)`,
-			Expected:   ast.Number{Value: int64(1)},
+			Expected:   int64(1),
 		},
 		{
 			Expression: `(to-int false)`,
-			Expected:   ast.Number{Value: int64(0)},
+			Expected:   int64(0),
 		},
 		{
 			Expression: `(to-int null)`,
-			Expected:   ast.Number{Value: int64(0)},
+			Expected:   int64(0),
 		},
 		{
 			Expression: `(to-int [])`,
@@ -134,35 +133,35 @@ func TestToFloatFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-float 1)`,
-			Expected:   ast.Number{Value: float64(1)},
+			Expected:   float64(1),
 		},
 		{
 			Expression: `(to-float (+ 1 3))`,
-			Expected:   ast.Number{Value: float64(4)},
+			Expected:   float64(4),
 		},
 		{
 			Expression: `(to-float 1.5)`,
-			Expected:   ast.Number{Value: float64(1.5)},
+			Expected:   float64(1.5),
 		},
 		{
 			Expression: `(to-float "3")`,
-			Expected:   ast.Number{Value: float64(3)},
+			Expected:   float64(3),
 		},
 		{
 			Expression: `(to-float "1.5")`,
-			Expected:   ast.Number{Value: float64(1.5)},
+			Expected:   float64(1.5),
 		},
 		{
 			Expression: `(to-float true)`,
-			Expected:   ast.Number{Value: float64(1)},
+			Expected:   float64(1),
 		},
 		{
 			Expression: `(to-float false)`,
-			Expected:   ast.Number{Value: float64(0)},
+			Expected:   float64(0),
 		},
 		{
 			Expression: `(to-float null)`,
-			Expected:   ast.Number{Value: float64(0)},
+			Expected:   float64(0),
 		},
 		{
 			Expression: `(to-float [])`,
@@ -192,55 +191,55 @@ func TestToBoolFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-bool 1)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(to-bool 0)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(to-bool (+ 1 3))`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(to-bool 1.5)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(to-bool 0.0)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(to-bool "3")`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(to-bool true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(to-bool false)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(to-bool null)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(to-bool [])`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(to-bool [0])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(to-bool {})`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(to-bool {foo "bar"})`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 	}
 
@@ -262,59 +261,59 @@ func TestTypeOfFunction(t *testing.T) {
 		},
 		{
 			Expression: `(type-of 1)`,
-			Expected:   ast.String("number"),
+			Expected:   "number",
 		},
 		{
 			Expression: `(type-of 0)`,
-			Expected:   ast.String("number"),
+			Expected:   "number",
 		},
 		{
 			Expression: `(type-of (+ 1 3))`,
-			Expected:   ast.String("number"),
+			Expected:   "number",
 		},
 		{
 			Expression: `(type-of 1.5)`,
-			Expected:   ast.String("number"),
+			Expected:   "number",
 		},
 		{
 			Expression: `(type-of 0.0)`,
-			Expected:   ast.String("number"),
+			Expected:   "number",
 		},
 		{
 			Expression: `(type-of "3")`,
-			Expected:   ast.String("string"),
+			Expected:   "string",
 		},
 		{
 			Expression: `(type-of true)`,
-			Expected:   ast.String("bool"),
+			Expected:   "bool",
 		},
 		{
 			Expression: `(type-of false)`,
-			Expected:   ast.String("bool"),
+			Expected:   "bool",
 		},
 		{
 			Expression: `(type-of null)`,
-			Expected:   ast.String("null"),
+			Expected:   "null",
 		},
 		{
 			Expression: `(type-of [])`,
-			Expected:   ast.String("vector"),
+			Expected:   "vector",
 		},
 		{
 			Expression: `(type-of (append [] "test"))`,
-			Expected:   ast.String("vector"),
+			Expected:   "vector",
 		},
 		{
 			Expression: `(type-of [0])`,
-			Expected:   ast.String("vector"),
+			Expected:   "vector",
 		},
 		{
 			Expression: `(type-of {})`,
-			Expected:   ast.String("object"),
+			Expected:   "object",
 		},
 		{
 			Expression: `(type-of {foo "bar"})`,
-			Expected:   ast.String("object"),
+			Expected:   "object",
 		},
 	}
 

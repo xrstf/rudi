@@ -42,7 +42,7 @@ func TestEvalProgram(t *testing.T) {
 		// (empty program)
 		{
 			AST:      makeProgram(),
-			Expected: ast.Null{},
+			Expected: nil,
 		},
 		// single statement
 		// "foo"
@@ -50,7 +50,7 @@ func TestEvalProgram(t *testing.T) {
 			AST: makeProgram(
 				ast.String("foo"),
 			),
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 		// program result should be the result from the last statement
 		// "foo" "bar"
@@ -59,7 +59,7 @@ func TestEvalProgram(t *testing.T) {
 				ast.String("foo"),
 				ast.String("bar"),
 			),
-			Expected: ast.String("bar"),
+			Expected: "bar",
 		},
 		// context changes from one statement should affect the next
 		// (set! $foo 1) $foo (set! $bar $foo) $bar
@@ -78,7 +78,7 @@ func TestEvalProgram(t *testing.T) {
 				),
 				makeVar("bar", nil),
 			),
-			Expected: ast.Number{Value: 1},
+			Expected: 1,
 		},
 		// context changes from inner statements should not leak
 		// (set! $foo (set! $bar 1)) $bar

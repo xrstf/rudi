@@ -4,7 +4,6 @@
 package eval
 
 import (
-	"errors"
 	"fmt"
 
 	"go.xrstf.de/rudi/pkg/eval/types"
@@ -35,7 +34,7 @@ func EvalPathExpression(ctx types.Context, path *ast.PathExpression) (*ast.Evalu
 		// $var[(set $bla 2)][(add $bla 2)] <-- would be $var[2][4]
 		switch asserted := step.(type) {
 		case ast.Identifier:
-			evaluated = asserted
+			evaluated = asserted.Name
 		default:
 			innerCtx, evaluated, err = EvalExpression(innerCtx, step)
 			if err != nil {
@@ -60,21 +59,14 @@ func ptrTo[T any](s T) *T {
 
 func convertToAccessor(evaluated any) (*ast.EvaluatedPathStep, error) {
 	switch asserted := evaluated.(type) {
-	case ast.String:
-		return &ast.EvaluatedPathStep{StringValue: ptrTo(string(asserted))}, nil
-	case ast.Identifier:
-		if asserted.Bang {
-			return nil, errors.New("cannot use bang modifier in path expression")
-		}
-
-		return &ast.EvaluatedPathStep{StringValue: &asserted.Name}, nil
-	case ast.Number:
-		intVal, ok := asserted.ToInteger()
-		if !ok {
-			return nil, fmt.Errorf("cannot use floats as indices: %v", asserted.ToFloat())
-		}
-
-		return &ast.EvaluatedPathStep{IntegerValue: &intVal}, nil
+	case string:
+		return &ast.EvaluatedPathStep{StringValue: &asserted}, nil
+	case int:
+		return &ast.EvaluatedPathStep{IntegerValue: ptrTo(int64(asserted))}, nil
+	case int32:
+		return &ast.EvaluatedPathStep{IntegerValue: ptrTo(int64(asserted))}, nil
+	case int64:
+		return &ast.EvaluatedPathStep{IntegerValue: &asserted}, nil
 	default:
 		return nil, fmt.Errorf("cannot use %T in path expression", asserted)
 	}
@@ -90,10 +82,5 @@ func TraversePathExpression(ctx types.Context, value any, path *ast.PathExpressi
 }
 
 func TraverseEvaluatedPathExpression(value any, path ast.EvaluatedPathExpression) (any, error) {
-	result, err := pathexpr.Get(value, pathexpr.FromEvaluatedPath(path))
-	if err != nil {
-		return nil, err
-	}
-
-	return types.WrapNative(result)
+	return pathexpr.Get(value, pathexpr.FromEvaluatedPath(path))
 }

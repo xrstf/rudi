@@ -61,9 +61,9 @@ func clone(val any) (any, error) {
 	case string:
 		return asserted, nil
 	case map[string]any:
-		return cloneObject(asserted)
+		return cloneMap(asserted)
 	case []any:
-		return cloneVector(asserted)
+		return cloneSlice(asserted)
 
 	// pointer to Go types
 
@@ -129,7 +129,7 @@ func clone(val any) (any, error) {
 	}
 }
 
-func cloneVector(obj []any) ([]any, error) {
+func cloneSlice(obj []any) ([]any, error) {
 	result := make([]any, len(obj))
 	for i, item := range obj {
 		cloned, err := clone(item)
@@ -143,7 +143,7 @@ func cloneVector(obj []any) ([]any, error) {
 	return result, nil
 }
 
-func cloneObject(obj map[string]any) (map[string]any, error) {
+func cloneMap(obj map[string]any) (map[string]any, error) {
 	result := map[string]any{}
 	for key, value := range obj {
 		cloned, err := clone(value)

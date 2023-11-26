@@ -51,23 +51,23 @@ func TestIfFunction(t *testing.T) {
 		},
 		{
 			Expression: `(if true 3)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			Expression: `(if (eq? 1 1) 3)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			Expression: `(if (eq? 1 2) 3)`,
-			Expected:   ast.Null{},
+			Expected:   nil,
 		},
 		{
 			Expression: `(if (eq? 1 2) "yes" "else")`,
-			Expected:   ast.String("else"),
+			Expected:   "else",
 		},
 		{
 			Expression: `(if false "yes" (+ 1 4))`,
-			Expected:   ast.Number{Value: int64(5)},
+			Expected:   int64(5),
 		},
 	}
 
@@ -81,26 +81,26 @@ func TestSetFunction(t *testing.T) {
 	testObjDocument := func() any {
 		return map[string]any{
 			"aString": "foo",
-			"aList":   []any{"first", int64(2), "third"},
+			"aList":   []any{"first", 2, "third"},
 			"aBool":   true,
 			"anObject": map[string]any{
 				"key1": true,
 				"key2": nil,
-				"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+				"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 			},
 		}
 	}
 
 	testVecDocument := func() any {
-		return []any{int64(1), int64(2), map[string]any{"foo": "bar"}}
+		return []any{1, 2, map[string]any{"foo": "bar"}}
 	}
 
 	testVariables := func() types.Variables {
 		return types.Variables{
-			"myvar":  int64(42),
+			"myvar":  42,
 			"obj":    testObjDocument(),
 			"vec":    testVecDocument(),
-			"astVec": ast.Vector{Data: []any{ast.String("foo")}},
+			"astVec": []any{"foo"},
 		}
 	}
 
@@ -140,7 +140,7 @@ func TestSetFunction(t *testing.T) {
 		// return the value that was set (without a bang modifier, this doesn't actually modify anything)
 		{
 			Expression: `(set $var "foo")`,
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(set $var "foo") $var`,
@@ -148,68 +148,71 @@ func TestSetFunction(t *testing.T) {
 		},
 		{
 			Expression: `(set $var 1)`,
-			Expected:   ast.Number{Value: int64(1)},
+			Expected:   int64(1),
 		},
 		// with bang it works as expected
 		{
 			Expression: `(set! $var 1)`,
-			Expected:   ast.Number{Value: int64(1)},
+			Expected:   int64(1),
 		},
 		{
 			Expression: `(set! $var 1) $var`,
-			Expected:   ast.Number{Value: int64(1)},
+			Expected:   int64(1),
 		},
 		// can overwrite variables on the top level
 		{
 			Expression: `(set! $myvar 12) $myvar`,
 			Variables:  testVariables(),
-			Expected:   ast.Number{Value: int64(12)},
+			Expected:   int64(12),
+			ExpectedVariables: types.Variables{
+				"myvar": int64(12),
+			},
 		},
 		// can change the type
 		{
 			Expression: `(set! $myvar "new value") $myvar`,
 			Variables:  testVariables(),
-			Expected:   ast.String("new value"),
+			Expected:   "new value",
 		},
 		{
 			Expression: `(set! $obj.aList[1] "new value")`,
 			Variables:  testVariables(),
-			Expected:   ast.String("new value"),
+			Expected:   "new value",
 		},
 		{
 			Expression: `(set! $obj.aList[1] "new value") $obj`,
 			Variables:  testVariables(),
-			Expected: ast.Object{Data: map[string]any{
+			Expected: map[string]any{
 				"aString": "foo",
 				"aList":   []any{"first", "new value", "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
-			}},
+			},
 		},
 		// set itself does not change the first argument
 		{
 			Expression: `(set $myvar "new value") $myvar`,
 			Variables:  testVariables(),
-			Expected:   ast.Number{Value: int64(42)},
+			Expected:   42,
 		},
 		{
 			Expression: `(set $obj.aString "new value") $obj.aString`,
 			Variables:  testVariables(),
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(set $obj.aList[1] "new value") $obj.aList`,
 			Variables:  testVariables(),
-			Expected:   ast.Vector{Data: []any{"first", int64(2), "third"}},
+			Expected:   []any{"first", 2, "third"},
 		},
 		// ...but not leak into upper scopes
 		{
 			Expression: `(set! $a 1) (if true (set! $a 2)) $a`,
-			Expected:   ast.Number{Value: int64(1)},
+			Expected:   int64(1),
 		},
 		{
 			Expression: `(set! $a 1) (if true (set! $b 2)) $b`,
@@ -218,11 +221,11 @@ func TestSetFunction(t *testing.T) {
 		// do not accidentally set a key without creating a new context
 		{
 			Expression: `(set! $a {foo "bar"}) (if true (set! $a.foo "updated"))`,
-			Expected:   ast.String("updated"),
+			Expected:   "updated",
 		},
 		{
 			Expression: `(set! $a {foo "bar"}) (if true (set! $a.foo "updated")) $a.foo`,
-			Expected:   ast.String("bar"),
+			Expected:   "bar",
 		},
 		// handle bad paths
 		{
@@ -241,50 +244,50 @@ func TestSetFunction(t *testing.T) {
 		// update a key within an object variable
 		{
 			Expression: `(set! $obj.aString "new value")`,
-			Expected:   ast.String("new value"),
+			Expected:   "new value",
 			Variables:  testVariables(),
 		},
 		{
 			Expression: `(set! $obj.aString "new value") $obj.aString`,
-			Expected:   ast.String("new value"),
+			Expected:   "new value",
 			Variables:  testVariables(),
 		},
 		// add a new sub key
 		{
 			Expression: `(set! $obj.newKey "new value")`,
-			Expected:   ast.String("new value"),
+			Expected:   "new value",
 			Variables:  testVariables(),
 		},
 		{
 			Expression: `(set! $obj.newKey "new value") $obj.newKey`,
-			Expected:   ast.String("new value"),
+			Expected:   "new value",
 			Variables:  testVariables(),
 		},
 		// runtime variables
 		{
 			Expression: `(set! $vec [1]) (set! $vec[0] 2) $vec[0]`,
-			Expected:   ast.Number{Value: int64(2)},
+			Expected:   int64(2),
 		},
 		// replace the global document
 		{
 			Expression:       `(set! . 1) .`,
 			Document:         testObjDocument(),
-			Expected:         ast.Number{Value: int64(1)},
+			Expected:         int64(1),
 			ExpectedDocument: int64(1),
 		},
 		// update keys in the global document
 		{
 			Expression: `(set! .aString "new-value") .aString`,
 			Document:   testObjDocument(),
-			Expected:   ast.String("new-value"),
+			Expected:   "new-value",
 			ExpectedDocument: map[string]any{
 				"aString": "new-value",
-				"aList":   []any{"first", int64(2), "third"},
+				"aList":   []any{"first", 2, "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
 			},
 		},
@@ -292,15 +295,15 @@ func TestSetFunction(t *testing.T) {
 		{
 			Expression: `(set! .newKey "new-value") .newKey`,
 			Document:   testObjDocument(),
-			Expected:   ast.String("new-value"),
+			Expected:   "new-value",
 			ExpectedDocument: map[string]any{
 				"aString": "foo",
-				"aList":   []any{"first", int64(2), "third"},
+				"aList":   []any{"first", 2, "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
 				"newKey": "new-value",
 			},
@@ -309,7 +312,7 @@ func TestSetFunction(t *testing.T) {
 		{
 			Expression: `(set! .aList[1] "new-value") .aList[1]`,
 			Document:   testObjDocument(),
-			Expected:   ast.String("new-value"),
+			Expected:   "new-value",
 			ExpectedDocument: map[string]any{
 				"aString": "foo",
 				"aList":   []any{"first", "new-value", "third"},
@@ -317,7 +320,7 @@ func TestSetFunction(t *testing.T) {
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
 			},
 		},
@@ -333,12 +336,12 @@ func TestDeleteFunction(t *testing.T) {
 	testObjDocument := func() map[string]any {
 		return map[string]any{
 			"aString": "foo",
-			"aList":   []any{"first", int64(2), "third"},
+			"aList":   []any{"first", 2, "third"},
 			"aBool":   true,
 			"anObject": map[string]any{
 				"key1": true,
 				"key2": nil,
-				"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+				"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 			},
 		}
 	}
@@ -370,45 +373,45 @@ func TestDeleteFunction(t *testing.T) {
 		{
 			Expression:       `(delete .)`,
 			Document:         map[string]any{"foo": "bar"},
-			Expected:         ast.Null{},
+			Expected:         nil,
 			ExpectedDocument: map[string]any{"foo": "bar"},
 		},
 		{
 			Expression: `(delete! .) .`,
 			Document:   map[string]any{"foo": "bar"},
-			Expected:   ast.Null{},
+			Expected:   nil,
 		},
 		// delete does not update the target
 		{
 			Expression:       `(delete .) .`,
 			Document:         map[string]any{"foo": "bar"},
-			Expected:         ast.Object{Data: map[string]any{"foo": "bar"}},
+			Expected:         map[string]any{"foo": "bar"},
 			ExpectedDocument: map[string]any{"foo": "bar"},
 		},
 		// can remove a key
 		{
 			Expression:       `(delete .foo)`,
 			Document:         map[string]any{"foo": "bar"},
-			Expected:         ast.Object{Data: map[string]any{}},
+			Expected:         map[string]any{},
 			ExpectedDocument: map[string]any{"foo": "bar"},
 		},
 		{
 			Expression:       `(delete .foo) .`,
 			Document:         map[string]any{"foo": "bar"},
-			Expected:         ast.Object{Data: map[string]any{"foo": "bar"}},
+			Expected:         map[string]any{"foo": "bar"},
 			ExpectedDocument: map[string]any{"foo": "bar"},
 		},
 		{
 			Expression:       `(delete! .foo) .`,
 			Document:         map[string]any{"foo": "bar"},
-			Expected:         ast.Object{Data: map[string]any{}},
+			Expected:         map[string]any{},
 			ExpectedDocument: map[string]any{},
 		},
 		// non-existent key is okay
 		{
 			Expression:       `(delete .bar)`,
 			Document:         map[string]any{"foo": "bar"},
-			Expected:         ast.Object{Data: map[string]any{"foo": "bar"}},
+			Expected:         map[string]any{"foo": "bar"},
 			ExpectedDocument: map[string]any{"foo": "bar"},
 		},
 		// path must be sane though
@@ -421,19 +424,19 @@ func TestDeleteFunction(t *testing.T) {
 		{
 			Expression:       `(delete .[1])`,
 			Document:         []any{"a", "b", "c"},
-			Expected:         ast.Vector{Data: []any{"a", "c"}},
+			Expected:         []any{"a", "c"},
 			ExpectedDocument: []any{"a", "b", "c"},
 		},
 		{
 			Expression:       `(delete .[1]) .`,
 			Document:         []any{"a", "b", "c"},
-			Expected:         ast.Vector{Data: []any{"a", "b", "c"}},
+			Expected:         []any{"a", "b", "c"},
 			ExpectedDocument: []any{"a", "b", "c"},
 		},
 		{
 			Expression:       `(delete! .[1]) .`,
 			Document:         []any{"a", "b", "c"},
-			Expected:         ast.Vector{Data: []any{"a", "c"}},
+			Expected:         []any{"a", "c"},
 			ExpectedDocument: []any{"a", "c"},
 		},
 		// vector bounds are checked
@@ -451,37 +454,37 @@ func TestDeleteFunction(t *testing.T) {
 		{
 			Expression: `(delete .aList[1])`,
 			Document:   testObjDocument(),
-			Expected: ast.Object{Data: map[string]any{
+			Expected: map[string]any{
 				"aString": "foo",
 				"aList":   []any{"first", "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
-			}},
+			},
 			ExpectedDocument: testObjDocument(),
 		},
 		{
 			Expression:       `(delete .aList[1]) .`,
 			Document:         testObjDocument(),
-			Expected:         ast.Object{Data: testObjDocument()},
+			Expected:         testObjDocument(),
 			ExpectedDocument: testObjDocument(),
 		},
 		{
 			Expression: `(delete! .aList[1]) .`,
 			Document:   testObjDocument(),
-			Expected: ast.Object{Data: map[string]any{
+			Expected: map[string]any{
 				"aString": "foo",
 				"aList":   []any{"first", "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
-			}},
+			},
 			ExpectedDocument: map[string]any{
 				"aString": "foo",
 				"aList":   []any{"first", "third"},
@@ -489,52 +492,52 @@ func TestDeleteFunction(t *testing.T) {
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
 				},
 			},
 		},
 		{
 			Expression: `(delete .anObject.key3[1].foo)`,
 			Document:   testObjDocument(),
-			Expected: ast.Object{Data: map[string]any{
+			Expected: map[string]any{
 				"aString": "foo",
-				"aList":   []any{"first", int64(2), "third"},
+				"aList":   []any{"first", 2, "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{}, int64(7)},
+					"key3": []any{9, map[string]any{}, 7},
 				},
-			}},
+			},
 			ExpectedDocument: testObjDocument(),
 		},
 		{
 			Expression:       `(delete .anObject.key3[1].foo) .`,
 			Document:         testObjDocument(),
-			Expected:         ast.Object{Data: testObjDocument()},
+			Expected:         testObjDocument(),
 			ExpectedDocument: testObjDocument(),
 		},
 		{
 			Expression: `(delete! .anObject.key3[1].foo) .`,
 			Document:   testObjDocument(),
-			Expected: ast.Object{Data: map[string]any{
+			Expected: map[string]any{
 				"aString": "foo",
-				"aList":   []any{"first", int64(2), "third"},
+				"aList":   []any{"first", 2, "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{}, int64(7)},
+					"key3": []any{9, map[string]any{}, 7},
 				},
-			}},
+			},
 			ExpectedDocument: map[string]any{
 				"aString": "foo",
-				"aList":   []any{"first", int64(2), "third"},
+				"aList":   []any{"first", 2, "third"},
 				"aBool":   true,
 				"anObject": map[string]any{
 					"key1": true,
 					"key2": nil,
-					"key3": []any{int64(9), map[string]any{}, int64(7)},
+					"key3": []any{9, map[string]any{}, 7},
 				},
 			},
 		},
@@ -558,23 +561,23 @@ func TestDoFunction(t *testing.T) {
 		},
 		{
 			Expression: `(do 3)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 
 		// test that the runtime context is inherited from one step to another
 		{
 			Expression: `(do (set! $var "foo") $var)`,
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(do (set! $var "foo") $var (set! $var "new") $var)`,
-			Expected:   ast.String("new"),
+			Expected:   "new",
 		},
 
 		// test that the runtime context doesn't leak
 		{
 			Expression: `(set! $var "outer") (do (set! $var "inner")) (concat $var ["1" "2"])`,
-			Expected:   ast.String("1outer2"),
+			Expected:   "1outer2",
 		},
 		{
 			Expression: `(do (set! $var "inner")) (concat $var ["1" "2"])`,
@@ -600,18 +603,18 @@ func TestDefaultFunction(t *testing.T) {
 		},
 		{
 			Expression: `(default null 3)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 
 		// coalescing should be applied
 
 		{
 			Expression: `(default false 3)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			Expression: `(default [] 3)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 
 		// errors are not swallowed
@@ -641,33 +644,33 @@ func TestTryFunction(t *testing.T) {
 		},
 		{
 			Expression: `(try (+ 1 2))`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 
 		// coalescing should be not applied
 
 		{
 			Expression: `(try false)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(try null)`,
-			Expected:   ast.Null{},
+			Expected:   nil,
 		},
 		{
 			Expression: `(try null "fallback")`,
-			Expected:   ast.Null{},
+			Expected:   nil,
 		},
 
 		// swallow errors
 
 		{
 			Expression: `(try (eq? 3 "foo"))`,
-			Expected:   ast.Null{},
+			Expected:   nil,
 		},
 		{
 			Expression: `(try (eq? 3 "foo") "fallback")`,
-			Expected:   ast.String("fallback"),
+			Expected:   "fallback",
 		},
 
 		// not in the fallback though
@@ -700,47 +703,47 @@ func TestIsEmptyFunction(t *testing.T) {
 		},
 		{
 			Expression: `(empty? null)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? true)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(empty? false)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? 0)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? 0.0)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? (+ 0 0.0))`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? (+ 1 0.0))`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(empty? [])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? [""])`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(empty? {})`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(empty? {foo "bar"})`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 	}
 
@@ -753,24 +756,24 @@ func TestIsEmptyFunction(t *testing.T) {
 func TestHasFunction(t *testing.T) {
 	testObjDocument := map[string]any{
 		"aString": "foo",
-		"aList":   []any{"first", int64(2), "third"},
+		"aList":   []any{"first", 2, "third"},
 		"aBool":   true,
 		"anObject": map[string]any{
 			"key1": true,
 			"key2": nil,
-			"key3": []any{int64(9), map[string]any{"foo": "bar"}, int64(7)},
+			"key3": []any{9, map[string]any{"foo": "bar"}, 77},
 		},
 	}
 
-	testVecDocument := []any{int64(1), int64(2), map[string]any{"foo": "bar"}}
+	testVecDocument := []any{1, 2, map[string]any{"foo": "bar"}}
 
 	testVariables := types.Variables{
 		// value does not matter here, but this testcase is still meant
 		// to ensure the missing path is detected, not detect an unknown variable
-		"myvar":  int64(42),
+		"myvar":  42,
 		"obj":    testObjDocument,
 		"vec":    testVecDocument,
-		"astVec": ast.Vector{Data: []any{ast.String("foo")}},
+		"astVec": ast.Vector{Data: []any{"foo"}},
 	}
 
 	testcases := []testutil.Testcase{
@@ -807,108 +810,108 @@ func TestHasFunction(t *testing.T) {
 
 		{
 			Expression: `(has? .)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 			Document:   nil, // the . always matches, no matter what the document is
 		},
 		{
 			Expression:       `(has? .)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .nonexistingKey)`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .[0])`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .aString)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .["aString"])`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .[(concat "" "a" "String")])`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .aBool)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .aList)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .aList[0])`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .aList[99])`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .aList.invalidObjKey)`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .anObject)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .anObject[99])`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .anObject.key1)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .anObject.key99)`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .anObject.key3[1].foo)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
 		{
 			Expression:       `(has? .anObject.key3[1].bar)`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testObjDocument,
 			ExpectedDocument: testObjDocument,
 		},
@@ -917,19 +920,19 @@ func TestHasFunction(t *testing.T) {
 
 		{
 			Expression:       `(has? .[1])`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testVecDocument,
 			ExpectedDocument: testVecDocument,
 		},
 		{
 			Expression:       `(has? .key)`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         testVecDocument,
 			ExpectedDocument: testVecDocument,
 		},
 		{
 			Expression:       `(has? .[2].foo)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         testVecDocument,
 			ExpectedDocument: testVecDocument,
 		},
@@ -938,32 +941,32 @@ func TestHasFunction(t *testing.T) {
 
 		{
 			Expression:       `(has? .)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         "testdata",
 			ExpectedDocument: "testdata",
 		},
 		{
 			Expression:       `(has? .)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         nil,
 			ExpectedDocument: nil,
 		},
 		{
 			Expression:       `(has? .foo)`,
-			Expected:         ast.Bool(false),
+			Expected:         false,
 			Document:         "testdata",
 			ExpectedDocument: "testdata",
 		},
 		{
 			Expression:       `(has? .)`,
-			Expected:         ast.Bool(true),
+			Expected:         true,
 			Document:         64,
-			ExpectedDocument: int64(64),
+			ExpectedDocument: 64,
 		},
 		{
 			Expression:       `(has? .)`,
-			Expected:         ast.Bool(true),
-			Document:         ast.String("foo"),
+			Expected:         true,
+			Document:         "foo",
 			ExpectedDocument: "foo",
 		},
 
@@ -981,32 +984,32 @@ func TestHasFunction(t *testing.T) {
 		},
 		{
 			Expression: `(has? $myvar.foo)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 			Variables:  testVariables,
 		},
 		{
 			Expression: `(has? $myvar[0])`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 			Variables:  testVariables,
 		},
 		{
 			Expression: `(has? $obj.aString)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 			Variables:  testVariables,
 		},
 		{
 			Expression: `(has? $obj.aList[1])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 			Variables:  testVariables,
 		},
 		{
 			Expression: `(has? $vec[1])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 			Variables:  testVariables,
 		},
 		{
 			Expression: `(has? $astVec[0])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 			Variables:  testVariables,
 		},
 
@@ -1014,22 +1017,22 @@ func TestHasFunction(t *testing.T) {
 
 		{
 			Expression: `(has? [1 2 3][1])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(has? [1 2 3][4])`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 
 		// follow a path expression on an object node
 
 		{
 			Expression: `(has? {foo "bar"}.foo)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(has? {foo "bar"}.bar)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 
 		// follow a path expression on a tuple node
@@ -1037,19 +1040,19 @@ func TestHasFunction(t *testing.T) {
 
 		{
 			Expression: `(has? (set $foo {foo "bar"}).foo)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(has? (set $foo {foo "bar"}).bar)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(has? (set $foo [1])[0])`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(has? (set $foo {foo "bar"})[0])`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 	}
 

@@ -25,15 +25,15 @@ func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(list); err == nil {
-		return ast.Number{Value: int64(len(vector))}, nil
+		return len(vector), nil
 	}
 
 	if obj, err := ctx.Coalesce().ToObject(list); err == nil {
-		return ast.Number{Value: int64(len(obj))}, nil
+		return len(obj), nil
 	}
 
 	if str, err := ctx.Coalesce().ToString(list); err == nil {
-		return ast.Number{Value: int64(len(str))}, nil
+		return len(str), nil
 	}
 
 	return nil, errors.New("argument is neither a string, vector nor object")
@@ -55,9 +55,9 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
-		result := ast.Vector{}
-		result.Data = append(result.Data, vector...)
-		result.Data = append(result.Data, evaluated...)
+		result := []any{}
+		result = append(result, vector...)
+		result = append(result, evaluated...)
 
 		return result, nil
 	}
@@ -77,7 +77,7 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		suffix += string(argString)
 	}
 
-	return ast.String(string(str) + suffix), nil
+	return string(str) + suffix, nil
 }
 
 func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -96,10 +96,7 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
-		result := ast.Vector{Data: evaluated}
-		result.Data = append(result.Data, vector...)
-
-		return result, nil
+		return append(evaluated, vector...), nil
 	}
 
 	str, err := ctx.Coalesce().ToString(acc)
@@ -117,7 +114,7 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		prefix += string(argString)
 	}
 
-	return ast.String(prefix + string(str)), nil
+	return prefix + string(str), nil
 }
 
 func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
@@ -137,17 +134,15 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			result[i], result[j] = result[j], result[i]
 		}
 
-		return ast.String(result), nil
+		return string(result), nil
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(value); err == nil {
-		result := ast.Vector{
-			// clone original data
-			Data: append([]any{}, vector...),
-		}
+		// clone original data
+		result := append([]any{}, vector...)
 
-		for i, j := 0, len(result.Data)-1; i < j; i, j = i+1, j-1 {
-			result.Data[i], result.Data[j] = result.Data[j], result.Data[i]
+		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+			result[i], result[j] = result[j], result[i]
 		}
 
 		return result, nil
@@ -182,7 +177,6 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	var result any
-	result = ast.Null{}
 
 	// list over vector elements
 	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
@@ -190,7 +184,7 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(loopVarName, item)
 			if loopIndexName != "" {
-				innerCtx = innerCtx.WithVariable(loopIndexName, ast.Number{Value: int64(i)})
+				innerCtx = innerCtx.WithVariable(loopIndexName, i)
 			}
 
 			for _, expr := range args[2:] {
@@ -210,7 +204,7 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(loopVarName, value)
 			if loopIndexName != "" {
-				innerCtx = innerCtx.WithVariable(loopIndexName, ast.String(key))
+				innerCtx = innerCtx.WithVariable(loopIndexName, key)
 			}
 
 			for _, expr := range args[2:] {
@@ -246,22 +240,15 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	var lit ast.Literal
-	if vec, err := ctx.Coalesce().ToVector(source); err == nil {
-		lit = ast.Vector{Data: vec}
-	} else if obj, err := ctx.Coalesce().ToObject(source); err == nil {
-		lit = ast.Object{Data: obj}
-	}
-
-	if lit == nil {
-		return nil, fmt.Errorf("argument #0: expected vector or object, got %T", source)
+	if err := checkIterable(ctx, source); err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
 	// handle plain function calls
 	// (map VECTOR identifier)
 	// (map OBJECT identifier)
 	if len(args) == 2 {
-		return anonymousMapFunction(innerCtx, lit, args[1])
+		return anonymousMapFunction(innerCtx, source, args[1])
 	}
 
 	// all further forms are (map THING NAMING_VEC EXPR+)
@@ -287,15 +274,13 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	// list over vector elements
 	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := ast.Vector{
-			Data: make([]any, len(sourceVector)),
-		}
+		output := make([]any, len(sourceVector))
 
 		for i, item := range sourceVector {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(valueVarName, item)
 			if indexVarName != "" {
-				innerCtx = innerCtx.WithVariable(indexVarName, ast.Number{Value: int64(i)})
+				innerCtx = innerCtx.WithVariable(indexVarName, i)
 			}
 
 			var result any
@@ -304,7 +289,7 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 				return nil, err
 			}
 
-			output.Data[i] = result
+			output[i] = result
 		}
 
 		return output, nil
@@ -312,9 +297,7 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	// list over object elements
 	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := ast.Object{
-			Data: map[string]any{},
-		}
+		output := map[string]any{}
 
 		for key, value := range sourceObject {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
@@ -329,7 +312,7 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 				return nil, err
 			}
 
-			output.Data[key] = result
+			output[key] = result
 		}
 
 		return output, nil
@@ -340,7 +323,7 @@ func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (map VECTOR identifier)
 // (map OBJECT identifier)
-func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expression) (any, error) {
+func anonymousMapFunction(ctx types.Context, source any, expr ast.Expression) (any, error) {
 	identifier, ok := expr.(ast.Identifier)
 	if !ok {
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
@@ -359,9 +342,7 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := ast.Vector{
-			Data: make([]any, len(vector)),
-		}
+		output := make([]any, len(vector))
 
 		for i, item := range vector {
 			var (
@@ -374,16 +355,14 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 				return nil, err
 			}
 
-			output.Data[i] = result
+			output[i] = result
 		}
 
 		return output, nil
 	}
 
 	if object, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := ast.Object{
-			Data: map[string]any{},
-		}
+		output := map[string]any{}
 
 		for key, value := range object {
 			var (
@@ -396,7 +375,7 @@ func anonymousMapFunction(ctx types.Context, source ast.Literal, expr ast.Expres
 				return nil, err
 			}
 
-			output.Data[key] = result
+			output[key] = result
 		}
 
 		return output, nil
@@ -425,22 +404,15 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	var lit ast.Literal
-	if vec, err := ctx.Coalesce().ToVector(source); err == nil {
-		lit = ast.Vector{Data: vec}
-	} else if obj, err := ctx.Coalesce().ToObject(source); err == nil {
-		lit = ast.Object{Data: obj}
-	}
-
-	if lit == nil {
-		return nil, fmt.Errorf("argument #0: expected Vector or Object, got %T", source)
+	if err := checkIterable(ctx, source); err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
 	// handle plain function calls
 	// (filter VECTOR identifier)
 	// (filter OBJECT identifier)
 	if len(args) == 2 {
-		return anonymousFilterFunction(innerCtx, lit, args[1])
+		return anonymousFilterFunction(innerCtx, source, args[1])
 	}
 
 	// all further forms are (map THING NAMING_VEC EXPR+)
@@ -471,15 +443,13 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	// list over vector elements
 	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := ast.Vector{
-			Data: []any{},
-		}
+		output := []any{}
 
 		for i, item := range sourceVector {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
 			innerCtx = innerCtx.WithVariable(valueVarName, item)
 			if indexVarName != "" {
-				innerCtx = innerCtx.WithVariable(indexVarName, ast.Number{Value: int64(i)})
+				innerCtx = innerCtx.WithVariable(indexVarName, i)
 			}
 
 			var result bool
@@ -489,7 +459,7 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			}
 
 			if result {
-				output.Data = append(output.Data, sourceVector[i])
+				output = append(output, sourceVector[i])
 			}
 		}
 
@@ -498,9 +468,7 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	// list over object elements
 	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := ast.Object{
-			Data: map[string]any{},
-		}
+		output := map[string]any{}
 
 		for key, value := range sourceObject {
 			// do not use separate contexts for each loop iteration, as the loop might build up a counter
@@ -516,7 +484,7 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 			}
 
 			if result {
-				output.Data[key] = result
+				output[key] = result
 			}
 		}
 
@@ -528,7 +496,7 @@ func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (filter VECTOR identifier)
 // (filter OBJECT identifier)
-func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Expression) (any, error) {
+func anonymousFilterFunction(ctx types.Context, source any, expr ast.Expression) (any, error) {
 	identifier, ok := expr.(ast.Identifier)
 	if !ok {
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
@@ -558,9 +526,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := ast.Vector{
-			Data: []any{},
-		}
+		output := []any{}
 
 		for i, item := range vector {
 			var (
@@ -574,7 +540,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 			}
 
 			if result {
-				output.Data = append(output.Data, vector[i])
+				output = append(output, vector[i])
 			}
 		}
 
@@ -582,9 +548,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 	}
 
 	if object, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := ast.Object{
-			Data: map[string]any{},
-		}
+		output := map[string]any{}
 
 		for key, value := range object {
 			var (
@@ -598,7 +562,7 @@ func anonymousFilterFunction(ctx types.Context, source ast.Literal, expr ast.Exp
 			}
 
 			if result {
-				output.Data[key] = result
+				output[key] = result
 			}
 		}
 
@@ -666,7 +630,7 @@ func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		if strNeedle, err := ctx.Coalesce().ToString(needle); err == nil {
 			contains := strings.Contains(strHaystack, strNeedle)
 
-			return ast.Bool(contains), nil
+			return contains, nil
 		}
 
 		return nil, fmt.Errorf("argument #1: expected string, got %T", needle)
@@ -686,10 +650,10 @@ func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 			equal, err := equality.StrictEqual(valLiteral, needleLiteral)
 			if err == nil && equal {
-				return ast.Bool(true), nil
+				return true, nil
 			}
 		}
 	}
 
-	return ast.Bool(false), nil
+	return false, nil
 }

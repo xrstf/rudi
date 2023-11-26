@@ -6,7 +6,6 @@ package builtin
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -31,31 +30,31 @@ func TestLenFunction(t *testing.T) {
 		{
 			// strict coalescing allows null to turn into [] or "", both have len=0
 			Expression: `(len null)`,
-			Expected:   ast.Number{Value: int64(0)},
+			Expected:   0,
 		},
 		{
 			Expression: `(len "")`,
-			Expected:   ast.Number{Value: int64(0)},
+			Expected:   0,
 		},
 		{
 			Expression: `(len " foo ")`,
-			Expected:   ast.Number{Value: int64(5)},
+			Expected:   5,
 		},
 		{
 			Expression: `(len [])`,
-			Expected:   ast.Number{Value: int64(0)},
+			Expected:   0,
 		},
 		{
 			Expression: `(len [1 2 3])`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   3,
 		},
 		{
 			Expression: `(len {})`,
-			Expected:   ast.Number{Value: int64(0)},
+			Expected:   0,
 		},
 		{
 			Expression: `(len {foo "bar" hello "world"})`,
-			Expected:   ast.Number{Value: int64(2)},
+			Expected:   2,
 		},
 	}
 
@@ -92,23 +91,23 @@ func TestAppendFunction(t *testing.T) {
 			// which would result in "1", but append/prepend prefer the first arg
 			// to be a vector)
 			Expression: `(append null 1)`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
+			Expected:   []any{int64(1)},
 		},
 		{
 			Expression: `(append [] 1)`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
+			Expected:   []any{int64(1)},
 		},
 		{
 			Expression: `(append [1 2] 3 "foo")`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}, ast.Number{Value: 2}, ast.Number{Value: 3}, ast.String("foo")}},
+			Expected:   []any{int64(1), int64(2), int64(3), "foo"},
 		},
 		{
 			Expression: `(append [] [])`,
-			Expected:   ast.Vector{Data: []any{ast.Vector{Data: []any{}}}},
+			Expected:   []any{[]any{}},
 		},
 		{
 			Expression: `(append [] "foo")`,
-			Expected:   ast.Vector{Data: []any{ast.String("foo")}},
+			Expected:   []any{"foo"},
 		},
 		{
 			Expression: `(append "foo" [])`,
@@ -120,7 +119,7 @@ func TestAppendFunction(t *testing.T) {
 		},
 		{
 			Expression: `(append "foo" "bar" "test")`,
-			Expected:   ast.String("foobartest"),
+			Expected:   "foobartest",
 		},
 	}
 
@@ -157,27 +156,27 @@ func TestPrependFunction(t *testing.T) {
 			// which would result in "1", but append/prepend prefer the first arg
 			// to be a vector)
 			Expression: `(prepend null 1)`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
+			Expected:   []any{int64(1)},
 		},
 		{
 			Expression: `(prepend [] 1)`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
+			Expected:   []any{int64(1)},
 		},
 		{
 			Expression: `(prepend [1] 2)`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 2}, ast.Number{Value: 1}}},
+			Expected:   []any{int64(2), int64(1)},
 		},
 		{
 			Expression: `(prepend [1 2] 3 "foo")`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 3}, ast.String("foo"), ast.Number{Value: 1}, ast.Number{Value: 2}}},
+			Expected:   []any{int64(3), "foo", int64(1), int64(2)},
 		},
 		{
 			Expression: `(prepend [] [])`,
-			Expected:   ast.Vector{Data: []any{ast.Vector{Data: []any{}}}},
+			Expected:   []any{[]any{}},
 		},
 		{
 			Expression: `(prepend [] "foo")`,
-			Expected:   ast.Vector{Data: []any{ast.String("foo")}},
+			Expected:   []any{"foo"},
 		},
 		{
 			Expression: `(prepend "foo" [])`,
@@ -189,7 +188,7 @@ func TestPrependFunction(t *testing.T) {
 		},
 		{
 			Expression: `(prepend "foo" "bar" "test")`,
-			Expected:   ast.String("bartestfoo"),
+			Expected:   "bartestfoo",
 		},
 	}
 
@@ -224,35 +223,35 @@ func TestReverseFunction(t *testing.T) {
 		{
 			// strict coalescing allows null to turn into ""
 			Expression: `(reverse null)`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(reverse "")`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(reverse (concat "" "f" "oo"))`,
-			Expected:   ast.String("oof"),
+			Expected:   "oof",
 		},
 		{
 			Expression: `(reverse "abcd")`,
-			Expected:   ast.String("dcba"),
+			Expected:   "dcba",
 		},
 		{
 			Expression: `(reverse (reverse "abcd"))`,
-			Expected:   ast.String("abcd"),
+			Expected:   "abcd",
 		},
 		{
 			Expression: `(reverse [])`,
-			Expected:   ast.Vector{Data: []any{}},
+			Expected:   []any{},
 		},
 		{
 			Expression: `(reverse [1])`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}}},
+			Expected:   []any{int64(1)},
 		},
 		{
 			Expression: `(reverse [1 2 3])`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 3}, ast.Number{Value: 2}, ast.Number{Value: 1}}},
+			Expected:   []any{int64(3), int64(2), int64(1)},
 		},
 	}
 
@@ -312,32 +311,32 @@ func TestRangeFunction(t *testing.T) {
 		{
 			// single simple expression
 			Expression: `(range [1 2 3] [a] (+ 1 2))`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			// multiple expressions that use a common context
 			Expression: `(range [1 2 3] [a] (set! $foo $a) (+ $foo 3))`,
-			Expected:   ast.Number{Value: int64(6)},
+			Expected:   int64(6),
 		},
 		{
 			// count iterations
 			Expression: `(range [1 2 3] [loop-var] (set! $counter (+ (default (try $counter) 0) 1)))`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			// value is bound to desired variable
 			Expression: `(range [1 2 3] [a] $a)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			// support loop index variable
 			Expression: `(range [1 2 3] [idx var] $idx)`,
-			Expected:   ast.Number{Value: int64(2)},
+			Expected:   2,
 		},
 		{
 			// support loop index variable
 			Expression: `(range [1 2 3] [idx var] $var)`,
-			Expected:   ast.Number{Value: int64(3)},
+			Expected:   int64(3),
 		},
 		{
 			// variables do not leak outside the range
@@ -352,15 +351,15 @@ func TestRangeFunction(t *testing.T) {
 		{
 			// support ranging over objects
 			Expression: `(range {} [key value] $key)`,
-			Expected:   ast.Null{},
+			Expected:   nil,
 		},
 		{
 			Expression: `(range {foo "bar"} [key value] $key)`,
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(range {foo "bar"} [key value] $value)`,
-			Expected:   ast.String("bar"),
+			Expected:   "bar",
 		},
 	}
 
@@ -420,11 +419,11 @@ func TestMapFunction(t *testing.T) {
 		{
 			// single simple expression
 			Expression: `(map ["foo" "bar"] to-upper)`,
-			Expected:   ast.Vector{Data: []any{ast.String("FOO"), ast.String("BAR")}},
+			Expected:   []any{"FOO", "BAR"},
 		},
 		{
 			Expression: `(map {foo "bar"} to-upper)`,
-			Expected:   ast.Object{Data: map[string]any{"foo": ast.String("BAR")}},
+			Expected:   map[string]any{"foo": "BAR"},
 		},
 		{
 			// type safety still applies
@@ -434,27 +433,27 @@ func TestMapFunction(t *testing.T) {
 		{
 			// eval expression with variable
 			Expression: `(map [1 2 3] [val] (+ $val 3))`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 4}, ast.Number{Value: 5}, ast.Number{Value: 6}}},
+			Expected:   []any{int64(4), int64(5), int64(6)},
 		},
 		{
 			// eval with loop index
 			Expression: `(map ["foo" "bar"] [idx _] $idx)`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 0}, ast.Number{Value: 1}}},
+			Expected:   []any{0, 1},
 		},
 		{
 			// last expression controls the result
 			Expression: `(map [1 2 3] [val] (+ $val 3) "foo")`,
-			Expected:   ast.Vector{Data: []any{ast.String("foo"), ast.String("foo"), ast.String("foo")}},
+			Expected:   []any{"foo", "foo", "foo"},
 		},
 		{
 			// multiple expressions that use a common context
 			Expression: `(map [1 2 3] [val] (set! $foo $val) (+ $foo 3))`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 4}, ast.Number{Value: 5}, ast.Number{Value: 6}}},
+			Expected:   []any{int64(4), int64(5), int64(6)},
 		},
 		{
 			// context is even shared across elements
 			Expression: `(map ["foo" "bar"] [_] (set! $counter (+ (try $counter 0) 1)))`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}, ast.Number{Value: 2}}},
+			Expected:   []any{int64(1), int64(2)},
 		},
 		{
 			// variables do not leak outside the range
@@ -469,27 +468,27 @@ func TestMapFunction(t *testing.T) {
 		// do not modify the source
 		{
 			Expression: `(set! $foo [1 2 3]) (map $foo [_ __] "bar")`,
-			Expected:   ast.Vector{Data: []any{ast.String("bar"), ast.String("bar"), ast.String("bar")}},
+			Expected:   []any{"bar", "bar", "bar"},
 		},
 		{
 			Expression: `(set! $foo [1 2 3]) (map $foo [_ __] "bar") $foo`,
-			Expected:   ast.Vector{Data: []any{ast.Number{Value: 1}, ast.Number{Value: 2}, ast.Number{Value: 3}}},
+			Expected:   []any{int64(1), int64(2), int64(3)},
 		},
 		{
 			Expression: `(set! $foo {foo "bar"}) (map $foo [_ __] "new-value") $foo`,
-			Expected:   ast.Object{Data: map[string]any{"foo": ast.String("bar")}},
+			Expected:   map[string]any{"foo": "bar"},
 		},
 		{
 			Expression: `(set! $foo ["foo" "bar"]) (map $foo to-upper)`,
-			Expected:   ast.Vector{Data: []any{ast.String("FOO"), ast.String("BAR")}},
+			Expected:   []any{"FOO", "BAR"},
 		},
 		{
 			Expression: `(set! $foo ["foo" "bar"]) (map $foo to-upper) $foo`,
-			Expected:   ast.Vector{Data: []any{ast.String("foo"), ast.String("bar")}},
+			Expected:   []any{"foo", "bar"},
 		},
 		{
 			Expression: `(set! $foo {foo "bar"}) (map $foo to-upper) $foo`,
-			Expected:   ast.Object{Data: map[string]any{"foo": ast.String("bar")}},
+			Expected:   map[string]any{"foo": "bar"},
 		},
 	}
 

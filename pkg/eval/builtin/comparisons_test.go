@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -85,39 +84,39 @@ func TestEqFunction(t *testing.T) {
 		{
 			left:     `true`,
 			right:    `true`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `true`,
 			right:    `false`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `true`,
 			right:    `.bool`,
-			expected: ast.Bool(true),
+			expected: true,
 			document: testDoc,
 		},
 		{
 			left:     `1`,
 			right:    `1`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `1`,
 			right:    `2`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `.int`,
 			right:    `4`,
-			expected: ast.Bool(true),
+			expected: true,
 			document: testDoc,
 		},
 		{
 			left:     `1`,
 			right:    `1.0`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:    `1`,
@@ -132,78 +131,78 @@ func TestEqFunction(t *testing.T) {
 		{
 			left:     `"foo"`,
 			right:    `"foo"`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `.string`,
 			right:    `"foo"`,
-			expected: ast.Bool(true),
+			expected: true,
 			document: testDoc,
 		},
 		{
 			left:     `"foo"`,
 			right:    `"bar"`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `"foo"`,
 			right:    `"Foo"`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `"foo"`,
 			right:    `" foo"`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `[]`,
 			right:    `[]`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `[]`,
 			right:    `[1]`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `[1]`,
 			right:    `[1]`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `[1 [2] {foo "bar"}]`,
 			right:    `[1 [2] {foo "bar"}]`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `[1 [2] {foo "bar"}]`,
 			right:    `[1 [2] {foo "baz"}]`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `{}`,
 			right:    `{}`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `{}`,
 			right:    `{foo "bar"}`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `{foo "bar"}`,
 			right:    `{foo "bar"}`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `{foo "bar"}`,
 			right:    `{foo "baz"}`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `{foo "bar" l [1 2]}`,
 			right:    `{foo "bar" l [1 2]}`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 	})
 
@@ -241,117 +240,117 @@ func TestLikeFunction(t *testing.T) {
 		{
 			left:     `1`,
 			right:    `1`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `1`,
 			right:    `"1"`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `1`,
 			right:    `1.0`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `1`,
 			right:    `"1.0"`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `1`,
 			right:    `"2.0"`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `1`,
 			right:    `true`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `1`,
 			right:    `2`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `false`,
 			right:    `null`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `false`,
 			right:    `"null"`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `0`,
 			right:    `null`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `0.0`,
 			right:    `null`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `""`,
 			right:    `null`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `false`,
 			right:    `0`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `false`,
 			right:    `""`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `false`,
 			right:    `[]`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `false`,
 			right:    `{}`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `false`,
 			right:    `"false"`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `true`,
 			right:    `{foo "bar"}`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `"foo"`,
 			right:    `"bar"`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `true`,
 			right:    `[""]`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `{}`,
 			right:    `[]`,
-			expected: ast.Bool(true),
+			expected: true,
 		},
 		{
 			left:     `{}`,
 			right:    `[1]`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 		{
 			left:     `{foo "bar"}`,
 			right:    `[]`,
-			expected: ast.Bool(false),
+			expected: false,
 		},
 	})
 
@@ -401,43 +400,43 @@ func TestLtFunction(t *testing.T) {
 		},
 		{
 			Expression: `(lt? 3 3)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(lt? 2 (+ 1 2))`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(lt? 2 3)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(lt? -3 2)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(lt? -3 -5)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(lt? 3.4 3.4)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(lt? 2.4 (+ 1.4 2))`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(lt? 2.4 3.4)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(lt? -3.4 2.4)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(lt? -3.4 -5.4)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 	}
 

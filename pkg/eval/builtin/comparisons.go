@@ -23,35 +23,7 @@ func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	leftValue, ok := leftData.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a literal, but %T", leftData)
-	}
-
-	_, rightData, err := eval.EvalExpression(ctx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
-
-	rightValue, ok := rightData.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a literal, but %T", rightData)
-	}
-
-	equal, err := equality.StrictEqual(leftValue, rightValue)
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.Bool(equal), nil
-}
-
-func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected exactly 2 arguments, got %d", size)
-	}
-
-	_, leftData, err := eval.EvalExpression(ctx, args[0])
+	leftData, err = types.WrapNative(leftData)
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
@@ -66,6 +38,54 @@ func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
+	rightData, err = types.WrapNative(rightData)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
+	rightValue, ok := rightData.(ast.Literal)
+	if !ok {
+		return nil, fmt.Errorf("argument #1 is not a literal, but %T", rightData)
+	}
+
+	equal, err := equality.StrictEqual(leftValue, rightValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return equal, nil
+}
+
+func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	if size := len(args); size != 2 {
+		return nil, fmt.Errorf("expected exactly 2 arguments, got %d", size)
+	}
+
+	_, leftData, err := eval.EvalExpression(ctx, args[0])
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	leftData, err = types.WrapNative(leftData)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
+
+	leftValue, ok := leftData.(ast.Literal)
+	if !ok {
+		return nil, fmt.Errorf("argument #0 is not a literal, but %T", leftData)
+	}
+
+	_, rightData, err := eval.EvalExpression(ctx, args[1])
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
+	rightData, err = types.WrapNative(rightData)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: %w", err)
+	}
+
 	rightValue, ok := rightData.(ast.Literal)
 	if !ok {
 		return nil, fmt.Errorf("argument #1 is not a literal, but %T", rightData)
@@ -76,11 +96,11 @@ func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	return ast.Bool(equal), nil
+	return equal, nil
 }
 
-type intProcessor func(left, right int64) (ast.Bool, error)
-type floatProcessor func(left, right float64) (ast.Bool, error)
+type intProcessor func(left, right int64) (bool, error)
+type floatProcessor func(left, right float64) (bool, error)
 
 func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor, desc string) types.Function {
 	return types.BasicFunction(func(ctx types.Context, args []ast.Expression) (any, error) {

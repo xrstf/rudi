@@ -9,5 +9,5 @@ import (
 )
 
 func EvalBool(ctx types.Context, b ast.Bool) (types.Context, any, error) {
-	return ctx, b, nil
+	return ctx, b.LiteralValue(), nil
 }

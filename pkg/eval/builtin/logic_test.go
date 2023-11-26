@@ -6,7 +6,6 @@ package builtin
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -50,27 +49,27 @@ func TestAndFunction(t *testing.T) {
 		},
 		{
 			Expression: `(and true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(and false)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(and null)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(and true false)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(and true true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(and (eq? 1 1) true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 	}
 
@@ -120,27 +119,27 @@ func TestOrFunction(t *testing.T) {
 		},
 		{
 			Expression: `(or true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(or false)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(or null)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(or true false)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(or true true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(or (eq? 1 1) true)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 	}
 
@@ -194,19 +193,19 @@ func TestNotFunction(t *testing.T) {
 		},
 		{
 			Expression: `(not false)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(not true)`,
-			Expected:   ast.Bool(false),
+			Expected:   false,
 		},
 		{
 			Expression: `(not null)`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 		{
 			Expression: `(not (not (not (not true))))`,
-			Expected:   ast.Bool(true),
+			Expected:   true,
 		},
 	}
 

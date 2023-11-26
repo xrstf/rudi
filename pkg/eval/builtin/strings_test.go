@@ -6,7 +6,6 @@ package builtin
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -50,23 +49,23 @@ func TestConcatFunction(t *testing.T) {
 		},
 		{
 			Expression: `(concat "g" "foo")`,
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(concat "-" "foo" "bar" "test")`,
-			Expected:   ast.String("foo-bar-test"),
+			Expected:   "foo-bar-test",
 		},
 		{
 			Expression: `(concat "" "foo" "bar")`,
-			Expected:   ast.String("foobar"),
+			Expected:   "foobar",
 		},
 		{
 			Expression: `(concat "" ["foo" "bar"])`,
-			Expected:   ast.String("foobar"),
+			Expected:   "foobar",
 		},
 		{
 			Expression: `(concat "-" ["foo" "bar"] "test" ["suffix"])`,
-			Expected:   ast.String("foo-bar-test-suffix"),
+			Expected:   "foo-bar-test-suffix",
 		},
 	}
 
@@ -104,33 +103,23 @@ func TestSplitFunction(t *testing.T) {
 		},
 		{
 			Expression: `(split "" "")`,
-			Expected: ast.Vector{
-				Data: []any{},
-			},
+			Expected:   []any{},
 		},
 		{
 			Expression: `(split "g" "")`,
-			Expected: ast.Vector{
-				Data: []any{ast.String("")},
-			},
+			Expected:   []any{""},
 		},
 		{
 			Expression: `(split "g" "foo")`,
-			Expected: ast.Vector{
-				Data: []any{ast.String("foo")},
-			},
+			Expected:   []any{"foo"},
 		},
 		{
 			Expression: `(split "-" "foo-bar-test-")`,
-			Expected: ast.Vector{
-				Data: []any{ast.String("foo"), ast.String("bar"), ast.String("test"), ast.String("")},
-			},
+			Expected:   []any{"foo", "bar", "test", ""},
 		},
 		{
 			Expression: `(split "" "foobar")`,
-			Expected: ast.Vector{
-				Data: []any{ast.String("f"), ast.String("o"), ast.String("o"), ast.String("b"), ast.String("a"), ast.String("r")},
-			},
+			Expected:   []any{"f", "o", "o", "b", "a", "r"},
 		},
 	}
 
@@ -164,15 +153,15 @@ func TestToUpperFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-upper "")`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(to-upper " TeSt ")`,
-			Expected:   ast.String(" TEST "),
+			Expected:   " TEST ",
 		},
 		{
 			Expression: `(to-upper " test ")`,
-			Expected:   ast.String(" TEST "),
+			Expected:   " TEST ",
 		},
 	}
 
@@ -206,15 +195,15 @@ func TestToLowerFunction(t *testing.T) {
 		},
 		{
 			Expression: `(to-lower "")`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(to-lower " TeSt ")`,
-			Expected:   ast.String(" test "),
+			Expected:   " test ",
 		},
 		{
 			Expression: `(to-lower " TEST ")`,
-			Expected:   ast.String(" test "),
+			Expected:   " test ",
 		},
 	}
 

@@ -30,7 +30,7 @@ func toBase64Function(ctx types.Context, args []ast.Expression) (any, error) {
 
 	encoded := base64.StdEncoding.EncodeToString([]byte(str))
 
-	return ast.String(encoded), nil
+	return encoded, nil
 }
 
 // (from-base64 VAL:string)
@@ -54,5 +54,5 @@ func fromBase64Function(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("not valid base64: %w", err)
 	}
 
-	return ast.String(string(decoded)), nil
+	return string(decoded), nil
 }

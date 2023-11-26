@@ -36,12 +36,7 @@ func EvalSymbolWithEvaluatedPath(ctx types.Context, sym ast.Symbol, path ast.Eva
 
 	// . always returns the root document
 	if sym.IsDot() {
-		wrapped, err := types.WrapNative(rootValue)
-		if err != nil {
-			return ctx, nil, err
-		}
-
-		return ctx, wrapped, nil
+		return ctx, rootValue, nil
 	}
 
 	// if this symbol is a variable, replace the root value with the variable's value

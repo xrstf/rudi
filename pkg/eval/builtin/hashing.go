@@ -38,7 +38,7 @@ func hashFunc(ctx types.Context, args []ast.Expression, h hash.Hash) (any, error
 
 	encoded := hex.EncodeToString(h.Sum(nil))
 
-	return ast.String(encoded), nil
+	return encoded, nil
 }
 
 // (sha1 VAL:string)

@@ -13,14 +13,12 @@ import (
 
 // evaluated objects are technically considered expressions.
 func EvalObject(ctx types.Context, obj ast.Object) (types.Context, any, error) {
-	return ctx, obj, nil
+	return ctx, obj.LiteralValue(), nil
 }
 
 func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, error) {
 	innerCtx := ctx
-	result := ast.Object{
-		Data: map[string]any{},
-	}
+	result := map[string]any{}
 
 	var (
 		key   any
@@ -56,7 +54,7 @@ func EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (types.Context, any, 
 			return ctx, nil, fmt.Errorf("failed to evaluate object value %s: %w", pair.Value.String(), err)
 		}
 
-		result.Data[keyString] = value
+		result[keyString] = value
 	}
 
 	if obj.PathExpression != nil {

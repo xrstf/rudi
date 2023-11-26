@@ -15,13 +15,8 @@ type Document struct {
 }
 
 func NewDocument(data any) (Document, error) {
-	wrapped, err := WrapNative(data)
-	if err != nil {
-		return Document{}, fmt.Errorf("invalid document data: %w", err)
-	}
-
 	return Document{
-		data: wrapped,
+		data: data,
 	}, nil
 }
 

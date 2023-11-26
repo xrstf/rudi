@@ -14,27 +14,27 @@ func TestEvalStatement(t *testing.T) {
 	testcases := []testutil.Testcase{
 		{
 			AST:      ast.Statement{Expression: ast.Null{}},
-			Expected: ast.Null{},
+			Expected: nil,
 		},
 		{
 			AST:      ast.Statement{Expression: ast.Bool(true)},
-			Expected: ast.Bool(true),
+			Expected: true,
 		},
 		{
 			AST:      ast.Statement{Expression: ast.String("foo")},
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 		{
 			AST:      ast.Statement{Expression: ast.Number{Value: 1}},
-			Expected: ast.Number{Value: 1},
+			Expected: 1,
 		},
 		{
 			AST:      ast.Statement{Expression: ast.Object{Data: map[string]any{"foo": "bar"}}},
-			Expected: ast.Object{Data: map[string]any{"foo": "bar"}},
+			Expected: map[string]any{"foo": "bar"},
 		},
 		{
 			AST:      ast.Statement{Expression: ast.Vector{Data: []any{"foo", 1}}},
-			Expected: ast.Vector{Data: []any{"foo", 1}},
+			Expected: []any{"foo", 1},
 		},
 	}
 

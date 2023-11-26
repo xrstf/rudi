@@ -12,14 +12,12 @@ import (
 
 // evaluated vectors are technically considered expressions.
 func EvalVector(ctx types.Context, vec ast.Vector) (types.Context, any, error) {
-	return ctx, vec, nil
+	return ctx, vec.LiteralValue(), nil
 }
 
 func EvalVectorNode(ctx types.Context, vec ast.VectorNode) (types.Context, any, error) {
 	innerCtx := ctx
-	result := ast.Vector{
-		Data: make([]any, len(vec.Expressions)),
-	}
+	result := make([]any, len(vec.Expressions))
 
 	var (
 		data any
@@ -35,7 +33,7 @@ func EvalVectorNode(ctx types.Context, vec ast.VectorNode) (types.Context, any, 
 			return ctx, nil, fmt.Errorf("failed to eval expression %s: %w", expr.String(), err)
 		}
 
-		result.Data[i] = data
+		result[i] = data
 	}
 
 	if vec.PathExpression != nil {

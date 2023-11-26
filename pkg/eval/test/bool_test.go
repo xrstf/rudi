@@ -14,11 +14,11 @@ func TestEvalBool(t *testing.T) {
 	testcases := []testutil.Testcase{
 		{
 			AST:      ast.Bool(true),
-			Expected: ast.Bool(true),
+			Expected: true,
 		},
 		{
 			AST:      ast.Bool(false),
-			Expected: ast.Bool(false),
+			Expected: false,
 		},
 	}
 

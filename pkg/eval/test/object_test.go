@@ -15,7 +15,7 @@ func TestEvalObjectNode(t *testing.T) {
 		// {}
 		{
 			AST:      ast.ObjectNode{},
-			Expected: ast.Object{},
+			Expected: map[string]any{},
 		},
 		// {foo "bar"}
 		{
@@ -27,10 +27,8 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Object{
-				Data: map[string]any{
-					"foo": ast.String("bar"),
-				},
+			Expected: map[string]any{
+				"foo": "bar",
 			},
 		},
 		// {null "bar"}
@@ -43,10 +41,8 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Object{
-				Data: map[string]any{
-					"": ast.String("bar"),
-				},
+			Expected: map[string]any{
+				"": "bar",
 			},
 		},
 		// {(eval "evaled") (eval "also evaled")}
@@ -69,10 +65,8 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Object{
-				Data: map[string]any{
-					"evaled": ast.String("also evaled"),
-				},
+			Expected: map[string]any{
+				"evaled": "also evaled",
 			},
 		},
 		// {{foo "bar"} "test"}
@@ -116,10 +110,8 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Object{
-				Data: map[string]any{
-					"bar": ast.String("test"),
-				},
+			Expected: map[string]any{
+				"bar": "test",
 			},
 		},
 		// {foo "bar"}.foo
@@ -137,7 +129,7 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.String("bar"),
+			Expected: "bar",
 		},
 		// {foo bar}
 		{

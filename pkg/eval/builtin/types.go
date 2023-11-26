@@ -25,12 +25,7 @@ func toStringFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// this function purposefully always uses humane coalescing
-	coalesced, err := coalescing.NewHumane().ToString(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.String(coalesced), nil
+	return coalescing.NewHumane().ToString(value)
 }
 
 // (to-int VAL:any)
@@ -45,12 +40,7 @@ func toIntFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// this function purposefully always uses humane coalescing
-	coalesced, err := coalescing.NewHumane().ToInt64(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.Number{Value: coalesced}, nil
+	return coalescing.NewHumane().ToInt64(value)
 }
 
 // (to-float VAL:any)
@@ -65,12 +55,7 @@ func toFloatFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// this function purposefully always uses humane coalescing
-	coalesced, err := coalescing.NewHumane().ToFloat64(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.Number{Value: coalesced}, nil
+	return coalescing.NewHumane().ToFloat64(value)
 }
 
 // (to-bool VAL:any)
@@ -85,12 +70,7 @@ func toBoolFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// this function purposefully always uses humane coalescing
-	coalesced, err := coalescing.NewHumane().ToBool(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.Bool(coalesced), nil
+	return coalescing.NewHumane().ToBool(value)
 }
 
 // (type-of VAL:any)
@@ -104,6 +84,11 @@ func typeOfFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
+	value, err = types.WrapNative(value)
+	if err != nil {
+		return nil, err
+	}
+
 	expr, ok := value.(ast.Literal)
 	if !ok {
 		return nil, fmt.Errorf("expected expression, but got %T", value)
@@ -111,5 +96,5 @@ func typeOfFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	name := strings.ToLower(expr.ExpressionName())
 
-	return ast.String(name), nil
+	return name, nil
 }

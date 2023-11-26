@@ -9,5 +9,5 @@ import (
 )
 
 func EvalString(ctx types.Context, str ast.String) (types.Context, any, error) {
-	return ctx, str, nil
+	return ctx, str.LiteralValue(), nil
 }

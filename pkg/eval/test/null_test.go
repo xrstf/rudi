@@ -14,7 +14,7 @@ func TestEvalNull(t *testing.T) {
 	testcases := []testutil.Testcase{
 		{
 			AST:      ast.Null{},
-			Expected: ast.Null{},
+			Expected: nil,
 		},
 	}
 

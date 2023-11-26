@@ -9,10 +9,5 @@ import (
 )
 
 func EvalStatement(ctx types.Context, stmt ast.Statement) (types.Context, any, error) {
-	newContext, result, err := EvalExpression(ctx, stmt.Expression)
-	if err != nil {
-		return ctx, nil, err
-	}
-
-	return newContext, result, nil
+	return EvalExpression(ctx, stmt.Expression)
 }

@@ -14,15 +14,19 @@ func TestEvalNumber(t *testing.T) {
 	testcases := []testutil.Testcase{
 		{
 			AST:      ast.Number{Value: 0},
-			Expected: ast.Number{Value: 0},
+			Expected: 0,
 		},
 		{
 			AST:      ast.Number{Value: 1},
-			Expected: ast.Number{Value: 1},
+			Expected: 1,
+		},
+		{
+			AST:      ast.Number{Value: -1},
+			Expected: -1,
 		},
 		{
 			AST:      ast.Number{Value: 3.14},
-			Expected: ast.Number{Value: 3.14},
+			Expected: 3.14,
 		},
 	}
 

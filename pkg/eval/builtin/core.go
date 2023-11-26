@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/deepcopy"
 	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/pathexpr"
@@ -44,7 +44,7 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return result, err
 	}
 
-	return ast.Null{}, nil
+	return nil, nil
 }
 
 // (do STEP:Expr+)
@@ -137,10 +137,10 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	_, err = eval.TraverseEvaluatedPathExpression(value, *evaluatedPath)
 	if err != nil {
-		return ast.Bool(false), nil
+		return false, nil
 	}
 
-	return ast.Bool(true), nil
+	return true, nil
 }
 
 // (default TEST:Expression FALLBACK:any)
@@ -181,7 +181,7 @@ func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	_, result, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		if len(args) == 1 {
-			return ast.Null{}, nil
+			return nil, nil
 		}
 
 		_, result, err = eval.EvalExpression(ctx, args[1])
@@ -277,7 +277,7 @@ func (deleteFunction) Evaluate(ctx types.Context, args []ast.Expression) (any, e
 		return nil, fmt.Errorf("cannot delete %s in %T: %w", pathExpr, currentValue, err)
 	}
 
-	return types.Must(types.WrapNative(updatedValue)), nil
+	return updatedValue, nil
 }
 
 func (deleteFunction) BangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error) {
@@ -337,5 +337,5 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	return ast.Bool(!boolified), nil
+	return !boolified, nil
 }

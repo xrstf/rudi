@@ -9,5 +9,5 @@ import (
 )
 
 func EvalNull(ctx types.Context, n ast.Null) (types.Context, any, error) {
-	return ctx, n, nil
+	return ctx, nil, nil
 }

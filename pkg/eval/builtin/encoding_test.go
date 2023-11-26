@@ -6,7 +6,6 @@ package builtin
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -31,23 +30,23 @@ func TestToBase64Function(t *testing.T) {
 		{
 			// strict coalescing allows null to turn into ""
 			Expression: `(to-base64 null)`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(to-base64 "")`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(to-base64 " ")`,
-			Expected:   ast.String("IA=="),
+			Expected:   "IA==",
 		},
 		{
 			Expression: `(to-base64 (concat "" "f" "o" "o"))`,
-			Expected:   ast.String("Zm9v"),
+			Expected:   "Zm9v",
 		},
 		{
 			Expression: `(to-base64 "test")`,
-			Expected:   ast.String("dGVzdA=="),
+			Expected:   "dGVzdA==",
 		},
 	}
 
@@ -82,29 +81,28 @@ func TestFromBase64Function(t *testing.T) {
 		{
 			// strict coalescing allows null to turn into ""
 			Expression: `(from-base64 null)`,
-			Expected:   ast.String(""),
-
+			Expected:   "",
 		},
 		{
 			// should be able to recover
 			Expression: `(try (from-base64 "definitely-not-base64") "fallback")`,
-			Expected:   ast.String("fallback"),
+			Expected:   "fallback",
 		},
 		{
 			Expression: `(from-base64 "")`,
-			Expected:   ast.String(""),
+			Expected:   "",
 		},
 		{
 			Expression: `(from-base64 "IA==")`,
-			Expected:   ast.String(" "),
+			Expected:   " ",
 		},
 		{
 			Expression: `(from-base64 (concat "" "Z" "m" "9" "v"))`,
-			Expected:   ast.String("foo"),
+			Expected:   "foo",
 		},
 		{
 			Expression: `(from-base64 "dGVzdA==")`,
-			Expected:   ast.String("test"),
+			Expected:   "test",
 		},
 	}
 

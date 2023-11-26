@@ -14,23 +14,23 @@ func TestEvalExpression(t *testing.T) {
 	testcases := []testutil.Testcase{
 		{
 			AST:      ast.Null{},
-			Expected: ast.Null{},
+			Expected: nil,
 		},
 		{
 			AST:      ast.Bool(true),
-			Expected: ast.Bool(true),
+			Expected: true,
 		},
 		{
 			AST:      ast.String("foo"),
-			Expected: ast.String("foo"),
+			Expected: "foo",
 		},
 		{
 			AST:      ast.Number{Value: 1},
-			Expected: ast.Number{Value: 1},
+			Expected: 1,
 		},
 		{
 			AST:      ast.Object{Data: map[string]any{"foo": "bar"}},
-			Expected: ast.Object{Data: map[string]any{"foo": "bar"}},
+			Expected: map[string]any{"foo": "bar"},
 		},
 		{
 			AST: ast.ObjectNode{
@@ -41,11 +41,11 @@ func TestEvalExpression(t *testing.T) {
 					},
 				},
 			},
-			Expected: ast.Object{Data: map[string]any{"foo": "bar"}},
+			Expected: map[string]any{"foo": "bar"},
 		},
 		{
 			AST:      ast.Vector{Data: []any{"foo", 1}},
-			Expected: ast.Vector{Data: []any{"foo", 1}},
+			Expected: []any{"foo", 1},
 		},
 		{
 			AST: ast.VectorNode{
@@ -54,7 +54,7 @@ func TestEvalExpression(t *testing.T) {
 					ast.Number{Value: 1},
 				},
 			},
-			Expected: ast.Vector{Data: []any{"foo", 1}},
+			Expected: []any{"foo", 1},
 		},
 	}
 

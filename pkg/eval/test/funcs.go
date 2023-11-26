@@ -31,11 +31,8 @@ var (
 			}
 
 			_, value, err := eval.EvalExpression(ctx, args[1])
-			if err != nil {
-				return nil, err
-			}
 
-			return value, nil
+			return value, err
 		}, ""),
 	}
 )
