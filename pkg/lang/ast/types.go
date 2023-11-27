@@ -330,6 +330,11 @@ var _ Expression = Number{}
 var _ Literal = Number{}
 
 func (n Number) Equal(other Number) bool {
+	// handle technically invalid numbers
+	if other.Value == nil || n.Value == nil {
+		return (other.Value == nil) == (n.Value == nil)
+	}
+
 	selfInt, selfOk := n.ToInteger()
 	otherInt, otherOk := other.ToInteger()
 

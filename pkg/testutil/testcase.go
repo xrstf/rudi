@@ -9,13 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/equality"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type Testcase struct {
