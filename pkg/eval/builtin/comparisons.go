@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/equality"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
@@ -23,32 +24,12 @@ func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	leftData, err = types.WrapNative(leftData)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	leftValue, ok := leftData.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a literal, but %T", leftData)
-	}
-
 	_, rightData, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
-	rightData, err = types.WrapNative(rightData)
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
-
-	rightValue, ok := rightData.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a literal, but %T", rightData)
-	}
-
-	equal, err := equality.StrictEqual(leftValue, rightValue)
+	equal, err := equality.EqualCoalesced(ctx.Coalesce(), leftData, rightData)
 	if err != nil {
 		return nil, err
 	}
@@ -66,32 +47,12 @@ func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	leftData, err = types.WrapNative(leftData)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	leftValue, ok := leftData.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a literal, but %T", leftData)
-	}
-
 	_, rightData, err := eval.EvalExpression(ctx, args[1])
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
-	rightData, err = types.WrapNative(rightData)
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
-
-	rightValue, ok := rightData.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("argument #1 is not a literal, but %T", rightData)
-	}
-
-	equal, err := equality.EqualEnough(leftValue, rightValue)
+	equal, err := equality.EqualCoalesced(coalescing.NewHumane(), leftData, rightData)
 	if err != nil {
 		return nil, err
 	}

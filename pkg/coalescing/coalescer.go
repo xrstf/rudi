@@ -10,14 +10,14 @@ import (
 )
 
 type Coalescer interface {
+	ToNull(val any) (bool, error)
 	ToBool(val any) (bool, error)
-	ToFloat64(val any) (float64, error)
 	ToInt64(val any) (int64, error)
+	ToFloat64(val any) (float64, error)
 	ToNumber(val any) (ast.Number, error)
 	ToString(val any) (string, error)
 	ToVector(val any) ([]any, error)
 	ToObject(val any) (map[string]any, error)
-	ToNull(val any) (bool, error)
 }
 
 func deliteral(val any) any {

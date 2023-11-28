@@ -114,9 +114,10 @@ func TestEqFunction(t *testing.T) {
 			document: testDoc,
 		},
 		{
+			// strict coalescing allows lossless float->int conversion
 			left:     `1`,
 			right:    `1.0`,
-			expected: false,
+			expected: true,
 		},
 		{
 			left:    `1`,
@@ -343,14 +344,14 @@ func TestLikeFunction(t *testing.T) {
 			expected: true,
 		},
 		{
-			left:     `{}`,
-			right:    `[1]`,
-			expected: false,
+			left:    `{}`,
+			right:   `[1]`,
+			invalid: true,
 		},
 		{
-			left:     `{foo "bar"}`,
-			right:    `[]`,
-			expected: false,
+			left:    `{foo "bar"}`,
+			right:   `[]`,
+			invalid: true,
 		},
 	})
 

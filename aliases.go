@@ -59,15 +59,3 @@ func NewVariables() Variables {
 func NewDocument(data any) (Document, error) {
 	return types.NewDocument(data)
 }
-
-// Unwrap returns the native Go value for either native Go values or an
-// Rudi AST node (like turning an ast.Number into an int64).
-func Unwrap(val any) (any, error) {
-	return types.UnwrapType(val)
-}
-
-// WrapNative returns the Rudi node equivalent of a native Go value, like turning
-// a string into ast.String.
-func WrapNative(val any) (any, error) {
-	return types.WrapNative(val)
-}

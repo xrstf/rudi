@@ -129,7 +129,7 @@ func assertResultValue(t *testing.T, expected any, actual any) {
 		if !ok {
 			t.Errorf("Result has invalid type:\n%s", renderDiff(expected, actual))
 		} else {
-			equal, err := equality.StrictEqual(expectedNode, resultNode)
+			equal, err := equality.EqualCoalesced(nil, expectedNode, resultNode)
 			if err != nil {
 				t.Errorf("Could not compare result with expectation: %v", err)
 			} else if !equal {

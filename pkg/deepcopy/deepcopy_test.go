@@ -450,7 +450,7 @@ func TestCloneObjectPointer(t *testing.T) {
 	}
 
 	input.Data["new"] = "new-value"
-	if _, ok := (*cloned).Data["new"]; ok {
+	if _, ok := cloned.Data["new"]; ok {
 		t.Fatal("Both input and output data point to the same memory address, no actual cloning happened.")
 	}
 }
@@ -464,7 +464,7 @@ func TestCloneVectorPointer(t *testing.T) {
 	}
 
 	input.Data[1] = "new"
-	if (*cloned).Data[1] == "new" {
+	if cloned.Data[1] == "new" {
 		t.Fatal("Both input and output data point to the same memory address, no actual cloning happened.")
 	}
 }

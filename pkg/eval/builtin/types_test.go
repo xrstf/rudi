@@ -44,6 +44,10 @@ func TestToStringFunction(t *testing.T) {
 			Expected:   "true",
 		},
 		{
+			Expression: `(to-string false)`,
+			Expected:   "false",
+		},
+		{
 			Expression: `(to-string null)`,
 			Expected:   "",
 		},
@@ -110,7 +114,15 @@ func TestToIntFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			Expression: `(to-int [0])`,
+			Invalid:    true,
+		},
+		{
 			Expression: `(to-int {})`,
+			Invalid:    true,
+		},
+		{
+			Expression: `(to-int {"" ""})`,
 			Invalid:    true,
 		},
 	}
@@ -168,7 +180,15 @@ func TestToFloatFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			Expression: `(to-float [""])`,
+			Invalid:    true,
+		},
+		{
 			Expression: `(to-float {})`,
+			Invalid:    true,
+		},
+		{
+			Expression: `(to-float {"" ""})`,
 			Invalid:    true,
 		},
 	}

@@ -637,19 +637,12 @@ func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	if vec, err := ctx.Coalesce().ToVector(haystack); err == nil {
-		needleLiteral, err := types.WrapNative(needle)
-		if err != nil {
-			return nil, fmt.Errorf("cannot compare with %T: %w", needle, err)
-		}
-
 		for _, val := range vec {
-			valLiteral, err := types.WrapNative(val)
+			equal, err := equality.EqualCoalesced(ctx.Coalesce(), val, needle)
 			if err != nil {
-				return nil, fmt.Errorf("cannot compare with %T: %w", val, err)
+				return false, err
 			}
-
-			equal, err := equality.StrictEqual(valLiteral, needleLiteral)
-			if err == nil && equal {
+			if equal {
 				return true, nil
 			}
 		}

@@ -9,6 +9,7 @@ import (
 
 	"go.xrstf.de/rudi/pkg/debug"
 	"go.xrstf.de/rudi/pkg/eval"
+	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
 )
@@ -87,7 +88,7 @@ func (p *rudiProgram) Run(data any, variables Variables, funcs Functions, coales
 	// get current state of the document
 	docData := finalCtx.GetDocument().Data()
 
-	unwrappedDocData, err := Unwrap(docData)
+	unwrappedDocData, err := types.UnwrapType(docData)
 	if err != nil {
 		// this should never happen
 		return nil, nil, fmt.Errorf("failed to unwrap final document data: %w", err)
@@ -105,7 +106,7 @@ func (p *rudiProgram) RunContext(ctx Context) (finalCtx Context, result any, err
 		return ctx, nil, err
 	}
 
-	unwrappedResult, err := Unwrap(result)
+	unwrappedResult, err := types.UnwrapType(result)
 	if err != nil {
 		// this should never happen
 		return ctx, nil, fmt.Errorf("failed to unwrap result: %w", err)
