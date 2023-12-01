@@ -59,8 +59,8 @@ func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor, desc s
 			return inter(leftInt, rightInt)
 		}
 
-		leftFloat := numbers[0].ToFloat()
-		rightFloat := numbers[1].ToFloat()
+		leftFloat := numbers[0].MustToFloat()
+		rightFloat := numbers[1].MustToFloat()
 
 		return floater(leftFloat, rightFloat)
 	}, desc)

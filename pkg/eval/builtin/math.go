@@ -59,7 +59,7 @@ func sumFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	sum := float64(0)
 	for _, num := range values {
-		sum += num.ToFloat()
+		sum += num.MustToFloat()
 	}
 
 	return sum, nil
@@ -85,9 +85,9 @@ func subFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return difference, nil
 	}
 
-	difference := values[0].ToFloat()
+	difference := values[0].MustToFloat()
 	for _, num := range values[1:] {
-		difference -= num.ToFloat()
+		difference -= num.MustToFloat()
 	}
 
 	return difference, nil
@@ -115,7 +115,7 @@ func multiplyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	product := float64(1)
 	for _, num := range values {
-		product *= num.ToFloat()
+		product *= num.MustToFloat()
 	}
 
 	return product, nil
@@ -131,13 +131,14 @@ func divideFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	result := values[0].ToFloat()
+	result := values[0].MustToFloat()
 
 	for _, num := range values[1:] {
-		divisor := num.ToFloat()
+		divisor := num.MustToFloat()
 		if divisor == 0 {
 			return nil, errors.New("division by zero")
 		}
+
 		result /= divisor
 	}
 

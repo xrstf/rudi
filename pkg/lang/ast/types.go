@@ -272,27 +272,6 @@ type Number struct {
 var _ Expression = Number{}
 var _ Literal = Number{}
 
-func (n Number) Equal(other Number) bool {
-	// handle technically invalid numbers
-	if other.Value == nil || n.Value == nil {
-		return (other.Value == nil) == (n.Value == nil)
-	}
-
-	selfInt, selfOk := n.ToInteger()
-	otherInt, otherOk := other.ToInteger()
-
-	// not the same type
-	if selfOk != otherOk {
-		return false
-	}
-
-	if selfOk {
-		return otherInt == selfInt
-	}
-
-	return n.ToFloat() == other.ToFloat()
-}
-
 func (n Number) ToInteger() (int64, bool) {
 	switch asserted := n.Value.(type) {
 	case int:
@@ -306,31 +285,32 @@ func (n Number) ToInteger() (int64, bool) {
 	}
 }
 
-func (n Number) IsFloat() bool {
-	_, ok := n.Value.(float64)
-	return ok
-}
-
-func (n Number) ToFloat() float64 {
+func (n Number) ToFloat() (float64, bool) {
 	switch asserted := n.Value.(type) {
-	case int:
-		return float64(asserted)
-	case int32:
-		return float64(asserted)
-	case int64:
-		return float64(asserted)
 	case float32:
-		return float64(asserted)
+		return float64(asserted), true
 	case float64:
-		return asserted
+		return asserted, true
 	default:
-		panic(fmt.Sprintf("Number with non-numeric value %v (%T)", n.Value, n.Value))
+		return 0, false
 	}
 }
 
+func (n Number) MustToFloat() float64 {
+	if i, ok := n.ToInteger(); ok {
+		return float64(i)
+	}
+
+	if f, ok := n.ToFloat(); ok {
+		return f
+	}
+
+	panic(fmt.Sprintf("invalid number value %#v (%T)", n.Value, n.Value))
+}
+
 func (n Number) String() string {
-	if n.IsFloat() {
-		return fmt.Sprintf("%f", n.Value)
+	if f, ok := n.ToFloat(); ok {
+		return fmt.Sprintf("%f", f)
 	}
 
 	return fmt.Sprintf("%d", n.Value)
