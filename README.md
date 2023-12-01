@@ -23,6 +23,20 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 (set! .foo[0] (+ (len .users) 42))
 ```
 
+## Contents
+
+* [Features](#features)
+* [Installation](#installation)
+* [Documentation](#documentation)
+  * [Language Description](docs/language.md)
+  * [Standard Library](docs/functions/README.md)
+* [Usage](#usage)
+  * [Command Line](#command-line)
+  * [Embedding](#embedding)
+* [Alternatives](#alternatives)
+* [Credits](#credits)
+* [License](#license)
+
 ## Features
 
 * **Safe** evaluation: Rudi is not Turing-complete and so Rudi programs are always guaranteed to
@@ -40,7 +54,8 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 ## Installation
 
 Rudi is primarily meant to be embedded into other Go programs, but a standalone CLI application,
-`rudi`, is also available to test your scripts with. `rudi` can be installed using Git & Go:
+`rudi`, is also available to test your scripts with. `rudi` can be installed using Git & Go. Rudi
+requires **Go 1.18** or newer.
 
 ```bash
 git clone https://github.com/xrstf/rudi
@@ -50,6 +65,13 @@ make build
 
 Alternatively, you can download the [latest release](https://github.com/xrstf/rudi/releases/latest)
 from GitHub.
+
+## Documentation
+
+Make yourself familiar with Rudi using the documentation:
+
+* The [Language Description](docs/language.md) describes the Rudi syntax and semantics.
+* All built-in functions are described in the [standard library](docs/functions/README.md).
 
 ## Usage
 
