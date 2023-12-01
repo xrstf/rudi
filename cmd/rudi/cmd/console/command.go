@@ -61,7 +61,7 @@ func Run(opts *cmdtypes.Options, args []string) error {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	ctx, err := util.SetupRudiContext(files)
+	ctx, err := util.SetupRudiContext(opts, files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}

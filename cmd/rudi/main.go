@@ -36,7 +36,7 @@ func printVersion() {
 }
 
 func main() {
-	opts := types.Options{}
+	opts := types.NewDefaultOptions()
 
 	opts.AddFlags(pflag.CommandLine)
 	pflag.Parse()

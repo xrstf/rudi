@@ -5,6 +5,8 @@ package types
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/spf13/pflag"
 )
@@ -17,6 +19,13 @@ type Options struct {
 	FormatYaml  bool
 	PrintAst    bool
 	ShowVersion bool
+	Coalescing  string
+}
+
+func NewDefaultOptions() Options {
+	return Options{
+		Coalescing: "strict",
+	}
 }
 
 func (o *Options) AddFlags(fs *pflag.FlagSet) {
@@ -26,6 +35,7 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVarP(&o.PrettyPrint, "pretty", "p", o.PrettyPrint, "Output pretty-printed JSON.")
 	fs.BoolVarP(&o.FormatYaml, "yaml", "y", o.FormatYaml, "Output pretty-printed YAML instead of JSON.")
 	fs.BoolVarP(&o.PrintAst, "debug-ast", "", o.PrintAst, "Output syntax tree of the parsed script in non-interactive mode.")
+	fs.StringVarP(&o.Coalescing, "coalesce", "", o.Coalescing, "Type conversion handling, choose one of strict, pedantic or humane.")
 	fs.BoolVarP(&o.ShowVersion, "version", "V", o.ShowVersion, "Show version and exit.")
 }
 
@@ -36,6 +46,11 @@ func (o *Options) Validate() error {
 
 	if o.Interactive && o.PrintAst {
 		return errors.New("cannot combine --interactive with --debug-ast")
+	}
+
+	o.Coalescing = strings.ToLower(o.Coalescing)
+	if o.Coalescing != "strict" && o.Coalescing != "pedantic" && o.Coalescing != "humane" {
+		return fmt.Errorf("invalid --coalesce value %q, must be one of strict, pedantic or humane", o.Coalescing)
 	}
 
 	return nil

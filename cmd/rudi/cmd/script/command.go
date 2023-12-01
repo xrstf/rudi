@@ -64,7 +64,7 @@ func Run(opts *types.Options, args []string) error {
 	}
 
 	// setup the evaluation context
-	ctx, err := util.SetupRudiContext(files)
+	ctx, err := util.SetupRudiContext(opts, files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}

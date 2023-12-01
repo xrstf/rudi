@@ -7,9 +7,11 @@ import (
 	"fmt"
 
 	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/pkg/coalescing"
 )
 
-func SetupRudiContext(files []any) (rudi.Context, error) {
+func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 	var (
 		document rudi.Document
 		err      error
@@ -27,7 +29,19 @@ func SetupRudiContext(files []any) (rudi.Context, error) {
 	vars := rudi.NewVariables().
 		Set("files", files)
 
-	ctx := rudi.NewContext(document, vars, rudi.NewBuiltInFunctions(), nil)
+	var coalescer coalescing.Coalescer
+	switch opts.Coalescing {
+	case "strict":
+		coalescer = coalescing.NewStrict()
+	case "pedantic":
+		coalescer = coalescing.NewPedantic()
+	case "humane":
+		coalescer = coalescing.NewHumane()
+	default:
+		return rudi.Context{}, fmt.Errorf("unknown coalescing mode %q", opts.Coalescing)
+	}
+
+	ctx := rudi.NewContext(document, vars, rudi.NewBuiltInFunctions(), coalescer)
 
 	return ctx, nil
 }
