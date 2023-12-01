@@ -13,6 +13,7 @@ import (
 var embeddedFS embed.FS
 
 type Topic struct {
+	Title       string
 	CliNames    []string
 	Group       string
 	Description string
@@ -27,10 +28,18 @@ func (t *Topic) Content() ([]byte, error) {
 func Topics() []Topic {
 	topics := []Topic{
 		{
+			Title:       "The Rudi Language",
 			CliNames:    []string{"language", "lang", "rudi"},
 			Group:       "General",
 			Description: "A short introduction to the Rudi language",
 			Filename:    "language.md",
+		},
+		{
+			Title:       "Type Handling & Conversions",
+			CliNames:    []string{"coalescing"},
+			Group:       "General",
+			Description: "A short introduction to the Rudi languageHow Rudi handles, converts and compares values",
+			Filename:    "coalescing.md",
 		},
 	}
 
@@ -67,6 +76,7 @@ func Topics() []Topic {
 		}
 
 		topics = append(topics, Topic{
+			Title:       funcName,
 			CliNames:    []string{funcName, sanitized},
 			Group:       ucFirst(group) + " Functions",
 			Description: function.Description(),

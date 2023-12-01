@@ -29,6 +29,7 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 * [Installation](#installation)
 * [Documentation](#documentation)
   * [Language Description](docs/language.md)
+  * [Type Handling](docs/coalescing.md)
   * [Standard Library](docs/functions/README.md)
 * [Usage](#usage)
   * [Command Line](#command-line)
@@ -72,6 +73,7 @@ Make yourself familiar with Rudi using the documentation:
 
 * The [Language Description](docs/language.md) describes the Rudi syntax and semantics.
 * All built-in functions are described in the [standard library](docs/functions/README.md).
+* [Type Handling](docs/coalescing.md) describes how Rudi handles, converts and compares values.
 
 ## Usage
 

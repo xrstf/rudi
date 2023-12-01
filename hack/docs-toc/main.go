@@ -98,7 +98,7 @@ func renderTopics(topics []docs.Topic, groups []string) string {
 		topicNames := getTopicNames(topics, group)
 		for _, topicName := range topicNames {
 			topic := getTopic(topics, topicName)
-			linkTitle := topicName
+			linkTitle := topic.Title
 
 			if topic.IsFunction {
 				linkTitle = fmt.Sprintf("`%s`", linkTitle)

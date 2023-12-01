@@ -5,7 +5,8 @@ Welcome to the Rudi documentation :smile:
 <!-- BEGIN_TOC -->
 ## General
 
-* [language](language.md) – A short introduction to the Rudi language
+* [Type Handling & Conversions](coalescing.md) – A short introduction to the Rudi languageHow Rudi handles, converts and compares values
+* [The Rudi Language](language.md) – A short introduction to the Rudi language
 
 ## Core Functions
 
