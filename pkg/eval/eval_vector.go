@@ -10,11 +10,6 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-// evaluated vectors are technically considered expressions.
-func EvalVector(ctx types.Context, vec ast.Vector) (types.Context, any, error) {
-	return ctx, vec.LiteralValue(), nil
-}
-
 func EvalVectorNode(ctx types.Context, vec ast.VectorNode) (types.Context, any, error) {
 	innerCtx := ctx
 	result := make([]any, len(vec.Expressions))

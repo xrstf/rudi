@@ -78,17 +78,9 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(nil, []any{0}, invalid, invalid, invalid),
 		newCoalescedTest(nil, []any{1}, invalid, invalid, invalid),
 		newCoalescedTest(nil, []any{""}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Vector{Data: nil}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Vector{Data: []any{}}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Vector{Data: []any{1}}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Vector{Data: []any{""}}, invalid, invalid, invalid),
 
 		newCoalescedTest(nil, map[string]any{}, invalid, invalid, true),
 		newCoalescedTest(nil, map[string]any{"": ""}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Object{Data: nil}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Object{Data: map[string]any{}}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
 
 		///////////////////////////////////////////////////////////
 		// test bool against all other types, except nils
@@ -150,25 +142,11 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(false, []any{0}, invalid, invalid, false),
 		newCoalescedTest(false, []any{1}, invalid, invalid, false),
 		newCoalescedTest(false, []any{""}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Vector{Data: []any{}}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Vector{Data: []any{0}}, invalid, invalid, true),
-		newCoalescedTest(true, ast.Vector{Data: []any{1}}, invalid, invalid, true),
-		newCoalescedTest(true, ast.Vector{Data: []any{""}}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Vector{Data: []any{}}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Vector{Data: []any{0}}, invalid, invalid, false),
-		newCoalescedTest(false, ast.Vector{Data: []any{1}}, invalid, invalid, false),
-		newCoalescedTest(false, ast.Vector{Data: []any{""}}, invalid, invalid, false),
 
 		newCoalescedTest(true, map[string]any{}, invalid, invalid, false),
 		newCoalescedTest(true, map[string]any{"": ""}, invalid, invalid, true),
 		newCoalescedTest(false, map[string]any{}, invalid, invalid, true),
 		newCoalescedTest(false, map[string]any{"": ""}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Object{Data: nil}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Object{Data: map[string]any{}}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Object{Data: nil}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Object{Data: map[string]any{}}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, false),
 
 		///////////////////////////////////////////////////////////
 		// test numbers against all other types, except nils and bools
@@ -208,14 +186,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(1, []any{0}, invalid, invalid, invalid),
 		newCoalescedTest(3.14, []any{}, invalid, invalid, invalid),
 		newCoalescedTest(3.14, []any{0}, invalid, invalid, invalid),
-		newCoalescedTest(0, ast.Vector{Data: []any{}}, invalid, invalid, invalid),
-		newCoalescedTest(0, ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
-		newCoalescedTest(0.0, ast.Vector{Data: []any{}}, invalid, invalid, invalid),
-		newCoalescedTest(0.0, ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
-		newCoalescedTest(1, ast.Vector{Data: []any{}}, invalid, invalid, invalid),
-		newCoalescedTest(1, ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
-		newCoalescedTest(3.14, ast.Vector{Data: []any{}}, invalid, invalid, invalid),
-		newCoalescedTest(3.14, ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
 
 		newCoalescedTest(0, map[string]any{}, invalid, invalid, invalid),
 		newCoalescedTest(0, map[string]any{"": ""}, invalid, invalid, invalid),
@@ -225,14 +195,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(1, map[string]any{"": ""}, invalid, invalid, invalid),
 		newCoalescedTest(3.14, map[string]any{}, invalid, invalid, invalid),
 		newCoalescedTest(3.14, map[string]any{"": ""}, invalid, invalid, invalid),
-		newCoalescedTest(0, ast.Object{Data: map[string]any{}}, invalid, invalid, invalid),
-		newCoalescedTest(0, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
-		newCoalescedTest(0.0, ast.Object{Data: map[string]any{}}, invalid, invalid, invalid),
-		newCoalescedTest(0.0, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
-		newCoalescedTest(1, ast.Object{Data: map[string]any{}}, invalid, invalid, invalid),
-		newCoalescedTest(1, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
-		newCoalescedTest(3.14, ast.Object{Data: map[string]any{}}, invalid, invalid, invalid),
-		newCoalescedTest(3.14, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
 
 		///////////////////////////////////////////////////////////
 		// test strings against all other types, except nils, bools and numbers
@@ -249,19 +211,11 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest("", []any{0}, invalid, invalid, invalid),
 		newCoalescedTest("0", []any{}, invalid, invalid, invalid),
 		newCoalescedTest("0", []any{0}, invalid, invalid, invalid),
-		newCoalescedTest("", ast.Vector{Data: []any{}}, invalid, invalid, invalid),
-		newCoalescedTest("", ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
-		newCoalescedTest("0", ast.Vector{Data: []any{}}, invalid, invalid, invalid),
-		newCoalescedTest("0", ast.Vector{Data: []any{0}}, invalid, invalid, invalid),
 
 		newCoalescedTest("", map[string]any{}, invalid, invalid, invalid),
 		newCoalescedTest("", map[string]any{"": ""}, invalid, invalid, invalid),
 		newCoalescedTest("0", map[string]any{}, invalid, invalid, invalid),
 		newCoalescedTest("0", map[string]any{"": ""}, invalid, invalid, invalid),
-		newCoalescedTest("", ast.Object{Data: map[string]any{}}, invalid, invalid, invalid),
-		newCoalescedTest("", ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
-		newCoalescedTest("0", ast.Object{Data: map[string]any{}}, invalid, invalid, invalid),
-		newCoalescedTest("0", ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
 
 		///////////////////////////////////////////////////////////
 		// test vectors against all other types, except nils, bools, numbers and strings
@@ -271,21 +225,12 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest([]any{0}, []any{0}, true, true, true),
 		newCoalescedTest([]any{0}, []any{"0"}, invalid, invalid, true),
 		newCoalescedTest([]any{false}, []any{0}, invalid, invalid, true),
-		newCoalescedTest([]any{}, ast.Vector{Data: []any{}}, true, true, true),
-		newCoalescedTest([]any{}, ast.Vector{Data: []any{0}}, false, false, false),
-		newCoalescedTest([]any{0}, ast.Vector{Data: []any{0}}, true, true, true),
-		newCoalescedTest([]any{0}, ast.Vector{Data: []any{"0"}}, invalid, invalid, true),
-		newCoalescedTest([]any{false}, ast.Vector{Data: []any{0}}, invalid, invalid, true),
 
 		newCoalescedTest([]any{}, map[string]any{}, invalid, invalid, true),
 		newCoalescedTest([]any{}, map[string]any{"": ""}, invalid, invalid, invalid),
 		newCoalescedTest([]any{0}, map[string]any{"": ""}, invalid, invalid, invalid),
 		newCoalescedTest([]any{1}, map[string]any{}, invalid, invalid, invalid),
 		newCoalescedTest([]any{nil}, map[string]any{"": ""}, invalid, invalid, invalid),
-		newCoalescedTest([]any{}, ast.Object{Data: map[string]any{}}, invalid, invalid, true),
-		newCoalescedTest([]any{}, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
-		newCoalescedTest([]any{0}, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
-		newCoalescedTest([]any{nil}, ast.Object{Data: map[string]any{"": ""}}, invalid, invalid, invalid),
 
 		///////////////////////////////////////////////////////////
 		// test objects
@@ -295,11 +240,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(map[string]any{"foo": false}, map[string]any{"foo": ""}, invalid, invalid, true),
 		newCoalescedTest(map[string]any{"foo": "bar"}, map[string]any{"foo": "bar"}, true, true, true),
 		newCoalescedTest(map[string]any{"foo": "bar"}, map[string]any{"foo": "X"}, false, false, false),
-		newCoalescedTest(map[string]any{}, ast.Object{Data: map[string]any{}}, true, true, true),
-		newCoalescedTest(map[string]any{}, ast.Object{Data: map[string]any{"foo": "bar"}}, false, false, false),
-		newCoalescedTest(map[string]any{"foo": false}, ast.Object{Data: map[string]any{"foo": ""}}, invalid, invalid, true),
-		newCoalescedTest(map[string]any{"foo": "bar"}, ast.Object{Data: map[string]any{"foo": "bar"}}, true, true, true),
-		newCoalescedTest(map[string]any{"foo": "bar"}, ast.Object{Data: map[string]any{"foo": "X"}}, false, false, false),
 	}
 }
 

@@ -59,16 +59,8 @@ func TestExpressionNames(t *testing.T) {
 			expected: "Symbol(?)",
 		},
 		{
-			expr:     Vector{},
-			expected: "Vector",
-		},
-		{
 			expr:     VectorNode{}, // ...Node suffix is only an internal distinction
 			expected: "Vector",
-		},
-		{
-			expr:     Object{},
-			expected: "Object",
 		},
 		{
 			expr:     ObjectNode{},

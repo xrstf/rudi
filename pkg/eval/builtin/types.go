@@ -5,7 +5,6 @@ package builtin
 
 import (
 	"fmt"
-	"strings"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval"
@@ -84,17 +83,27 @@ func typeOfFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return nil, err
 	}
 
-	value, err = types.WrapNative(value)
-	if err != nil {
-		return nil, err
+	var typeName string
+
+	switch value.(type) {
+	case nil:
+		typeName = "null"
+	case bool:
+		typeName = "bool"
+	case int64:
+		typeName = "number"
+	case float64:
+		typeName = "number"
+	case string:
+		typeName = "string"
+	case []any:
+		typeName = "vector"
+	case map[string]any:
+		typeName = "object"
+	default:
+		// should never happen
+		typeName = fmt.Sprintf("%T", value)
 	}
 
-	expr, ok := value.(ast.Literal)
-	if !ok {
-		return nil, fmt.Errorf("expected expression, but got %T", value)
-	}
-
-	name := strings.ToLower(expr.ExpressionName())
-
-	return name, nil
+	return typeName, nil
 }

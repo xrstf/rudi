@@ -29,10 +29,6 @@ func TestEvalExpression(t *testing.T) {
 			Expected: 1,
 		},
 		{
-			AST:      ast.Object{Data: map[string]any{"foo": "bar"}},
-			Expected: map[string]any{"foo": "bar"},
-		},
-		{
 			AST: ast.ObjectNode{
 				Data: []ast.KeyValuePair{
 					{
@@ -42,10 +38,6 @@ func TestEvalExpression(t *testing.T) {
 				},
 			},
 			Expected: map[string]any{"foo": "bar"},
-		},
-		{
-			AST:      ast.Vector{Data: []any{"foo", 1}},
-			Expected: []any{"foo", 1},
 		},
 		{
 			AST: ast.VectorNode{

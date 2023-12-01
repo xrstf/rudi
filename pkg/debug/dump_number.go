@@ -6,10 +6,8 @@ package debug
 import (
 	"fmt"
 	"io"
-
-	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func DumpNumber(num *ast.Number, out io.Writer) error {
-	return writeString(out, fmt.Sprintf("(number %s)", num))
+func DumpNumber(value any, out io.Writer) error {
+	return writeString(out, fmt.Sprintf("(number (%T %v))", value, value))
 }

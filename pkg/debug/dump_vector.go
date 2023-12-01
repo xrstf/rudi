@@ -10,14 +10,14 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func DumpVector(vec *ast.Vector, out io.Writer, depth int) error {
-	if depth == DoNotIndent || len(vec.Data) == 0 {
+func DumpVector(vec []any, out io.Writer, depth int) error {
+	if depth == DoNotIndent || len(vec) == 0 {
 		return dumpVectorSingleline(vec, out, depth)
 	}
 
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
-	for _, val := range vec.Data {
+	for _, val := range vec {
 		if err := dumpAny(val, &buf, 0); err != nil {
 			return err
 		}
@@ -30,12 +30,12 @@ func DumpVector(vec *ast.Vector, out io.Writer, depth int) error {
 	}
 }
 
-func dumpVectorSingleline(vec *ast.Vector, out io.Writer, depth int) error {
+func dumpVectorSingleline(vec []any, out io.Writer, depth int) error {
 	if err := writeString(out, "(vector"); err != nil {
 		return err
 	}
 
-	for _, val := range vec.Data {
+	for _, val := range vec {
 		if err := writeString(out, " "); err != nil {
 			return err
 		}
@@ -48,14 +48,14 @@ func dumpVectorSingleline(vec *ast.Vector, out io.Writer, depth int) error {
 	return writeString(out, ")")
 }
 
-func dumpVectorMultiline(vec *ast.Vector, out io.Writer, depth int) error {
+func dumpVectorMultiline(vec []any, out io.Writer, depth int) error {
 	prefix := strings.Repeat(Indent, depth+1)
 
 	if err := writeString(out, "(vector"); err != nil {
 		return err
 	}
 
-	for _, val := range vec.Data {
+	for _, val := range vec {
 		if err := writeString(out, "\n"+prefix); err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func dumpVectorMultiline(vec *ast.Vector, out io.Writer, depth int) error {
 	return writeString(out, "\n"+prefix+")")
 }
 
-func DumpVectorNode(vec *ast.VectorNode, out io.Writer, depth int) error {
+func DumpVectorNode(vec ast.VectorNode, out io.Writer, depth int) error {
 	if depth == DoNotIndent || len(vec.Expressions) == 0 {
 		return dumpVectorNodeSingleline(vec, out, depth)
 	}
@@ -89,7 +89,7 @@ func DumpVectorNode(vec *ast.VectorNode, out io.Writer, depth int) error {
 	}
 }
 
-func dumpVectorNodeSingleline(vec *ast.VectorNode, out io.Writer, depth int) error {
+func dumpVectorNodeSingleline(vec ast.VectorNode, out io.Writer, depth int) error {
 	if err := writeString(out, "(vector"); err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func dumpVectorNodeSingleline(vec *ast.VectorNode, out io.Writer, depth int) err
 	return dumpOptionalPathExpression(vec.PathExpression, out, depth)
 }
 
-func dumpVectorNodeMultiline(vec *ast.VectorNode, out io.Writer, depth int) error {
+func dumpVectorNodeMultiline(vec ast.VectorNode, out io.Writer, depth int) error {
 	prefixInner := strings.Repeat(Indent, depth+1)
 
 	if err := writeString(out, "(vector"); err != nil {

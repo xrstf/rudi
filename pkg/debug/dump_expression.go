@@ -13,21 +13,17 @@ import (
 func DumpExpression(expr ast.Expression, out io.Writer, depth int) error {
 	switch asserted := expr.(type) {
 	case ast.Null:
-		return DumpNull(&asserted, out)
+		return DumpNull(out)
 	case ast.Bool:
-		return DumpBool(&asserted, out)
+		return DumpBool(bool(asserted), out)
 	case ast.String:
-		return DumpString(&asserted, out)
+		return DumpString(string(asserted), out)
 	case ast.Number:
-		return DumpNumber(&asserted, out)
-	case ast.Object:
-		return DumpObject(&asserted, out, depth)
+		return DumpNumber(asserted.Value, out)
 	case ast.ObjectNode:
-		return DumpObjectNode(&asserted, out, depth)
-	case ast.Vector:
-		return DumpVector(&asserted, out, depth)
+		return DumpObjectNode(asserted, out, depth)
 	case ast.VectorNode:
-		return DumpVectorNode(&asserted, out, depth)
+		return DumpVectorNode(asserted, out, depth)
 	case ast.Symbol:
 		return DumpSymbol(&asserted, out, depth)
 	case ast.Tuple:

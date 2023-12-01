@@ -5,10 +5,8 @@ package debug
 
 import (
 	"io"
-
-	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func DumpNull(n *ast.Null, out io.Writer) error {
+func DumpNull(out io.Writer) error {
 	return writeString(out, "(null)")
 }

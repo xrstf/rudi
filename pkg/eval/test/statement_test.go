@@ -28,14 +28,6 @@ func TestEvalStatement(t *testing.T) {
 			AST:      ast.Statement{Expression: ast.Number{Value: 1}},
 			Expected: 1,
 		},
-		{
-			AST:      ast.Statement{Expression: ast.Object{Data: map[string]any{"foo": "bar"}}},
-			Expected: map[string]any{"foo": "bar"},
-		},
-		{
-			AST:      ast.Statement{Expression: ast.Vector{Data: []any{"foo", 1}}},
-			Expected: []any{"foo", 1},
-		},
 	}
 
 	for _, testcase := range testcases {

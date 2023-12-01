@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -97,10 +96,9 @@ func TestSetFunction(t *testing.T) {
 
 	testVariables := func() types.Variables {
 		return types.Variables{
-			"myvar":  42,
-			"obj":    testObjDocument(),
-			"vec":    testVecDocument(),
-			"astVec": []any{"foo"},
+			"myvar": 42,
+			"obj":   testObjDocument(),
+			"vec":   testVecDocument(),
 		}
 	}
 
@@ -770,10 +768,9 @@ func TestHasFunction(t *testing.T) {
 	testVariables := types.Variables{
 		// value does not matter here, but this testcase is still meant
 		// to ensure the missing path is detected, not detect an unknown variable
-		"myvar":  42,
-		"obj":    testObjDocument,
-		"vec":    testVecDocument,
-		"astVec": ast.Vector{Data: []any{"foo"}},
+		"myvar": 42,
+		"obj":   testObjDocument,
+		"vec":   testVecDocument,
 	}
 
 	testcases := []testutil.Testcase{
@@ -1004,11 +1001,6 @@ func TestHasFunction(t *testing.T) {
 		},
 		{
 			Expression: `(has? $vec[1])`,
-			Expected:   true,
-			Variables:  testVariables,
-		},
-		{
-			Expression: `(has? $astVec[0])`,
 			Expected:   true,
 			Variables:  testVariables,
 		},

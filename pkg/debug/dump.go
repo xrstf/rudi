@@ -25,56 +25,46 @@ func DumpSingleline(p any, out io.Writer) error {
 
 func dumpAny(val any, out io.Writer, depth int) error {
 	switch asserted := val.(type) {
-	case *ast.Null:
-		return DumpNull(asserted, out)
+	case nil:
+		return DumpNull(out)
 	case ast.Null:
-		return DumpNull(&asserted, out)
-	case *ast.Bool:
+		return DumpNull(out)
+	case bool:
 		return DumpBool(asserted, out)
 	case ast.Bool:
-		return DumpBool(&asserted, out)
-	case *ast.String:
-		return DumpString(asserted, out)
-	case ast.String:
-		return DumpString(&asserted, out)
-	case *ast.Number:
+		return DumpBool(bool(asserted), out)
+	case int:
+		return DumpNumber(asserted, out)
+	case int32:
+		return DumpNumber(asserted, out)
+	case int64:
+		return DumpNumber(asserted, out)
+	case float32:
+		return DumpNumber(asserted, out)
+	case float64:
 		return DumpNumber(asserted, out)
 	case ast.Number:
-		return DumpNumber(&asserted, out)
-	case *ast.Object:
-		return DumpObject(asserted, out, depth)
-	case ast.Object:
-		return DumpObject(&asserted, out, depth)
-	case *ast.ObjectNode:
-		return DumpObjectNode(asserted, out, depth)
-	case ast.ObjectNode:
-		return DumpObjectNode(&asserted, out, depth)
-	case *ast.Vector:
+		return DumpNumber(asserted.Value, out)
+	case string:
+		return DumpString(asserted, out)
+	case ast.String:
+		return DumpString(string(asserted), out)
+	case []any:
 		return DumpVector(asserted, out, depth)
-	case ast.Vector:
-		return DumpVector(&asserted, out, depth)
-	case *ast.VectorNode:
-		return DumpVectorNode(asserted, out, depth)
 	case ast.VectorNode:
-		return DumpVectorNode(&asserted, out, depth)
-	case *ast.Symbol:
-		return DumpSymbol(asserted, out, depth)
+		return DumpVectorNode(asserted, out, depth)
+	case map[string]any:
+		return DumpObject(asserted, out, depth)
+	case ast.ObjectNode:
+		return DumpObjectNode(asserted, out, depth)
 	case ast.Symbol:
 		return DumpSymbol(&asserted, out, depth)
-	case *ast.Tuple:
-		return DumpTuple(asserted, out, depth)
 	case ast.Tuple:
 		return DumpTuple(&asserted, out, depth)
-	case *ast.Identifier:
-		return DumpIdentifier(asserted, out)
 	case ast.Identifier:
 		return DumpIdentifier(&asserted, out)
-	case *ast.Statement:
-		return DumpStatement(asserted, out, depth)
 	case ast.Statement:
 		return DumpStatement(&asserted, out, depth)
-	case *ast.Program:
-		return DumpProgram(asserted, out, depth)
 	case ast.Program:
 		return DumpProgram(&asserted, out, depth)
 	}

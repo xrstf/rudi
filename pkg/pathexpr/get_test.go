@@ -6,8 +6,6 @@ package pathexpr
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/lang/ast"
-
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -68,21 +66,11 @@ func TestGet(t *testing.T) {
 			path:    Path{0},
 			invalid: true,
 		},
-		{
-			value:    ast.Object{Data: map[string]any{"foo": "bar"}},
-			path:     Path{"foo"},
-			expected: "bar",
-		},
 
 		// simply slice access without recursion
 
 		{
 			value:    []any{"foo", "bar", "baz"},
-			path:     Path{0},
-			expected: "foo",
-		},
-		{
-			value:    ast.Vector{Data: []any{"foo", "bar", "baz"}},
 			path:     Path{0},
 			expected: "foo",
 		},

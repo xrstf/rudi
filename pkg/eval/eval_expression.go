@@ -20,12 +20,8 @@ func EvalExpression(ctx types.Context, expr ast.Expression) (types.Context, any,
 		return EvalString(ctx, asserted)
 	case ast.Number:
 		return EvalNumber(ctx, asserted)
-	case ast.Object:
-		return EvalObject(ctx, asserted)
 	case ast.ObjectNode:
 		return EvalObjectNode(ctx, asserted)
-	case ast.Vector:
-		return EvalVector(ctx, asserted)
 	case ast.VectorNode:
 		return EvalVectorNode(ctx, asserted)
 	case ast.Symbol:

@@ -195,14 +195,14 @@ func WrapNative(val any) (ast.Literal, error) {
 		return ast.Number{Value: asserted}, nil
 	case ast.Number:
 		return asserted, nil
-	case []any:
-		return ast.Vector{Data: asserted}, nil
-	case ast.Vector:
-		return asserted, nil
-	case map[string]any:
-		return ast.Object{Data: asserted}, nil
-	case ast.Object:
-		return asserted, nil
+	// case []any:
+	// 	return ast.VectorNode{Data: asserted}, nil
+	// case ast.Vector:
+	// 	return asserted, nil
+	// case map[string]any:
+	// 	return ast.Object{Data: asserted}, nil
+	// case ast.Object:
+	// 	return asserted, nil
 	default:
 		return nil, fmt.Errorf("cannot wrap %v (%T)", val, val)
 	}
@@ -246,16 +246,16 @@ func UnwrapType(val any) (any, error) {
 		return float64(asserted), nil
 	case float64:
 		return asserted, nil
-	case ast.Vector:
-		return asserted.Data, nil
-	case *ast.Vector:
-		return asserted.Data, nil
+	// case ast.Vector:
+	// 	return asserted.Data, nil
+	// case *ast.Vector:
+	// 	return asserted.Data, nil
 	case []any:
 		return asserted, nil
-	case ast.Object:
-		return asserted.Data, nil
-	case *ast.Object:
-		return asserted.Data, nil
+	// case ast.Object:
+	// 	return asserted.Data, nil
+	// case *ast.Object:
+	// 	return asserted.Data, nil
 	case map[string]any:
 		return asserted, nil
 	default:

@@ -142,39 +142,6 @@ func (Tuple) ExpressionName() string {
 	return "Tuple"
 }
 
-// Vector is an evaluated vector.
-type Vector struct {
-	Data []any
-}
-
-var _ Expression = Vector{}
-var _ Literal = Vector{}
-
-func (v Vector) String() string {
-	exprs := make([]string, len(v.Data))
-	for i, expr := range v.Data {
-		exprs[i] = fmt.Sprintf("%s", expr)
-	}
-	return "[" + strings.Join(exprs, " ") + "]"
-}
-
-func (Vector) ExpressionName() string {
-	return "Vector"
-}
-
-func (v Vector) LiteralValue() any {
-	return v.Data
-}
-
-func (v Vector) Clone() Vector {
-	result := Vector{
-		Data: make([]any, len(v.Data)),
-	}
-	copy(result.Data, v.Data)
-
-	return result
-}
-
 // VectorNode represents the parsed code for constructing an vector.
 // When an VectorNode is evaluated, it turns into an Vector.
 type VectorNode struct {
@@ -200,30 +167,6 @@ func (v VectorNode) String() string {
 
 func (VectorNode) ExpressionName() string {
 	return "Vector"
-}
-
-// Object is an evaluated object.
-type Object struct {
-	Data map[string]any
-}
-
-var _ Expression = Object{}
-var _ Literal = Object{}
-
-func (o Object) String() string {
-	exprs := make([]string, 0)
-	for key, value := range o.Data {
-		exprs = append(exprs, fmt.Sprintf("%q: %v", key, value))
-	}
-	return "{" + strings.Join(exprs, ", ") + "}"
-}
-
-func (Object) ExpressionName() string {
-	return "Object"
-}
-
-func (o Object) LiteralValue() any {
-	return o.Data
 }
 
 // ObjectNode represents the parsed code for constructing an object.

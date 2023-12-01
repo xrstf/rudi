@@ -10,14 +10,14 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func DumpObject(obj *ast.Object, out io.Writer, depth int) error {
-	if depth == DoNotIndent || len(obj.Data) == 0 {
+func DumpObject(obj map[string]any, out io.Writer, depth int) error {
+	if depth == DoNotIndent || len(obj) == 0 {
 		return dumpObjectSingleline(obj, out, depth)
 	}
 
 	// check if we can in-line or if we need to put each element on its own line
 	var buf strings.Builder
-	for key, value := range obj.Data {
+	for key, value := range obj {
 		if err := dumpAny(key, &buf, 0); err != nil {
 			return err
 		}
@@ -34,12 +34,12 @@ func DumpObject(obj *ast.Object, out io.Writer, depth int) error {
 	}
 }
 
-func dumpObjectSingleline(obj *ast.Object, out io.Writer, depth int) error {
+func dumpObjectSingleline(obj map[string]any, out io.Writer, depth int) error {
 	if err := writeString(out, "(object"); err != nil {
 		return err
 	}
 
-	for key, value := range obj.Data {
+	for key, value := range obj {
 		if err := writeString(out, " "); err != nil {
 			return err
 		}
@@ -60,14 +60,14 @@ func dumpObjectSingleline(obj *ast.Object, out io.Writer, depth int) error {
 	return writeString(out, ")")
 }
 
-func dumpObjectMultiline(obj *ast.Object, out io.Writer, depth int) error {
+func dumpObjectMultiline(obj map[string]any, out io.Writer, depth int) error {
 	prefix := strings.Repeat(Indent, depth+1)
 
 	if err := writeString(out, "(object"); err != nil {
 		return err
 	}
 
-	for key, value := range obj.Data {
+	for key, value := range obj {
 		if err := writeString(out, "\n"+prefix); err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func dumpObjectMultiline(obj *ast.Object, out io.Writer, depth int) error {
 	return writeString(out, "\n"+prefix+")")
 }
 
-func DumpObjectNode(obj *ast.ObjectNode, out io.Writer, depth int) error {
+func DumpObjectNode(obj ast.ObjectNode, out io.Writer, depth int) error {
 	if depth == DoNotIndent || len(obj.Data) == 0 {
 		return dumpObjectNodeSingleline(obj, out, depth)
 	}
@@ -113,7 +113,7 @@ func DumpObjectNode(obj *ast.ObjectNode, out io.Writer, depth int) error {
 	}
 }
 
-func dumpObjectNodeSingleline(obj *ast.ObjectNode, out io.Writer, depth int) error {
+func dumpObjectNodeSingleline(obj ast.ObjectNode, out io.Writer, depth int) error {
 	if err := writeString(out, "(object"); err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func dumpObjectNodeSingleline(obj *ast.ObjectNode, out io.Writer, depth int) err
 	return dumpOptionalPathExpression(obj.PathExpression, out, depth)
 }
 
-func dumpObjectNodeMultiline(obj *ast.ObjectNode, out io.Writer, depth int) error {
+func dumpObjectNodeMultiline(obj ast.ObjectNode, out io.Writer, depth int) error {
 	prefixInner := strings.Repeat(Indent, depth+1)
 
 	if err := writeString(out, "(object"); err != nil {
