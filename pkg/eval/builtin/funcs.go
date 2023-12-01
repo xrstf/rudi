@@ -4,6 +4,7 @@
 package builtin
 
 import (
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 )
 
@@ -59,8 +60,15 @@ var Functions = types.Functions{
 	"not": types.BasicFunction(notFunction, "negates the given argument"),
 
 	// comparisons
-	"eq?":   types.BasicFunction(eqFunction, "equality check: return true if both arguments are the same"),
-	"like?": types.BasicFunction(likeFunction, `like eq?, but does lossless type conversions so 1 == "1"`),
+	"eq?": makeEqualityFunc(func(ctx types.Context) coalescing.Coalescer {
+		return ctx.Coalesce()
+	}, "equality check: return true if both arguments are the same"),
+	"identical?": makeEqualityFunc(func(ctx types.Context) coalescing.Coalescer {
+		return coalescing.NewStrict()
+	}, "like eq?, but always uses strict coalecsing"),
+	"like?": makeEqualityFunc(func(ctx types.Context) coalescing.Coalescer {
+		return coalescing.NewHumane()
+	}, "like eq?, but always uses humane coalecsing"),
 
 	"lt?": makeNumberComparatorFunc(
 		func(a, b int64) (bool, error) { return a < b, nil },

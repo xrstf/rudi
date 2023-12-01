@@ -14,50 +14,24 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func eqFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected exactly 2 arguments, got %d", size)
-	}
+func makeEqualityFunc(coalescerGetter func(ctx types.Context) coalescing.Coalescer, desc string) types.Function {
+	return types.BasicFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
+		if size := len(args); size != 2 {
+			return nil, fmt.Errorf("expected exactly 2 arguments, got %d", size)
+		}
 
-	_, leftData, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
+		_, leftData, err := eval.EvalExpression(ctx, args[0])
+		if err != nil {
+			return nil, fmt.Errorf("argument #0: %w", err)
+		}
 
-	_, rightData, err := eval.EvalExpression(ctx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
+		_, rightData, err := eval.EvalExpression(ctx, args[1])
+		if err != nil {
+			return nil, fmt.Errorf("argument #1: %w", err)
+		}
 
-	equal, err := equality.EqualCoalesced(ctx.Coalesce(), leftData, rightData)
-	if err != nil {
-		return nil, err
-	}
-
-	return equal, nil
-}
-
-func likeFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected exactly 2 arguments, got %d", size)
-	}
-
-	_, leftData, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	_, rightData, err := eval.EvalExpression(ctx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
-	}
-
-	equal, err := equality.EqualCoalesced(coalescing.NewHumane(), leftData, rightData)
-	if err != nil {
-		return nil, err
-	}
-
-	return equal, nil
+		return equality.EqualCoalesced(coalescerGetter(ctx), leftData, rightData)
+	}, desc)
 }
 
 type intProcessor func(left, right int64) (bool, error)
