@@ -199,6 +199,8 @@ Rudi has been named after my grandfather.
 Thanks to [@embik](https://github.com/embik) and [@xmudrii](https://github.com/xmudrii) for enduring
 my constant questions for feedback :smile:
 
+Rudi has been made possible by the amazing [Pigeon](https://github.com/mna/pigeon) parser generator.
+
 ## License
 
 MIT
