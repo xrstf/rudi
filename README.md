@@ -64,6 +64,8 @@ cd rudi
 make build
 ```
 
+This will result in a `rudi` binary in `_build/`; to install system-wide, use `make install`.
+
 Alternatively, you can download the [latest release](https://github.com/xrstf/rudi/releases/latest)
 from GitHub.
 
