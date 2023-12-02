@@ -6,18 +6,21 @@ package pathexpr
 import (
 	"errors"
 	"fmt"
-
-	"go.xrstf.de/rudi/pkg/eval/types"
 )
+
+type ObjectWriter interface {
+	ObjectReader
+	SetObjectKey(name string, value any) (any, error)
+}
+
+type VectorWriter interface {
+	VectorReader
+	SetVectorItem(index int, value any) (any, error)
+}
 
 func Set(dest any, path Path, newValue any) (any, error) {
 	if len(path) == 0 {
 		return newValue, nil
-	}
-
-	target, err := types.UnwrapType(dest)
-	if err != nil {
-		return nil, fmt.Errorf("cannot descend into %T", dest)
 	}
 
 	thisStep := path[0]
@@ -25,12 +28,8 @@ func Set(dest any, path Path, newValue any) (any, error) {
 
 	// [index]...
 	if index, ok := toIntegerStep(thisStep); ok {
-		if index < 0 {
-			return nil, fmt.Errorf("index %d out of bounds", index)
-		}
-
-		if slice, ok := target.([]any); ok {
-			if index >= len(slice) {
+		if slice, ok := dest.([]any); ok {
+			if index < 0 || index >= len(slice) {
 				return nil, fmt.Errorf("index %d out of bounds", index)
 			}
 
@@ -46,12 +45,26 @@ func Set(dest any, path Path, newValue any) (any, error) {
 			return slice, nil
 		}
 
-		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, target)
+		if writer, ok := dest.(VectorWriter); ok {
+			existingValue, err := writer.GetVectorItem(index)
+			if err != nil {
+				return nil, fmt.Errorf("cannot descend with [%d] into %T", index, dest)
+			}
+
+			updatedValue, err := Set(existingValue, remainingSteps, newValue)
+			if err != nil {
+				return nil, err
+			}
+
+			return writer.SetVectorItem(index, updatedValue)
+		}
+
+		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, dest)
 	}
 
 	// .key
 	if key, ok := toStringStep(thisStep); ok {
-		if object, ok := target.(map[string]any); ok {
+		if object, ok := dest.(map[string]any); ok {
 			// getting the empty value for non-existing keys is fine
 			existingValue := object[key]
 
@@ -65,8 +78,22 @@ func Set(dest any, path Path, newValue any) (any, error) {
 			return object, nil
 		}
 
+		if writer, ok := dest.(ObjectWriter); ok {
+			existingValue, err := writer.GetObjectKey(key)
+			if err != nil {
+				return nil, fmt.Errorf("cannot descend with [%s] into %T", key, dest)
+			}
+
+			updatedValue, err := Set(existingValue, remainingSteps, newValue)
+			if err != nil {
+				return nil, err
+			}
+
+			return writer.SetObjectKey(key, updatedValue)
+		}
+
 		// nulls can be turned into objects
-		if target == nil {
+		if dest == nil {
 			updatedValue, err := Set(nil, remainingSteps, newValue)
 			if err != nil {
 				return nil, err
@@ -77,7 +104,7 @@ func Set(dest any, path Path, newValue any) (any, error) {
 			}, nil
 		}
 
-		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, target)
+		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, dest)
 	}
 
 	return nil, errors.New("invalid path step: neither key nor index")

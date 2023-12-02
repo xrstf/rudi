@@ -4,10 +4,42 @@
 package pathexpr
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+type unknownType struct{}
+
+type customObjGetter struct {
+	value any
+}
+
+var _ ObjectReader = customObjGetter{}
+
+func (g customObjGetter) GetObjectKey(name string) (any, error) {
+	if name == "value" {
+		return g.value, nil
+	}
+
+	return nil, fmt.Errorf("cannot get property %q", name)
+}
+
+type customVecGetter struct {
+	magic int
+	value any
+}
+
+var _ VectorReader = customVecGetter{}
+
+func (g customVecGetter) GetVectorItem(index int) (any, error) {
+	if index == g.magic {
+		return g.value, nil
+	}
+
+	return nil, fmt.Errorf("cannot get index %d", index)
+}
 
 func TestGet(t *testing.T) {
 	testcases := []struct {
@@ -45,6 +77,11 @@ func TestGet(t *testing.T) {
 		},
 		{
 			value:   func() {},
+			path:    Path{"foo"},
+			invalid: true,
+		},
+		{
+			value:   unknownType{},
 			path:    Path{"foo"},
 			invalid: true,
 		},
@@ -130,6 +167,40 @@ func TestGet(t *testing.T) {
 		{
 			value:   map[string]any{"foo": []any{"a", "b", map[string]any{"deep": "value"}}},
 			path:    Path{"foo", 2, "missing"},
+			invalid: true,
+		},
+
+		// descend into custom types
+
+		{
+			value:    customObjGetter{value: map[string]any{"foo": "bar"}},
+			path:     Path{"value", "foo"},
+			expected: "bar",
+		},
+		{
+			value:   customObjGetter{value: map[string]any{"foo": "bar"}},
+			path:    Path{"unknown"},
+			invalid: true,
+		},
+		{
+			value:   customObjGetter{value: nil},
+			path:    Path{0},
+			invalid: true,
+		},
+
+		{
+			value:    customVecGetter{magic: 7, value: map[string]any{"foo": "bar"}},
+			path:     Path{7, "foo"},
+			expected: "bar",
+		},
+		{
+			value:   customVecGetter{magic: 7, value: map[string]any{"foo": "bar"}},
+			path:    Path{2},
+			invalid: true,
+		},
+		{
+			value:   customVecGetter{magic: 7, value: nil},
+			path:    Path{"objectstep"},
 			invalid: true,
 		},
 	}

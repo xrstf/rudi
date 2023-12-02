@@ -4,10 +4,76 @@
 package pathexpr
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+type customObjDeleter struct {
+	Value any
+}
+
+var _ ObjectKeyDeleter = &customObjDeleter{}
+
+func (w customObjDeleter) GetObjectKey(name string) (any, error) {
+	if name == "value" {
+		return w.Value, nil
+	}
+
+	return nil, fmt.Errorf("cannot get property %q", name)
+}
+
+func (w *customObjDeleter) SetObjectKey(name string, value any) (any, error) {
+	if name == "value" {
+		w.Value = value
+		return w, nil
+	}
+
+	return nil, fmt.Errorf("cannot set property %q", name)
+}
+
+func (w *customObjDeleter) DeleteObjectKey(name string) (any, error) {
+	if name == "value" {
+		w.Value = nil
+		return w, nil
+	}
+
+	return nil, fmt.Errorf("cannot delete property %q", name)
+}
+
+type customVecDeleter struct {
+	Magic int
+	Value any
+}
+
+var _ VectorItemDeleter = &customVecDeleter{}
+
+func (w customVecDeleter) GetVectorItem(index int) (any, error) {
+	if index == w.Magic {
+		return w.Value, nil
+	}
+
+	return nil, fmt.Errorf("cannot get index %d", index)
+}
+
+func (w *customVecDeleter) SetVectorItem(index int, value any) (any, error) {
+	if index == w.Magic {
+		w.Value = value
+		return w, nil
+	}
+
+	return nil, fmt.Errorf("index %d out of bounds", index)
+}
+
+func (w *customVecDeleter) DeleteVectorItem(index int) (any, error) {
+	if index == w.Magic {
+		w.Value = nil
+		return w, nil
+	}
+
+	return nil, fmt.Errorf("index %d out of bounds", index)
+}
 
 func TestDelete(t *testing.T) {
 	testcases := []struct {
@@ -124,6 +190,70 @@ func TestDelete(t *testing.T) {
 			dest:    []any{"foo", map[string]any{"foo": "bar"}, "bar"},
 			path:    Path{3, "list"},
 			invalid: true,
+		},
+
+		// custom types
+
+		{
+			name: "can delete in custom objects",
+			dest: &customObjDeleter{
+				Value: "old",
+			},
+			path: Path{"value"},
+			expected: &customObjDeleter{
+				Value: nil,
+			},
+		},
+		{
+			name: "can delete in custom objects",
+			dest: &customObjDeleter{
+				Value: map[string]any{
+					"foo":   "bar",
+					"hello": "world",
+					"list":  []any{1, 2, 3},
+				},
+			},
+			path: Path{"value", "list", 1},
+			expected: &customObjDeleter{
+				Value: map[string]any{
+					"foo":   "bar",
+					"hello": "world",
+					"list":  []any{1, 3},
+				},
+			},
+		},
+
+		{
+			name: "can delete in custom vectors",
+			dest: &customVecDeleter{
+				Magic: 7,
+				Value: "old",
+			},
+			path: Path{7},
+			expected: &customVecDeleter{
+				Magic: 7,
+				Value: nil,
+			},
+		},
+		{
+			name: "can delete in custom vectors",
+			dest: &customVecDeleter{
+				Magic: 7,
+				Value: map[string]any{
+					"foo":   "bar",
+					"hello": "world",
+					"list":  []any{1, 2, 3},
+				},
+			},
+			path: Path{7, "list", 1},
+			expected: &customVecDeleter{
+				Magic: 7,
+				Value: map[string]any{
+					"foo":   "bar",
+					"hello": "world",
+					"list":  []any{1, 3},
+				},
+			},
 		},
 	}
 

@@ -5,9 +5,15 @@ package pathexpr
 
 import (
 	"fmt"
-
-	"go.xrstf.de/rudi/pkg/eval/types"
 )
+
+type ObjectReader interface {
+	GetObjectKey(name string) (any, error)
+}
+
+type VectorReader interface {
+	GetVectorItem(index int) (any, error)
+}
 
 func Get(value any, path Path) (any, error) {
 	if len(path) == 0 {
@@ -15,12 +21,7 @@ func Get(value any, path Path) (any, error) {
 	}
 
 	for _, step := range path {
-		nativeVal, err := types.UnwrapType(value)
-		if err != nil {
-			return nil, fmt.Errorf("cannot descend with %s into %T: %w", step, value, err)
-		}
-
-		if valueAsSlice, ok := nativeVal.([]any); ok {
+		if valueAsSlice, ok := value.([]any); ok {
 			index, ok := toIntegerStep(step)
 			if !ok {
 				return nil, fmt.Errorf("cannot use %v as an array index", step)
@@ -34,7 +35,21 @@ func Get(value any, path Path) (any, error) {
 			continue
 		}
 
-		if valueAsObject, ok := nativeVal.(map[string]any); ok {
+		if vectorReader, ok := value.(VectorReader); ok {
+			index, ok := toIntegerStep(step)
+			if ok {
+				var err error
+
+				value, err = vectorReader.GetVectorItem(index)
+				if err != nil {
+					return nil, fmt.Errorf("cannot descend with %v (%T) into %T: %w", step, step, value, err)
+				}
+
+				continue
+			}
+		}
+
+		if valueAsObject, ok := value.(map[string]any); ok {
 			key, ok := toStringStep(step)
 			if !ok {
 				return nil, fmt.Errorf("cannot use %v as an object key", step)
@@ -47,6 +62,20 @@ func Get(value any, path Path) (any, error) {
 			}
 
 			continue
+		}
+
+		if objectReader, ok := value.(ObjectReader); ok {
+			key, ok := toStringStep(step)
+			if ok {
+				var err error
+
+				value, err = objectReader.GetObjectKey(key)
+				if err != nil {
+					return nil, fmt.Errorf("cannot descend with %v (%T) into %T: %w", step, step, value, err)
+				}
+
+				continue
+			}
 		}
 
 		return nil, fmt.Errorf("cannot descend with %v (%T) into %T", step, step, value)
