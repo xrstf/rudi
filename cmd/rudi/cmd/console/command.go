@@ -50,7 +50,7 @@ var replCommands = map[string]replCommandFunc{
 	"help": helpCommand,
 }
 
-func Run(opts *cmdtypes.Options, args []string) error {
+func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 	rl, err := readline.New("⮞ ")
 	if err != nil {
 		return fmt.Errorf("failed to setup readline prompt: %w", err)
@@ -66,7 +66,7 @@ func Run(opts *cmdtypes.Options, args []string) error {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
-	fmt.Println("Welcome to 🚂Rudi")
+	fmt.Printf("Welcome to 🚂Rudi %s\n", rudiVersion)
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
 

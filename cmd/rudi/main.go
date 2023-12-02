@@ -63,7 +63,7 @@ func main() {
 	}
 
 	if opts.Interactive || len(args) == 0 {
-		if err := console.Run(&opts, args); err != nil {
+		if err := console.Run(&opts, args, BuildTag); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
