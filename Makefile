@@ -14,7 +14,7 @@ GO_BUILD_FLAGS ?= -v -ldflags '$(GO_LDFLAGS)'
 GO_TEST_FLAGS ?=
 
 .PHONY: all
-all: clean generate build docs test
+all: clean generate build docs test spellcheck
 
 .PHONY: generate
 generate:
@@ -44,3 +44,7 @@ test:
 .PHONY: lint
 lint:
 	golangci-lint run ./...
+
+.PHONY: spellcheck
+spellcheck:
+	typos
