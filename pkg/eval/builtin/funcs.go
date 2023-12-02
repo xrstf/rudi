@@ -10,14 +10,17 @@ import (
 
 var Functions = types.Functions{
 	// core
-	"default": types.BasicFunction(defaultFunction, "returns the default value if the first argument is empty"),
-	"delete":  deleteFunction{},
-	"do":      types.BasicFunction(doFunction, "eval a sequence of statements where only one expression is valid"),
-	"empty?":  types.BasicFunction(isEmptyFunction, "returns true when the given value is empty-ish (0, false, null, \"\", ...)"),
-	"has?":    types.BasicFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value"),
-	"if":      types.BasicFunction(ifFunction, "evaluate one of two expressions based on a condition"),
-	"set":     types.BasicFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)"),
-	"try":     types.BasicFunction(tryFunction, "returns the fallback if the first expression errors out"),
+	"default":      types.BasicFunction(defaultFunction, "returns the default value if the first argument is empty"),
+	"delete":       deleteFunction{},
+	"do":           types.BasicFunction(doFunction, "eval a sequence of statements where only one expression is valid"),
+	"empty?":       types.BasicFunction(isEmptyFunction, "returns true when the given value is empty-ish (0, false, null, \"\", ...)"),
+	"has?":         types.BasicFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value"),
+	"if":           types.BasicFunction(ifFunction, "evaluate one of two expressions based on a condition"),
+	"set":          types.BasicFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)"),
+	"try":          types.BasicFunction(tryFunction, "returns the fallback if the first expression errors out"),
+	"strictly":     types.BasicFunction(strictlyFunction, "evaluates the child expressions using strict coalescing"),
+	"pedantically": types.BasicFunction(pedanticallyFunction, "evaluates the child expressions using pedantic coalescing"),
+	"humanely":     types.BasicFunction(humanelyFunction, "evaluates the child expressions using humane coalescing"),
 
 	// math
 	"+": types.BasicFunction(sumFunction, "returns the sum of all of its arguments"),

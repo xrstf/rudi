@@ -339,3 +339,41 @@ func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	return !boolified, nil
 }
+
+// (strictly EXPR+)
+func strictlyFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	return coalescingChangerFunction(ctx, args, coalescing.NewStrict())
+}
+
+// (humanely EXPR+)
+func humanelyFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	return coalescingChangerFunction(ctx, args, coalescing.NewHumane())
+}
+
+// (pedantically EXPR+)
+func pedanticallyFunction(ctx types.Context, args []ast.Expression) (any, error) {
+	return coalescingChangerFunction(ctx, args, coalescing.NewPedantic())
+}
+
+func coalescingChangerFunction(ctx types.Context, args []ast.Expression, c coalescing.Coalescer) (any, error) {
+	if size := len(args); size < 1 {
+		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
+	}
+
+	tupleCtx := ctx.WithCoalescer(c)
+
+	var (
+		result any
+		err    error
+	)
+
+	// do not use evalArgs(), as we want to inherit the context between expressions
+	for i, arg := range args {
+		tupleCtx, result, err = eval.EvalExpression(tupleCtx, arg)
+		if err != nil {
+			return nil, fmt.Errorf("argument #%d: %w", i, err)
+		}
+	}
+
+	return result, nil
+}

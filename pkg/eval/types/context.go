@@ -83,6 +83,15 @@ func (c Context) WithVariable(name string, val any) Context {
 	}
 }
 
+func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
+	return Context{
+		document:  c.document,
+		funcs:     c.funcs,
+		variables: c.variables,
+		coalescer: coalescer,
+	}
+}
+
 type Function interface {
 	Evaluate(ctx Context, args []ast.Expression) (any, error)
 
@@ -131,6 +140,15 @@ func (f Functions) Get(name string) (Function, bool) {
 // The function returns the same Functions to allow fluent access.
 func (f Functions) Set(name string, fun Function) Functions {
 	f[name] = fun
+	return f
+}
+
+// Add adds all functions from other to the current set.
+// The function returns the same Functions to allow fluent access.
+func (f Functions) Add(other Functions) Functions {
+	for k, v := range other {
+		f[k] = v
+	}
 	return f
 }
 
