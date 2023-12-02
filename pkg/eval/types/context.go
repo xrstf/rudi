@@ -85,6 +85,10 @@ func (c Context) WithVariable(name string, val any) Context {
 
 type Function interface {
 	Evaluate(ctx Context, args []ast.Expression) (any, error)
+
+	// Description returns a short, one-line description of the function; markdown
+	// can be used to highlight other function names, like "behaves similar
+	// to `foo`, but …".
 	Description() string
 }
 

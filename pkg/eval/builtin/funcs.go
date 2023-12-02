@@ -65,10 +65,10 @@ var Functions = types.Functions{
 	}, "equality check: return true if both arguments are the same"),
 	"identical?": makeEqualityFunc(func(ctx types.Context) coalescing.Coalescer {
 		return coalescing.NewStrict()
-	}, "like eq?, but always uses strict coalecsing"),
+	}, "like `eq?`, but always uses strict coalecsing"),
 	"like?": makeEqualityFunc(func(ctx types.Context) coalescing.Coalescer {
 		return coalescing.NewHumane()
-	}, "like eq?, but always uses humane coalecsing"),
+	}, "like `eq?`, but always uses humane coalecsing"),
 
 	"lt?": makeNumberComparatorFunc(
 		func(a, b int64) (bool, error) { return a < b, nil },
@@ -93,10 +93,10 @@ var Functions = types.Functions{
 
 	// types
 	"type-of":   types.BasicFunction(typeOfFunction, `returns the type of a given value (e.g. "string" or "number")`),
-	"to-string": types.BasicFunction(toStringFunction, "try to convert the given argument losslessly to a string"),
-	"to-int":    types.BasicFunction(toIntFunction, "try to convert the given argument losslessly to an int64"),
-	"to-float":  types.BasicFunction(toFloatFunction, "try to convert the given argument losslessly to a float64"),
 	"to-bool":   types.BasicFunction(toBoolFunction, "try to convert the given argument losslessly to a bool"),
+	"to-float":  types.BasicFunction(toFloatFunction, "try to convert the given argument losslessly to a float64"),
+	"to-int":    types.BasicFunction(toIntFunction, "try to convert the given argument losslessly to an int64"),
+	"to-string": types.BasicFunction(toStringFunction, "try to convert the given argument losslessly to a string"),
 
 	// hashes
 	"sha1":   types.BasicFunction(sha1Function, "return the lowercase hex representation of the SHA-1 hash"),

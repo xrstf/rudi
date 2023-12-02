@@ -31,4 +31,5 @@ a string or a vector.
 
 ## Context
 
-`try` executes glue and each element in their own contexts, so nothing is shared.
+`concat` executes glue and each element in their own contexts, so nothing is
+shared.

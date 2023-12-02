@@ -21,4 +21,5 @@ a vector of these substrings.
 
 ## Context
 
-`try` executes separator and vector in their own contexts, so nothing is shared.
+`split` executes separator and vector in their own contexts, so nothing is
+shared.

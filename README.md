@@ -79,6 +79,20 @@ Make yourself familiar with Rudi using the documentation:
 
 ### Command Line
 
+Rudi comes with a standalone CLI tool called `rudi`.
+
+```
+Usage of rudi:
+      --coalesce string   Type conversion handling, choose one of strict, pedantic or humane. (default "strict")
+      --debug-ast         Output syntax tree of the parsed script in non-interactive mode.
+  -h, --help              Show help and documentation.
+  -i, --interactive       Start an interactive REPL to run expressions.
+  -p, --pretty            Output pretty-printed JSON.
+  -s, --script string     Load Rudi script from file instead of first argument (only in non-interactive mode).
+  -V, --version           Show version and exit.
+  -y, --yaml              Output pretty-printed YAML instead of JSON.
+```
+
 `rudi` can run in one of two modes:
 
 * **Interactive Mode** is enabled by passing `--interactive` (or `-i`). This will start a REPL

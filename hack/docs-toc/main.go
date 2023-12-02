@@ -26,18 +26,18 @@ func main() {
 	groups := getGroups(topics)
 
 	// the main readme gets all topics
-	if err := updateFileWithTopics(readme, topics, groups); err != nil {
+	if err := updateFileWithTopics(readme, topics, groups, ""); err != nil {
 		log.Fatalf("Failed to update %s: %v", readme, err)
 	}
 
 	// the functions readme does not get the first section ("general")
-	if err := updateFileWithTopics(functionsReadme, topics, groups[1:]); err != nil {
+	if err := updateFileWithTopics(functionsReadme, topics, groups[1:], "../"); err != nil {
 		log.Fatalf("Failed to update %s: %v", functionsReadme, err)
 	}
 }
 
-func updateFileWithTopics(filename string, topics []docs.Topic, groups []string) error {
-	rendered := renderTopics(topics, groups)
+func updateFileWithTopics(filename string, topics []docs.Topic, groups []string, linkPrefix string) error {
+	rendered := renderTopics(topics, groups, linkPrefix)
 	rendered = fmt.Sprintf("%s\n%s\n%s", beginMarker, rendered, endMarker)
 
 	content, err := os.ReadFile(filename)
@@ -88,7 +88,7 @@ func getGroups(topics []docs.Topic) []string {
 	return append(prioritizedGroups, remainingGroups...)
 }
 
-func renderTopics(topics []docs.Topic, groups []string) string {
+func renderTopics(topics []docs.Topic, groups []string, linkPrefix string) string {
 	var out strings.Builder
 
 	for _, group := range groups {
@@ -104,7 +104,7 @@ func renderTopics(topics []docs.Topic, groups []string) string {
 				linkTitle = fmt.Sprintf("`%s`", linkTitle)
 			}
 
-			out.WriteString(fmt.Sprintf("* [%s](%s) – %s\n", linkTitle, topic.Filename, topic.Description))
+			out.WriteString(fmt.Sprintf("* [%s](%s) – %s\n", linkTitle, linkPrefix+topic.Filename, topic.Description))
 		}
 
 		out.WriteString("\n")
