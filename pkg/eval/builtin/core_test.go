@@ -71,7 +71,7 @@ func TestIfFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -325,7 +325,7 @@ func TestSetFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -542,7 +542,7 @@ func TestDeleteFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -584,7 +584,7 @@ func TestDoFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -629,7 +629,7 @@ func TestDefaultFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -680,7 +680,7 @@ func TestTryFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -746,7 +746,7 @@ func TestIsEmptyFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -1049,7 +1049,7 @@ func TestHasFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }

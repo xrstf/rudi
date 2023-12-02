@@ -143,11 +143,28 @@ func (f Functions) Set(name string, fun Function) Functions {
 	return f
 }
 
+// Set removes a function from the set.
+// The function returns the same Functions to allow fluent access.
+func (f Functions) Delete(name string) Functions {
+	delete(f, name)
+	return f
+}
+
 // Add adds all functions from other to the current set.
 // The function returns the same Functions to allow fluent access.
 func (f Functions) Add(other Functions) Functions {
-	for k, v := range other {
-		f[k] = v
+	for name, fun := range other {
+		f[name] = fun
+	}
+	return f
+}
+
+// Remove removes all functions from this set that are part of the other set,
+// to enable constructs like AllFunctions.Remove(MathFunctions)
+// The function returns the same Functions to allow fluent access.
+func (f Functions) Remove(other Functions) Functions {
+	for name := range other {
+		f.Delete(name)
 	}
 	return f
 }

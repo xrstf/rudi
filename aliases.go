@@ -45,9 +45,9 @@ func NewFunctions() Functions {
 	return types.NewFunctions()
 }
 
-// NewBuiltInFunctions returns a copy of the built-in Rudi functions.
+// NewBuiltInFunctions returns a copy of all the built-in Rudi functions.
 func NewBuiltInFunctions() Functions {
-	return builtin.Functions.DeepCopy()
+	return builtin.AllFunctions.DeepCopy()
 }
 
 // NewVariables returns an empty set of runtime variables.

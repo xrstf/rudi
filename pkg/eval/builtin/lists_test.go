@@ -59,7 +59,7 @@ func TestLenFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -124,7 +124,7 @@ func TestAppendFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -193,7 +193,7 @@ func TestPrependFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -256,7 +256,7 @@ func TestReverseFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -364,7 +364,7 @@ func TestRangeFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -493,7 +493,7 @@ func TestMapFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }

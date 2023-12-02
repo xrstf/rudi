@@ -47,7 +47,7 @@ func TestSha1Function(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -90,7 +90,7 @@ func TestSha256Function(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -133,7 +133,7 @@ func TestSha512Function(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }

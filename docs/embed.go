@@ -50,7 +50,7 @@ func Topics() []Topic {
 		"div":  {},
 	}
 
-	for funcName, function := range builtin.Functions {
+	for funcName, function := range builtin.AllFunctions {
 		if _, ok := ignoredFunctions[funcName]; ok {
 			continue
 		}

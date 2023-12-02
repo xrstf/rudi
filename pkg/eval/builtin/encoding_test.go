@@ -51,7 +51,7 @@ func TestToBase64Function(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -107,7 +107,7 @@ func TestFromBase64Function(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }

@@ -74,7 +74,7 @@ func TestAndFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -144,7 +144,7 @@ func TestOrFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -210,7 +210,7 @@ func TestNotFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }

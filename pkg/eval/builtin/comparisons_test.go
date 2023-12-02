@@ -208,7 +208,7 @@ func TestEqFunction(t *testing.T) {
 	})
 
 	for _, testcase := range append(syntax, flipped...) {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -356,7 +356,7 @@ func TestLikeFunction(t *testing.T) {
 	})
 
 	for _, testcase := range append(syntax, testcases...) {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
@@ -442,7 +442,7 @@ func TestLtFunction(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase.Functions = Functions
+		testcase.Functions = AllFunctions
 		t.Run(testcase.String(), testcase.Run)
 	}
 }
