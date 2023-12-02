@@ -8,6 +8,40 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type customCopier struct {
+	Value any
+}
+
+var _ Copier = customCopier{}
+
+func (c customCopier) DeepCopy() (any, error) {
+	copied, err := Clone(c.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	return customCopier{
+		Value: copied,
+	}, nil
+}
+
+type customPtrCopier struct {
+	Value any
+}
+
+var _ Copier = &customPtrCopier{}
+
+func (c *customPtrCopier) DeepCopy() (any, error) {
+	copied, err := Clone(c.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	return &customPtrCopier{
+		Value: copied,
+	}, nil
+}
+
 func TestCloneScalars(t *testing.T) {
 	testcases := []struct {
 		input    any
@@ -75,7 +109,7 @@ func TestCloneScalars(t *testing.T) {
 			}
 
 			if !cmp.Equal(cloned, testcase.expected) {
-				t.Fatalf("Unpected result:\n\n%s\n", renderDiff(testcase.expected, cloned))
+				t.Fatalf("Unexpected result:\n\n%s\n", renderDiff(testcase.expected, cloned))
 			}
 
 			if &cloned == &testcase.input {
@@ -120,7 +154,7 @@ func TestCloneMapDeep(t *testing.T) {
 	}
 
 	if !cmp.Equal(cloned, input) {
-		t.Fatalf("Unpected result:\n\n%s\n", renderDiff(input, cloned))
+		t.Fatalf("Unexpected result:\n\n%s\n", renderDiff(input, cloned))
 	}
 
 	helloList := input["hello"].([]any)
@@ -164,7 +198,7 @@ func TestCloneSliceDeep(t *testing.T) {
 	}
 
 	if !cmp.Equal(cloned, input) {
-		t.Fatalf("Unpected result:\n\n%s\n", renderDiff(input, cloned))
+		t.Fatalf("Unexpected result:\n\n%s\n", renderDiff(input, cloned))
 	}
 
 	helloObj := input[3].(map[string]any)
@@ -172,6 +206,34 @@ func TestCloneSliceDeep(t *testing.T) {
 
 	if cmp.Equal(cloned, input) {
 		t.Fatal("Changing the input changed the output, no actual deep cloning happened.")
+	}
+}
+
+func TestCustomCopier(t *testing.T) {
+	data := map[string]any{"foo": "bar"}
+	cc := customCopier{Value: data}
+
+	cloned, err := Clone(cc)
+	if err != nil {
+		t.Fatalf("Failed to clone: %v", err)
+	}
+
+	if !cmp.Equal(cc, cloned) {
+		t.Fatalf("Unexpected result:\n\n%s\n", renderDiff(cc, cloned))
+	}
+}
+
+func TestCustomPtrCopier(t *testing.T) {
+	data := map[string]any{"foo": "bar"}
+	cc := &customPtrCopier{Value: data}
+
+	cloned, err := Clone(cc)
+	if err != nil {
+		t.Fatalf("Failed to clone: %v", err)
+	}
+
+	if !cmp.Equal(cc, cloned) {
+		t.Fatalf("Unexpected result:\n\n%s\n", renderDiff(cc, cloned))
 	}
 }
 

@@ -30,6 +30,10 @@ func MustClone[T any](val T) T {
 	return cloned
 }
 
+type Copier interface {
+	DeepCopy() (any, error)
+}
+
 func clone(val any) (any, error) {
 	switch asserted := val.(type) {
 	// Go native types
@@ -65,6 +69,10 @@ func clone(val any) (any, error) {
 		return ast.Number{Value: asserted.Value}, nil
 	case ast.String:
 		return asserted, nil
+
+	// custom logic
+	case Copier:
+		return asserted.DeepCopy()
 
 	default:
 		return nil, fmt.Errorf("cannot deep-copy %T", val)
