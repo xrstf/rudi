@@ -129,9 +129,9 @@ Let's look closer at each type's conversion logic:
 * **string**: works as expected; floats have their trailing zeros trimmed (`3.12000` becomes
   `"3.12"`). `true` becomes `"true"` and `false` becomes `"false"`. `null` becomes an empty string.
 * **vector**: `null` turns into an empty vector and objects can only be converted to an empty vector
-  if they are empty, otherwise an error is retuned.
+  if they are empty, otherwise an error is returned.
 * **object**: `null` turns into an empty object and vectors can only be converted to an empty object
-  if they are empty, otherwise an error is retuned.
+  if they are empty, otherwise an error is returned.
 
 ## Conversion Functions
 
