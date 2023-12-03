@@ -39,8 +39,10 @@ github.com/xrstf/colorjson v0.0.0-20231123184920-5ea6fecf578f h1:gVBqsyWwyxxzSGj
 github.com/xrstf/colorjson v0.0.0-20231123184920-5ea6fecf578f/go.mod h1:AY6XdslHQYqT5ivYt21gXNpCjsck8iEoytnNfz3COxY=
 go.xrstf.de/go-term-markdown v0.0.0-20231119170546-73a1852b91cc h1:0vqYzllpoI4x5V4QPCN3LWL/kmAdxl7gXf3OchayNSw=
 go.xrstf.de/go-term-markdown v0.0.0-20231119170546-73a1852b91cc/go.mod h1:0bARjSNhCWOffbH9lX3J7QoLkjuTf3oEV8OhZHPenMg=
-go.xrstf.de/rudi-contrib/semver v0.0.0-20231203191548-aba8974ae9a2 h1:ko2wkZHb8V4CZx0V7pBKE87EykjcceaYNXPhAs/NpuE=
-go.xrstf.de/rudi-contrib/semver v0.0.0-20231203191548-aba8974ae9a2/go.mod h1:pIxgeSQ2X+34H+hiZFUUw+xnzwjt5OTuM69M6/w8MDc=
+go.xrstf.de/rudi-contrib/semver v0.0.0-20231203192305-a1898e2e54e2 h1:XUFm6DuTZ2ypq9d6ATWLwMbo7Op68xOmCRoWb7kkkXU=
+go.xrstf.de/rudi-contrib/semver v0.0.0-20231203192305-a1898e2e54e2/go.mod h1:pIxgeSQ2X+34H+hiZFUUw+xnzwjt5OTuM69M6/w8MDc=
+go.xrstf.de/rudi-contrib/yaml v0.0.0-20231203192305-a1898e2e54e2 h1:8CFFt6xW1xC5E5I1hMOMsjzMj/XnDvSRGoL8fjYjiDk=
+go.xrstf.de/rudi-contrib/yaml v0.0.0-20231203192305-a1898e2e54e2/go.mod h1:XSHDq7P5S3Xa+tfiuNk9w8MnDpAqO3p2FSo8eNQWPnc=
 golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

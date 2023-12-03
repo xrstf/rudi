@@ -7,9 +7,11 @@ import (
 	"fmt"
 
 	"go.xrstf.de/rudi"
-	"go.xrstf.de/rudi-contrib/semver"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/pkg/coalescing"
+
+	"go.xrstf.de/rudi-contrib/semver"
+	"go.xrstf.de/rudi-contrib/yaml"
 )
 
 func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
@@ -43,7 +45,8 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 	}
 
 	funcs := rudi.NewBuiltInFunctions().
-		Add(semver.Functions)
+		Add(semver.Functions).
+		Add(yaml.Functions)
 
 	ctx := rudi.NewContext(document, vars, funcs, coalescer)
 
