@@ -7,7 +7,8 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/spf13/pflag v1.0.5
 	go.xrstf.de/go-term-markdown v0.0.0-20231119170546-73a1852b91cc
-	go.xrstf.de/rudi v0.0.0
+	go.xrstf.de/rudi v0.1.0
+	go.xrstf.de/rudi-contrib/semver v0.0.0-20231203191548-aba8974ae9a2
 	gopkg.in/yaml.v3 v3.0.1
 )
 

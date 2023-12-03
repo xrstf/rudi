@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi-contrib/semver"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/pkg/coalescing"
 )
@@ -41,7 +42,10 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 		return rudi.Context{}, fmt.Errorf("unknown coalescing mode %q", opts.Coalescing)
 	}
 
-	ctx := rudi.NewContext(document, vars, rudi.NewBuiltInFunctions(), coalescer)
+	funcs := rudi.NewBuiltInFunctions().
+		Add(semver.Functions)
+
+	ctx := rudi.NewContext(document, vars, funcs, coalescer)
 
 	return ctx, nil
 }
