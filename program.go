@@ -9,7 +9,6 @@ import (
 
 	"go.xrstf.de/rudi/pkg/debug"
 	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
 )
@@ -80,7 +79,7 @@ func (p *rudiProgram) Run(data any, variables Variables, funcs Functions, coales
 
 	ctx := NewContext(doc, variables, funcs, coalescer)
 
-	finalCtx, unwrappedResult, err := p.RunContext(ctx)
+	finalCtx, result, err := p.RunContext(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("script failed: %w", err)
 	}
@@ -88,13 +87,7 @@ func (p *rudiProgram) Run(data any, variables Variables, funcs Functions, coales
 	// get current state of the document
 	docData := finalCtx.GetDocument().Data()
 
-	unwrappedDocData, err := types.UnwrapType(docData)
-	if err != nil {
-		// this should never happen
-		return nil, nil, fmt.Errorf("failed to unwrap final document data: %w", err)
-	}
-
-	return unwrappedDocData, unwrappedResult, nil
+	return docData, result, nil
 }
 
 // RunContext is like Run(), but uses a pre-setup Context and returns the
@@ -106,13 +99,7 @@ func (p *rudiProgram) RunContext(ctx Context) (finalCtx Context, result any, err
 		return ctx, nil, err
 	}
 
-	unwrappedResult, err := types.UnwrapType(result)
-	if err != nil {
-		// this should never happen
-		return ctx, nil, fmt.Errorf("failed to unwrap result: %w", err)
-	}
-
-	return finalCtx, unwrappedResult, nil
+	return finalCtx, result, nil
 }
 
 // String returns the Rudi-representation of the parsed script, with comments

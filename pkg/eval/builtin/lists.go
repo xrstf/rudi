@@ -638,7 +638,7 @@ func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	if vec, err := ctx.Coalesce().ToVector(haystack); err == nil {
 		for _, val := range vec {
-			equal, err := equality.EqualCoalesced(ctx.Coalesce(), val, needle)
+			equal, err := equality.Equal(ctx.Coalesce(), val, needle)
 			if err != nil {
 				return false, err
 			}

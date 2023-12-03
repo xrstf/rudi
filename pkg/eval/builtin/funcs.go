@@ -37,26 +37,10 @@ var (
 			return coalescing.NewHumane()
 		}, "like `eq?`, but always uses humane coalecsing"),
 
-		"lt?": makeNumberComparatorFunc(
-			func(a, b int64) (bool, error) { return a < b, nil },
-			func(a, b float64) (bool, error) { return a < b, nil },
-			"returns a < b",
-		),
-		"lte?": makeNumberComparatorFunc(
-			func(a, b int64) (bool, error) { return a <= b, nil },
-			func(a, b float64) (bool, error) { return a <= b, nil },
-			"return a <= b",
-		),
-		"gt?": makeNumberComparatorFunc(
-			func(a, b int64) (bool, error) { return a > b, nil },
-			func(a, b float64) (bool, error) { return a > b, nil },
-			"returns a > b",
-		),
-		"gte?": makeNumberComparatorFunc(
-			func(a, b int64) (bool, error) { return a >= b, nil },
-			func(a, b float64) (bool, error) { return a >= b, nil },
-			"returns a >= b",
-		),
+		"lt?":  makeComparatorFunc(ltCoalescer, "returns a < b"),
+		"lte?": makeComparatorFunc(lteCoalescer, "returns a <= b"),
+		"gt?":  makeComparatorFunc(gtCoalescer, "returns a > b"),
+		"gte?": makeComparatorFunc(gteCoalescer, "returns a >= b"),
 	}
 
 	MathFunctions = types.Functions{

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
@@ -69,13 +68,7 @@ func dumpAny(val any, out io.Writer, depth int) error {
 		return DumpProgram(&asserted, out, depth)
 	}
 
-	wrapped, err := types.WrapNative(val)
-	if err != nil {
-		return fmt.Errorf("cannot dump values of type %T", val)
-	}
-
-	// as long as dumpAny() can handle all possible types returned by WrapNative, this won't be an infinite loop
-	return dumpAny(wrapped, out, depth)
+	return fmt.Errorf("cannot dump values of type %T", val)
 }
 
 func writeString(out io.Writer, str string) error {

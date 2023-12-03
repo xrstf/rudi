@@ -281,7 +281,7 @@ func TestEqualCoalesced(t *testing.T) {
 			for _, subtest := range subtests {
 				_, expectErr := subtest.expected.(invalidConversion)
 
-				equal, err := EqualCoalesced(subtest.coal, subtest.left, subtest.right)
+				equal, err := Equal(subtest.coal, subtest.left, subtest.right)
 				if err != nil {
 					if !expectErr {
 						t.Errorf("%T unexpectedly failed: %v (%T) == %v (%T): %v", subtest.coal, subtest.left, subtest.left, subtest.right, subtest.right, err)
@@ -295,7 +295,7 @@ func TestEqualCoalesced(t *testing.T) {
 				}
 
 				// comparisons must be associated (a == b means b == a)
-				flippedEqual, err := EqualCoalesced(subtest.coal, subtest.right, subtest.left)
+				flippedEqual, err := Equal(subtest.coal, subtest.right, subtest.left)
 				if err != nil {
 					if !expectErr {
 						t.Errorf("%T unexpectedly failed on reverse test: %v (%T) == %v (%T): %v", subtest.coal, subtest.right, subtest.right, subtest.left, subtest.left, err)

@@ -12,6 +12,34 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
+type CustomNullCoalescer interface {
+	CoalesceToNull(c Coalescer) (bool, error)
+}
+
+type CustomBoolCoalescer interface {
+	CoalesceToBool(c Coalescer) (bool, error)
+}
+
+type CustomInt64Coalescer interface {
+	CoalesceToInt64(c Coalescer) (int64, error)
+}
+
+type CustomFloat64Coalescer interface {
+	CoalesceToFloat64(c Coalescer) (float64, error)
+}
+
+type CustomStringCoalescer interface {
+	CoalesceToString(c Coalescer) (string, error)
+}
+
+type CustomVectorCoalescer interface {
+	CoalesceToVector(c Coalescer) ([]any, error)
+}
+
+type CustomObjectCoalescer interface {
+	CoalesceToObject(c Coalescer) (map[string]any, error)
+}
+
 type humane struct{}
 
 func NewHumane() Coalescer {
@@ -20,7 +48,7 @@ func NewHumane() Coalescer {
 
 var _ Coalescer = humane{}
 
-func (humane) ToNull(val any) (bool, error) {
+func (h humane) ToNull(val any) (bool, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return true, nil
@@ -69,12 +97,14 @@ func (humane) ToNull(val any) (bool, error) {
 			return false, errors.New("cannot coalesce non-empty object into null")
 		}
 		return true, nil
+	case CustomNullCoalescer:
+		return v.CoalesceToNull(h)
 	default:
 		return false, fmt.Errorf("cannot coalesce %T into null", v)
 	}
 }
 
-func (humane) ToBool(val any) (bool, error) {
+func (h humane) ToBool(val any) (bool, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return false, nil
@@ -100,12 +130,14 @@ func (humane) ToBool(val any) (bool, error) {
 		return len(v) > 0, nil
 	case map[string]any:
 		return len(v) > 0, nil
+	case CustomBoolCoalescer:
+		return v.CoalesceToBool(h)
 	default:
 		return false, fmt.Errorf("cannot coalesce %T into bool", v)
 	}
 }
 
-func (humane) ToFloat64(val any) (float64, error) {
+func (h humane) ToFloat64(val any) (float64, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return 0, nil
@@ -136,12 +168,14 @@ func (humane) ToFloat64(val any) (float64, error) {
 			return 0, fmt.Errorf("cannot coalesce %T into float64", v)
 		}
 		return parsed, nil
+	case CustomFloat64Coalescer:
+		return v.CoalesceToFloat64(h)
 	default:
 		return 0, fmt.Errorf("cannot coalesce %T into float64", v)
 	}
 }
 
-func (humane) ToInt64(val any) (int64, error) {
+func (h humane) ToInt64(val any) (int64, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return 0, nil
@@ -184,6 +218,8 @@ func (humane) ToInt64(val any) (int64, error) {
 			return 0, fmt.Errorf("cannot coalesce %T into int64", v)
 		}
 		return parsed, nil
+	case CustomInt64Coalescer:
+		return v.CoalesceToInt64(h)
 	default:
 		return 0, fmt.Errorf("cannot coalesce %T into int64", v)
 	}
@@ -193,7 +229,7 @@ func (h humane) ToNumber(val any) (ast.Number, error) {
 	return toNumber(h, val)
 }
 
-func (humane) ToString(val any) (string, error) {
+func (h humane) ToString(val any) (string, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return "", nil
@@ -209,6 +245,8 @@ func (humane) ToString(val any) (string, error) {
 		return formatFloat(v), nil
 	case string:
 		return v, nil
+	case CustomStringCoalescer:
+		return v.CoalesceToString(h)
 	default:
 		return "", fmt.Errorf("cannot coalesce %T into string", v)
 	}
@@ -223,7 +261,7 @@ func formatFloat(f float64) string {
 	return strings.TrimSuffix(formatted, ".")
 }
 
-func (humane) ToVector(val any) ([]any, error) {
+func (h humane) ToVector(val any) ([]any, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return []any{}, nil
@@ -235,12 +273,14 @@ func (humane) ToVector(val any) ([]any, error) {
 		} else {
 			return nil, fmt.Errorf("cannot coalesce %T into vector", v)
 		}
+	case CustomVectorCoalescer:
+		return v.CoalesceToVector(h)
 	default:
 		return nil, fmt.Errorf("cannot coalesce %T into vector", v)
 	}
 }
 
-func (humane) ToObject(val any) (map[string]any, error) {
+func (h humane) ToObject(val any) (map[string]any, error) {
 	switch v := deliteral(val).(type) {
 	case nil:
 		return map[string]any{}, nil
@@ -252,6 +292,8 @@ func (humane) ToObject(val any) (map[string]any, error) {
 		}
 	case map[string]any:
 		return v, nil
+	case CustomObjectCoalescer:
+		return v.CoalesceToObject(h)
 	default:
 		return nil, fmt.Errorf("cannot coalesce %T into object", v)
 	}

@@ -30,38 +30,93 @@ func makeEqualityFunc(coalescerGetter func(ctx types.Context) coalescing.Coalesc
 			return nil, fmt.Errorf("argument #1: %w", err)
 		}
 
-		return equality.EqualCoalesced(coalescerGetter(ctx), leftData, rightData)
+		return equality.Equal(coalescerGetter(ctx), leftData, rightData)
 	}, desc)
 }
 
-type intProcessor func(left, right int64) (bool, error)
-type floatProcessor func(left, right float64) (bool, error)
+type comparisonCoalescer func(result int) (bool, error)
 
-func makeNumberComparatorFunc(inter intProcessor, floater floatProcessor, desc string) types.Function {
+func makeComparatorFunc(cc comparisonCoalescer, desc string) types.Function {
 	return types.BasicFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
 		if size := len(args); size != 2 {
 			return nil, fmt.Errorf("expected 2 argument(s), got %d", size)
 		}
 
-		numbers, _, err := evalNumericalExpressions(ctx, args)
+		_, left, err := eval.EvalExpression(ctx, args[0])
+		if err != nil {
+			return nil, fmt.Errorf("argument #0: %w", err)
+		}
+
+		_, right, err := eval.EvalExpression(ctx, args[1])
+		if err != nil {
+			return nil, fmt.Errorf("argument #1: %w", err)
+		}
+
+		compared, err := equality.Compare(ctx.Coalesce(), left, right)
 		if err != nil {
 			return nil, err
 		}
 
-		leftInt, leftOk := numbers[0].ToInteger()
-		rightInt, rightOk := numbers[1].ToInteger()
-
-		if leftOk != rightOk {
-			return nil, errors.New("cannot compare floats to integers")
-		}
-
-		if leftOk && rightOk {
-			return inter(leftInt, rightInt)
-		}
-
-		leftFloat := numbers[0].MustToFloat()
-		rightFloat := numbers[1].MustToFloat()
-
-		return floater(leftFloat, rightFloat)
+		return cc(compared)
 	}, desc)
+}
+
+func ltCoalescer(result int) (bool, error) {
+	switch result {
+	case equality.IsEqual:
+		return false, nil
+	case equality.IsSmaller:
+		return true, nil
+	case equality.IsGreater:
+		return false, nil
+	case equality.Unorderable:
+		return false, errors.New("cannot order the given arguments")
+	default:
+		panic("Unexpected comparison result.")
+	}
+}
+
+func lteCoalescer(result int) (bool, error) {
+	switch result {
+	case equality.IsEqual:
+		return true, nil
+	case equality.IsSmaller:
+		return true, nil
+	case equality.IsGreater:
+		return false, nil
+	case equality.Unorderable:
+		return false, errors.New("cannot order the given arguments")
+	default:
+		panic("Unexpected comparison result.")
+	}
+}
+
+func gtCoalescer(result int) (bool, error) {
+	switch result {
+	case equality.IsEqual:
+		return false, nil
+	case equality.IsSmaller:
+		return false, nil
+	case equality.IsGreater:
+		return true, nil
+	case equality.Unorderable:
+		return false, errors.New("cannot order the given arguments")
+	default:
+		panic("Unexpected comparison result.")
+	}
+}
+
+func gteCoalescer(result int) (bool, error) {
+	switch result {
+	case equality.IsEqual:
+		return true, nil
+	case equality.IsSmaller:
+		return false, nil
+	case equality.IsGreater:
+		return true, nil
+	case equality.Unorderable:
+		return false, errors.New("cannot order the given arguments")
+	default:
+		panic("Unexpected comparison result.")
+	}
 }

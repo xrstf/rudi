@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/MichaelMure/go-term-text v0.3.1 // indirect
+	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect

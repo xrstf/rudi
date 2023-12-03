@@ -31,7 +31,7 @@ applied to all functions (so technically `eq?!` is valid, though weird looking).
 * [`identical?`](../functions/comparisons-identical.md) – like `eq?`, but always uses strict coalecsing
 * [`like?`](../functions/comparisons-like.md) – like `eq?`, but always uses humane coalecsing
 * [`lt?`](../functions/comparisons-lt.md) – returns a < b
-* [`lte?`](../functions/comparisons-lte.md) – return a <= b
+* [`lte?`](../functions/comparisons-lte.md) – returns a <= b
 
 ## Dates Functions
 
