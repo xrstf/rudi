@@ -4,35 +4,25 @@
 package test
 
 import (
-	"fmt"
-
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/eval/util"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 var (
 	dummyFunctions = types.Functions{
-		"eval": types.BasicFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
-			if len(args) != 1 {
-				return nil, fmt.Errorf("expected 1 argument, got %d", len(args))
-			}
+		"eval": util.NewLiteralFunction(func(ctx types.Context, args []any) (any, error) {
+			return args[0], nil
+		}, "").MinArgs(1).MaxArgs(1),
 
-			_, result, err := eval.EvalExpression(ctx, args[0])
-
-			return result, err
-		}, ""),
 		// Funny enough, due to the way functions work in Rudi, "set" does not
 		// actually set anything, it relies on the function magic behind the
 		// scenes to handle the bang modifier.
-		"set": types.BasicFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
-			if len(args) != 2 {
-				return nil, fmt.Errorf("expected 2 arguments, got %d", len(args))
-			}
-
+		"set": util.NewRawFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
 			_, value, err := eval.EvalExpression(ctx, args[1])
 
 			return value, err
-		}, ""),
+		}, "").MinArgs(2).MaxArgs(2),
 	}
 )

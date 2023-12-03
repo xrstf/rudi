@@ -106,7 +106,9 @@ type basicFunc struct {
 	desc string
 }
 
-func BasicFunction(f TupleFunction, description string) Function {
+// NewFunction creates the lowest of low level functions in Rudi and should rarely be used by
+// integrators/library developers. Use the helpers in the root package instead.
+func NewFunction(f TupleFunction, description string) Function {
 	return basicFunc{
 		f:    f,
 		desc: description,

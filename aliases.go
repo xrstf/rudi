@@ -4,9 +4,10 @@
 package rudi
 
 import (
+	"go.xrstf.de/rudi/pkg/builtin"
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/eval/builtin"
 	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/eval/util"
 )
 
 // Context is the evaluation context for a Rudi program, consisting of
@@ -58,4 +59,23 @@ func NewVariables() Variables {
 // NewDocument wraps any sort of data as a Rudi document.
 func NewDocument(data any) (Document, error) {
 	return types.NewDocument(data)
+}
+
+// RawFunction is a function that receives its raw, unevaluated child expressions as arguments.
+// This is the lowest level a function can be, allowing to selectively evaluate the arguments to
+// control side effects.
+type RawFunction = util.RawFunction
+
+// NewRawFunction wraps a raw function to be used in Rudi.
+func NewRawFunction(f RawFunction, description string) util.Function {
+	return util.NewRawFunction(f, description)
+}
+
+// LiteralFunction is a function that receives all of its arguments already evaluated, but not yet
+// coalesced into specific types.
+type LiteralFunction = util.LiteralFunction
+
+// NewLiteralFunction wraps a literal function to be used in Rudi.
+func NewLiteralFunction(f LiteralFunction, description string) util.Function {
+	return util.NewLiteralFunction(f, description)
 }

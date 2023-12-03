@@ -14,50 +14,30 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func lenFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 argument, got %d", size)
-	}
-
-	_, list, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	if vector, err := ctx.Coalesce().ToVector(list); err == nil {
+func lenFunction(ctx types.Context, args []any) (any, error) {
+	if vector, err := ctx.Coalesce().ToVector(args[0]); err == nil {
 		return len(vector), nil
 	}
 
-	if obj, err := ctx.Coalesce().ToObject(list); err == nil {
+	if obj, err := ctx.Coalesce().ToObject(args[0]); err == nil {
 		return len(obj), nil
 	}
 
-	if str, err := ctx.Coalesce().ToString(list); err == nil {
+	if str, err := ctx.Coalesce().ToString(args[0]); err == nil {
 		return len(str), nil
 	}
 
 	return nil, errors.New("argument is neither a string, vector nor object")
 }
 
-func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 2 {
-		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
-	}
-
-	_, acc, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	evaluated, err := evalArgs(ctx, args, 1)
-	if err != nil {
-		return nil, err
-	}
+func appendFunction(ctx types.Context, args []any) (any, error) {
+	acc := args[0]
+	tail := args[1:]
 
 	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
 		result := []any{}
 		result = append(result, vector...)
-		result = append(result, evaluated...)
+		result = append(result, tail...)
 
 		return result, nil
 	}
@@ -68,7 +48,7 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	suffix := ""
-	for i, arg := range evaluated {
+	for i, arg := range tail {
 		argString, err := ctx.Coalesce().ToString(arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, arg)
@@ -80,23 +60,12 @@ func appendFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return string(str) + suffix, nil
 }
 
-func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 2 {
-		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
-	}
-
-	_, acc, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	evaluated, err := evalArgs(ctx, args, 1)
-	if err != nil {
-		return nil, err
-	}
+func prependFunction(ctx types.Context, args []any) (any, error) {
+	acc := args[0]
+	tail := args[1:]
 
 	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
-		return append(evaluated, vector...), nil
+		return append(tail, vector...), nil
 	}
 
 	str, err := ctx.Coalesce().ToString(acc)
@@ -105,7 +74,7 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	prefix := ""
-	for i, arg := range evaluated {
+	for i, arg := range tail {
 		argString, err := ctx.Coalesce().ToString(arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, arg)
@@ -117,17 +86,8 @@ func prependFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return prefix + string(str), nil
 }
 
-func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 argument, got %d", size)
-	}
-
-	_, value, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	if str, err := ctx.Coalesce().ToString(value); err == nil {
+func reverseFunction(ctx types.Context, args []any) (any, error) {
+	if str, err := ctx.Coalesce().ToString(args[0]); err == nil {
 		// thank you https://stackoverflow.com/a/10030772
 		result := []rune(str)
 		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
@@ -137,7 +97,7 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return string(result), nil
 	}
 
-	if vector, err := ctx.Coalesce().ToVector(value); err == nil {
+	if vector, err := ctx.Coalesce().ToVector(args[0]); err == nil {
 		// clone original data
 		result := append([]any{}, vector...)
 
@@ -148,7 +108,7 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return result, nil
 	}
 
-	return nil, fmt.Errorf("argument is neither a vector nor a string, but %T", value)
+	return nil, fmt.Errorf("argument is neither a vector nor a string, but %T", args[0])
 }
 
 // (range VECTOR [item] expr+)
@@ -156,10 +116,6 @@ func reverseFunction(ctx types.Context, args []ast.Expression) (any, error) {
 // (range OBJECT [val] expr+)
 // (range OBJECT [key val] expr+)
 func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 3 {
-		return nil, fmt.Errorf("expected 3+ arguments, got %d", size)
-	}
-
 	// decode desired loop variable namings, as that's cheap to do
 	loopIndexName, loopVarName, err := evalNamingVector(ctx, args[1])
 	if err != nil {
@@ -228,10 +184,6 @@ func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
 // (map OBJECT [item] expr+)
 // (map OBJECT [i item] expr+)
 func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 2 {
-		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
-	}
-
 	// evaluate the first argument;
 	// (map (map .foo +) stuff) should work, so the first argument only needs to _evaluate_
 	// to a vector/object, it doesn't need to be a literal objectnode/vectornode.
@@ -387,10 +339,6 @@ func anonymousMapFunction(ctx types.Context, source any, expr ast.Expression) (a
 // (filter OBJECT [val] expr+)
 // (filter OBJECT [key val] expr+)
 func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 2 {
-		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
-	}
-
 	// evaluate the first argument;
 	// (filter (filter .foo +) stuff) should work, so the first argument only needs to _evaluate_
 	// to a vector/object, it doesn't need to be a literal objectnode/vectornode.
@@ -607,18 +555,9 @@ func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string,
 	return indexName, valueName, nil
 }
 
-func containsFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 2 {
-		return nil, fmt.Errorf("expected 2+ arguments, got %d", size)
-	}
-
-	arguments, err := evalArgs(ctx, args, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	haystack := arguments[0]
-	needle := arguments[1]
+func containsFunction(ctx types.Context, args []any) (any, error) {
+	haystack := args[0]
+	needle := args[1]
 
 	if strHaystack, err := ctx.Coalesce().ToString(haystack); err == nil {
 		if strNeedle, err := ctx.Coalesce().ToString(needle); err == nil {

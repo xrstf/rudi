@@ -17,10 +17,6 @@ import (
 
 // (if COND:Expr YES:Expr NO:Expr?)
 func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 2 || size > 3 {
-		return nil, fmt.Errorf("expected 2 or 3 arguments, got %d", size)
-	}
-
 	_, condition, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, fmt.Errorf("condition: %w", err)
@@ -49,10 +45,6 @@ func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (do STEP:Expr+)
 func doFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 1 {
-		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
-	}
-
 	tupleCtx := ctx
 
 	var (
@@ -73,10 +65,6 @@ func doFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (has? SYM:SymbolWithPathExpression)
 func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 argument, got %d", size)
-	}
-
 	var (
 		expr     ast.Expression
 		pathExpr *ast.PathExpression
@@ -145,10 +133,6 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (default TEST:Expression FALLBACK:any)
 func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
-	}
-
 	_, result, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
@@ -174,10 +158,6 @@ func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (try TEST:Expression FALLBACK:any?)
 func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size < 1 || size > 2 {
-		return nil, fmt.Errorf("expected 1 or 2 arguments, got %d", size)
-	}
-
 	_, result, err := eval.EvalExpression(ctx, args[0])
 	if err != nil {
 		if len(args) == 1 {
@@ -196,10 +176,6 @@ func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
 // (set VAR:Variable VALUE:any)
 // (set EXPR:PathExpression VALUE:any)
 func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 2 {
-		return nil, fmt.Errorf("expected 2 arguments, got %d", size)
-	}
-
 	symbol, ok := args[0].(ast.Symbol)
 	if !ok {
 		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
@@ -321,20 +297,11 @@ func (deleteFunction) BangHandler(ctx types.Context, sym ast.Symbol, value any) 
 }
 
 // (empty? VALUE:any)
-func isEmptyFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 or 2 arguments, got %d", size)
-	}
-
-	_, result, err := eval.EvalExpression(ctx, args[0])
+func isEmptyFunction(ctx types.Context, args []any) (any, error) {
+	// this function purposefully always uses humane coalescing
+	boolified, err := coalescing.NewHumane().ToBool(args[0])
 	if err != nil {
 		return nil, err
-	}
-
-	// this function purposefully always uses humane coalescing
-	boolified, err := coalescing.NewHumane().ToBool(result)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
 	return !boolified, nil
@@ -356,24 +323,6 @@ func pedanticallyFunction(ctx types.Context, args []ast.Expression) (any, error)
 }
 
 func coalescingChangerFunction(ctx types.Context, args []ast.Expression, c coalescing.Coalescer) (any, error) {
-	if size := len(args); size < 1 {
-		return nil, fmt.Errorf("expected 1+ arguments, got %d", size)
-	}
-
-	tupleCtx := ctx.WithCoalescer(c)
-
-	var (
-		result any
-		err    error
-	)
-
-	// do not use evalArgs(), as we want to inherit the context between expressions
-	for i, arg := range args {
-		tupleCtx, result, err = eval.EvalExpression(tupleCtx, arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d: %w", i, err)
-		}
-	}
-
-	return result, nil
+	_, result, err := eval.EvalExpression(ctx.WithCoalescer(c), args[0])
+	return result, err
 }

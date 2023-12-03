@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.xrstf.de/rudi/pkg/eval/builtin"
+	"go.xrstf.de/rudi/pkg/builtin"
 )
 
 //go:embed *
@@ -44,7 +44,7 @@ func Topics() []Topic {
 	}
 
 	ignoredFunctions := map[string]struct{}{
-		"sum":  {},
+		"add":  {},
 		"sub":  {},
 		"mult": {},
 		"div":  {},
@@ -58,7 +58,7 @@ func Topics() []Topic {
 		var sanitized string
 		switch funcName {
 		case "+":
-			sanitized = "sum"
+			sanitized = "add"
 		case "-":
 			sanitized = "sub"
 		case "*":

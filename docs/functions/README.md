@@ -68,7 +68,7 @@ applied to all functions (so technically `eq?!` is valid, though weird looking).
 ## Math Functions
 
 * [`*`](../functions/math-mult.md) – returns the product of all of its arguments
-* [`+`](../functions/math-sum.md) – returns the sum of all of its arguments
+* [`+`](../functions/math-add.md) – returns the sum of all of its arguments
 * [`-`](../functions/math-sub.md) – returns arg1 - arg2 - .. - argN
 * [`/`](../functions/math-div.md) – returns arg1 / arg2 / .. / argN
 

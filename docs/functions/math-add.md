@@ -1,7 +1,7 @@
 # +
 
 `+` sums up all provided arguments. Arguments must evaluate to numeric values.
-`sum` is an alias for this function.
+`add` is an alias for this function.
 
 ## Examples
 
