@@ -18,7 +18,7 @@ func NewStrict() Coalescer {
 var _ Coalescer = strict{}
 
 func (strict) ToNull(val any) (bool, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return true, nil
 	default:
@@ -27,7 +27,7 @@ func (strict) ToNull(val any) (bool, error) {
 }
 
 func (strict) ToBool(val any) (bool, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return false, nil
 	case bool:
@@ -38,7 +38,7 @@ func (strict) ToBool(val any) (bool, error) {
 }
 
 func (strict) ToFloat64(val any) (float64, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return 0, nil
 	case int:
@@ -57,7 +57,7 @@ func (strict) ToFloat64(val any) (float64, error) {
 }
 
 func (strict) ToInt64(val any) (int64, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return 0, nil
 	case int:
@@ -86,7 +86,7 @@ func (s strict) ToNumber(val any) (ast.Number, error) {
 }
 
 func (strict) ToString(val any) (string, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return "", nil
 	case string:
@@ -97,7 +97,7 @@ func (strict) ToString(val any) (string, error) {
 }
 
 func (strict) ToVector(val any) ([]any, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return []any{}, nil
 	case []any:
@@ -108,7 +108,7 @@ func (strict) ToVector(val any) ([]any, error) {
 }
 
 func (strict) ToObject(val any) (map[string]any, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return map[string]any{}, nil
 	case map[string]any:

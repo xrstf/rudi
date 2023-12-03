@@ -9,19 +9,9 @@ import (
 	"reflect"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 var ErrIncompatibleTypes = errors.New("types are incompatible")
-
-func deliteral(val any) any {
-	lit, ok := val.(ast.Literal)
-	if ok {
-		return lit.LiteralValue()
-	}
-
-	return val
-}
 
 type Comparer interface {
 	Compare(other any) (int, error)
@@ -52,9 +42,6 @@ func Compare(c coalescing.Coalescer, left, right any) (int, error) {
 	if c == nil {
 		c = coalescing.NewStrict()
 	}
-
-	left = deliteral(left)
-	right = deliteral(right)
 
 	// if either of the sides is a null, convert the other to null
 	matched, compared, err := compareNullish(c, left, right)

@@ -333,12 +333,7 @@ func anonymousMapFunction(ctx types.Context, source any, expr ast.Expression) (a
 	innerCtx := ctx
 
 	mapItem := func(ctx types.Context, item any) (types.Context, any, error) {
-		wrapped, err := types.WrapNative(item)
-		if err != nil {
-			return ctx, nil, err
-		}
-
-		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{wrapped})
+		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(item)})
 	}
 
 	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
@@ -506,13 +501,12 @@ func anonymousFilterFunction(ctx types.Context, source any, expr ast.Expression)
 	innerCtx := ctx
 
 	filterItem := func(ctx types.Context, item any) (types.Context, bool, error) {
-		wrapped, err := types.WrapNative(item)
-		if err != nil {
-			return ctx, false, err
-		}
+		var (
+			result any
+			err    error
+		)
 
-		var result any
-		ctx, result, err = eval.EvalFunctionCall(ctx, identifier, []ast.Expression{wrapped})
+		ctx, result, err = eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(item)})
 		if err != nil {
 			return ctx, false, err
 		}

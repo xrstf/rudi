@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/equality"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
@@ -124,19 +123,7 @@ func renderDiff(expected any, actual any) string {
 }
 
 func assertResultValue(t *testing.T, expected any, actual any) {
-	if expectedNode, ok := expected.(ast.Literal); ok {
-		resultNode, ok := actual.(ast.Literal)
-		if !ok {
-			t.Errorf("Result has invalid type:\n%s", renderDiff(expected, actual))
-		} else {
-			equal, err := equality.Equal(nil, expectedNode, resultNode)
-			if err != nil {
-				t.Errorf("Could not compare result with expectation: %v", err)
-			} else if !equal {
-				t.Errorf("Resulting value does not match expectation:\n\n%s\n", renderDiff(expected, actual))
-			}
-		}
-	} else if !cmp.Equal(expected, actual) {
+	if !cmp.Equal(expected, actual) {
 		t.Errorf("Resulting value does not match expectation:\n\n%s\n", renderDiff(expected, actual))
 	}
 }

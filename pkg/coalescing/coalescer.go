@@ -20,15 +20,6 @@ type Coalescer interface {
 	ToObject(val any) (map[string]any, error)
 }
 
-func deliteral(val any) any {
-	lit, ok := val.(ast.Literal)
-	if ok {
-		return lit.LiteralValue()
-	}
-
-	return val
-}
-
 func toNumber(c Coalescer, val any) (ast.Number, error) {
 	i, err := c.ToInt64(val)
 	if err == nil {

@@ -49,7 +49,7 @@ func NewHumane() Coalescer {
 var _ Coalescer = humane{}
 
 func (h humane) ToNull(val any) (bool, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return true, nil
 	case bool:
@@ -105,7 +105,7 @@ func (h humane) ToNull(val any) (bool, error) {
 }
 
 func (h humane) ToBool(val any) (bool, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return false, nil
 	case bool:
@@ -138,7 +138,7 @@ func (h humane) ToBool(val any) (bool, error) {
 }
 
 func (h humane) ToFloat64(val any) (float64, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return 0, nil
 	case bool:
@@ -176,7 +176,7 @@ func (h humane) ToFloat64(val any) (float64, error) {
 }
 
 func (h humane) ToInt64(val any) (int64, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return 0, nil
 	case bool:
@@ -230,7 +230,7 @@ func (h humane) ToNumber(val any) (ast.Number, error) {
 }
 
 func (h humane) ToString(val any) (string, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return "", nil
 	case bool:
@@ -262,7 +262,7 @@ func formatFloat(f float64) string {
 }
 
 func (h humane) ToVector(val any) ([]any, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return []any{}, nil
 	case []any:
@@ -281,7 +281,7 @@ func (h humane) ToVector(val any) ([]any, error) {
 }
 
 func (h humane) ToObject(val any) (map[string]any, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return map[string]any{}, nil
 	case []any:

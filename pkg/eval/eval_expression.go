@@ -30,6 +30,8 @@ func EvalExpression(ctx types.Context, expr ast.Expression) (types.Context, any,
 		return EvalTuple(ctx, asserted)
 	case ast.Identifier:
 		return EvalIdentifier(ctx, asserted)
+	case ast.Shim:
+		return EvalShim(ctx, asserted)
 	}
 
 	return ctx, nil, fmt.Errorf("unknown expression %s (%T)", expr.String(), expr)

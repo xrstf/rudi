@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 type invalidConversion int
@@ -37,18 +36,15 @@ func newCoalescedTest(left, right any, pedantic, strict, humane any) coalescedTe
 // null, bool, int64, float64, string, vector, object
 // for brevity's sake, we know that int==int32==int64 internally, likewise for floats
 
-func getEqualCoalescedTestcases() []coalescedTestcase {
+func getEqualTestcases() []coalescedTestcase {
 	return []coalescedTestcase{
 		///////////////////////////////////////////////////////////
 		// test nil against all other types
 
 		newCoalescedTest(nil, nil, true, true, true),
-		newCoalescedTest(nil, ast.Null{}, true, true, true),
 
 		newCoalescedTest(nil, true, invalid, invalid, invalid),
 		newCoalescedTest(nil, false, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Bool(true), invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Bool(false), invalid, invalid, true),
 
 		newCoalescedTest(nil, int64(0), invalid, invalid, true),
 		newCoalescedTest(nil, float64(0), invalid, invalid, true),
@@ -58,21 +54,10 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(nil, float64(1), invalid, invalid, invalid),
 		newCoalescedTest(nil, int64(-1), invalid, invalid, invalid),
 		newCoalescedTest(nil, float64(-1), invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Number{Value: int64(0)}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Number{Value: float64(0)}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Number{Value: float64(0.0)}, invalid, invalid, true),
-		newCoalescedTest(nil, ast.Number{Value: float64(0.1)}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Number{Value: int64(1)}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Number{Value: float64(1)}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Number{Value: int64(-1)}, invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.Number{Value: float64(-1)}, invalid, invalid, invalid),
 
 		newCoalescedTest(nil, "", invalid, invalid, true),
 		newCoalescedTest(nil, " ", invalid, invalid, invalid),
 		newCoalescedTest(nil, "test", invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.String(""), invalid, invalid, true),
-		newCoalescedTest(nil, ast.String(" "), invalid, invalid, invalid),
-		newCoalescedTest(nil, ast.String("test"), invalid, invalid, invalid),
 
 		newCoalescedTest(nil, []any{}, invalid, invalid, true),
 		newCoalescedTest(nil, []any{0}, invalid, invalid, invalid),
@@ -88,9 +73,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(true, true, true, true, true),
 		newCoalescedTest(false, false, true, true, true),
 		newCoalescedTest(true, false, false, false, false),
-		newCoalescedTest(true, ast.Bool(true), true, true, true),
-		newCoalescedTest(false, ast.Bool(false), true, true, true),
-		newCoalescedTest(true, ast.Bool(false), false, false, false),
 
 		newCoalescedTest(true, int64(0), invalid, invalid, false),
 		newCoalescedTest(true, float64(0), invalid, invalid, false),
@@ -106,20 +88,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(false, float64(1.0), invalid, invalid, false),
 		newCoalescedTest(false, int64(-1), invalid, invalid, false),
 		newCoalescedTest(false, float64(-1), invalid, invalid, false),
-		newCoalescedTest(true, ast.Number{Value: int64(0)}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Number{Value: float64(0)}, invalid, invalid, false),
-		newCoalescedTest(true, ast.Number{Value: int64(1)}, invalid, invalid, true),
-		newCoalescedTest(true, ast.Number{Value: float64(1)}, invalid, invalid, true),
-		newCoalescedTest(true, ast.Number{Value: float64(1.0)}, invalid, invalid, true),
-		newCoalescedTest(true, ast.Number{Value: int64(-1)}, invalid, invalid, true),
-		newCoalescedTest(true, ast.Number{Value: float64(-1)}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Number{Value: int64(0)}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Number{Value: float64(0)}, invalid, invalid, true),
-		newCoalescedTest(false, ast.Number{Value: int64(1)}, invalid, invalid, false),
-		newCoalescedTest(false, ast.Number{Value: float64(1)}, invalid, invalid, false),
-		newCoalescedTest(false, ast.Number{Value: float64(1.0)}, invalid, invalid, false),
-		newCoalescedTest(false, ast.Number{Value: int64(-1)}, invalid, invalid, false),
-		newCoalescedTest(false, ast.Number{Value: float64(-1)}, invalid, invalid, false),
 
 		newCoalescedTest(true, "", invalid, invalid, false),
 		newCoalescedTest(true, " ", invalid, invalid, true),
@@ -127,12 +95,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(false, "", invalid, invalid, true),
 		newCoalescedTest(false, " ", invalid, invalid, false),
 		newCoalescedTest(false, "test", invalid, invalid, false),
-		newCoalescedTest(true, ast.String(""), invalid, invalid, false),
-		newCoalescedTest(true, ast.String(" "), invalid, invalid, true),
-		newCoalescedTest(true, ast.String("test"), invalid, invalid, true),
-		newCoalescedTest(false, ast.String(""), invalid, invalid, true),
-		newCoalescedTest(false, ast.String(" "), invalid, invalid, false),
-		newCoalescedTest(false, ast.String("test"), invalid, invalid, false),
 
 		newCoalescedTest(true, []any{}, invalid, invalid, false),
 		newCoalescedTest(true, []any{0}, invalid, invalid, true),
@@ -154,15 +116,11 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(0, 0, true, true, true),
 		newCoalescedTest(0, 1, false, false, false),
 		newCoalescedTest(0, -1, false, false, false),
-		newCoalescedTest(0, ast.Number{Value: -1}, false, false, false),
 		newCoalescedTest(2, 2, true, true, true),
 		newCoalescedTest(0, 0.0, invalid, true, true),
 		newCoalescedTest(0, 1.0, invalid, false, false),
 		newCoalescedTest(2, 2.0, invalid, true, true),
-		newCoalescedTest(2, ast.Number{Value: 2.0}, invalid, true, true),
 		newCoalescedTest(-3.14, -3.14, true, true, true),
-		newCoalescedTest(-3.14, ast.Number{Value: -3.14}, true, true, true),
-		newCoalescedTest(ast.Number{Value: -3.14}, ast.Number{Value: -3.14}, true, true, true),
 
 		newCoalescedTest(0, "", invalid, invalid, true),
 		newCoalescedTest(0.0, "", invalid, invalid, true),
@@ -176,7 +134,6 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 		newCoalescedTest(1, " 1 ", invalid, invalid, true),
 		newCoalescedTest(3, "3", invalid, invalid, true),
 		newCoalescedTest(3.1, "3.1", invalid, invalid, true),
-		newCoalescedTest(3.1, ast.String("3.1"), invalid, invalid, true),
 
 		newCoalescedTest(0, []any{}, invalid, invalid, invalid),
 		newCoalescedTest(0, []any{0}, invalid, invalid, invalid),
@@ -243,7 +200,7 @@ func getEqualCoalescedTestcases() []coalescedTestcase {
 	}
 }
 
-func TestEqualCoalesced(t *testing.T) {
+func TestEqual(t *testing.T) {
 	pedanticCoalescer := coalescing.NewPedantic()
 	strictCoalescer := coalescing.NewStrict()
 	humaneCoalescer := coalescing.NewHumane()
@@ -255,7 +212,7 @@ func TestEqualCoalesced(t *testing.T) {
 		expected any
 	}
 
-	for _, testcase := range getEqualCoalescedTestcases() {
+	for _, testcase := range getEqualTestcases() {
 		t.Run(fmt.Sprintf("%v %v", testcase.left, testcase.right), func(t *testing.T) {
 			subtests := []subtest{
 				{

@@ -18,7 +18,7 @@ func NewPedantic() Coalescer {
 var _ Coalescer = pedantic{}
 
 func (pedantic) ToNull(val any) (bool, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case nil:
 		return true, nil
 	default:
@@ -27,7 +27,7 @@ func (pedantic) ToNull(val any) (bool, error) {
 }
 
 func (pedantic) ToBool(val any) (bool, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case bool:
 		return v, nil
 	default:
@@ -36,7 +36,7 @@ func (pedantic) ToBool(val any) (bool, error) {
 }
 
 func (pedantic) ToFloat64(val any) (float64, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case float32:
 		return float64(v), nil
 	case float64:
@@ -47,7 +47,7 @@ func (pedantic) ToFloat64(val any) (float64, error) {
 }
 
 func (pedantic) ToInt64(val any) (int64, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case int:
 		return int64(v), nil
 	case int32:
@@ -64,7 +64,7 @@ func (p pedantic) ToNumber(val any) (ast.Number, error) {
 }
 
 func (pedantic) ToString(val any) (string, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case string:
 		return v, nil
 	default:
@@ -73,7 +73,7 @@ func (pedantic) ToString(val any) (string, error) {
 }
 
 func (pedantic) ToVector(val any) ([]any, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case []any:
 		return v, nil
 	default:
@@ -82,7 +82,7 @@ func (pedantic) ToVector(val any) ([]any, error) {
 }
 
 func (pedantic) ToObject(val any) (map[string]any, error) {
-	switch v := deliteral(val).(type) {
+	switch v := val.(type) {
 	case map[string]any:
 		return v, nil
 	default:

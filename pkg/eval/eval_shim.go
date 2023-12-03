@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func EvalBool(ctx types.Context, b ast.Bool) (types.Context, any, error) {
-	return ctx, bool(b), nil
+func EvalShim(ctx types.Context, s ast.Shim) (types.Context, any, error) {
+	return ctx, s.Value, nil
 }

@@ -4,8 +4,6 @@
 package types
 
 import (
-	"fmt"
-
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
@@ -208,96 +206,6 @@ func (v Variables) DeepCopy() Variables {
 	return result
 }
 
-func WrapNative(val any) (ast.Literal, error) {
-	switch asserted := val.(type) {
-	case nil:
-		return ast.Null{}, nil
-	case ast.Null:
-		return asserted, nil
-	case string:
-		return ast.String(asserted), nil
-	case ast.String:
-		return asserted, nil
-	case bool:
-		return ast.Bool(asserted), nil
-	case ast.Bool:
-		return asserted, nil
-	case int:
-		return ast.Number{Value: int64(asserted)}, nil
-	case int32:
-		return ast.Number{Value: int64(asserted)}, nil
-	case int64:
-		return ast.Number{Value: asserted}, nil
-	case float32:
-		return ast.Number{Value: float64(asserted)}, nil
-	case float64:
-		return ast.Number{Value: asserted}, nil
-	case ast.Number:
-		return asserted, nil
-	// case []any:
-	// 	return ast.VectorNode{Data: asserted}, nil
-	// case ast.Vector:
-	// 	return asserted, nil
-	// case map[string]any:
-	// 	return ast.Object{Data: asserted}, nil
-	// case ast.Object:
-	// 	return asserted, nil
-	default:
-		return nil, fmt.Errorf("cannot wrap %v (%T)", val, val)
-	}
-}
-
-func Must[T any](val T, _ error) T {
-	return val
-}
-
-func UnwrapType(val any) (any, error) {
-	switch asserted := val.(type) {
-	case ast.Null:
-		return nil, nil
-	case *ast.Null:
-		return nil, nil
-	case nil:
-		return nil, nil
-	case ast.Bool:
-		return bool(asserted), nil
-	case *ast.Bool:
-		return bool(*asserted), nil
-	case bool:
-		return asserted, nil
-	case ast.String:
-		return string(asserted), nil
-	case *ast.String:
-		return string(*asserted), nil
-	case string:
-		return asserted, nil
-	case ast.Number:
-		return asserted.Value, nil
-	case *ast.Number:
-		return asserted.Value, nil
-	case int:
-		return int64(asserted), nil
-	case int32:
-		return int64(asserted), nil
-	case int64:
-		return asserted, nil
-	case float32:
-		return float64(asserted), nil
-	case float64:
-		return asserted, nil
-	// case ast.Vector:
-	// 	return asserted.Data, nil
-	// case *ast.Vector:
-	// 	return asserted.Data, nil
-	case []any:
-		return asserted, nil
-	// case ast.Object:
-	// 	return asserted.Data, nil
-	// case *ast.Object:
-	// 	return asserted.Data, nil
-	case map[string]any:
-		return asserted, nil
-	default:
-		return nil, fmt.Errorf("cannot unwrap %v (%T)", val, val)
-	}
+func MakeShim(val any) ast.Shim {
+	return ast.Shim{Value: val}
 }

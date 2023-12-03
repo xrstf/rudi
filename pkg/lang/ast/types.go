@@ -13,12 +13,6 @@ type Expression interface {
 	ExpressionName() string
 }
 
-type Literal interface {
-	Expression
-
-	LiteralValue() any
-}
-
 // A program is either a series of statements or a single, non-tuple expression.
 type Program struct {
 	Statements []Statement
@@ -247,7 +241,6 @@ func (i Identifier) ExpressionName() string {
 type String string
 
 var _ Expression = String("")
-var _ Literal = String("")
 
 func (s String) Equal(other String) bool {
 	return string(s) == string(other)
@@ -261,16 +254,11 @@ func (String) ExpressionName() string {
 	return "String"
 }
 
-func (s String) LiteralValue() any {
-	return string(s)
-}
-
 type Number struct {
 	Value any
 }
 
 var _ Expression = Number{}
-var _ Literal = Number{}
 
 func (n Number) ToInteger() (int64, bool) {
 	switch asserted := n.Value.(type) {
@@ -320,14 +308,9 @@ func (Number) ExpressionName() string {
 	return "Number"
 }
 
-func (n Number) LiteralValue() any {
-	return n.Value
-}
-
 type Bool bool
 
 var _ Expression = Bool(false)
-var _ Literal = Bool(false)
 
 func (b Bool) Equal(other Bool) bool {
 	return bool(b) == bool(other)
@@ -345,14 +328,9 @@ func (Bool) ExpressionName() string {
 	return "Bool"
 }
 
-func (b Bool) LiteralValue() any {
-	return bool(b)
-}
-
 type Null struct{}
 
 var _ Expression = Null{}
-var _ Literal = Null{}
 
 func (Null) Equal(other Null) bool {
 	return true
@@ -364,10 +342,6 @@ func (Null) String() string {
 
 func (Null) ExpressionName() string {
 	return "Null"
-}
-
-func (Null) LiteralValue() any {
-	return nil
 }
 
 type PathExpression struct {
@@ -455,4 +429,25 @@ func (a EvaluatedPathStep) ExpressionName() string {
 	}
 
 	return "PathStep(" + name + ")"
+}
+
+// Shims are used to turn any Go value into a Rudi expression. This is done when
+// contructing new expressions and tuples at runtime. A Rudi program itself can
+// never contain Shim nodes.
+type Shim struct {
+	Value any
+}
+
+var _ Expression = Shim{}
+
+func (s Shim) Equal(other Shim) bool {
+	return s.Value == other.Value
+}
+
+func (Shim) String() string {
+	return "Shim"
+}
+
+func (Shim) ExpressionName() string {
+	return "Shim"
 }
