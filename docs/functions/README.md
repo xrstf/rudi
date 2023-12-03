@@ -74,10 +74,10 @@ applied to all functions (so technically `eq?!` is valid, though weird looking).
 
 ## Strings Functions
 
-* [`concat`](../functions/strings-concat.md) – concatenate items in a vector using a common glue string
+* [`concat`](../functions/strings-concat.md) – concatenates items in a vector using a common glue string
 * [`has-prefix?`](../functions/strings-has-prefix.md) – returns true if the given string has the prefix
 * [`has-suffix?`](../functions/strings-has-suffix.md) – returns true if the given string has the suffix
-* [`split`](../functions/strings-split.md) – split a string into a vector
+* [`split`](../functions/strings-split.md) – splits a string into a vector
 * [`to-lower`](../functions/strings-to-lower.md) – returns the lowercased version of the given string
 * [`to-upper`](../functions/strings-to-upper.md) – returns the uppercased version of the given string
 * [`trim`](../functions/strings-trim.md) – returns the given whitespace with leading/trailing whitespace removed

@@ -432,7 +432,7 @@ func (a EvaluatedPathStep) ExpressionName() string {
 }
 
 // Shims are used to turn any Go value into a Rudi expression. This is done when
-// contructing new expressions and tuples at runtime. A Rudi program itself can
+// constructing new expressions and tuples at runtime. A Rudi program itself can
 // never contain Shim nodes.
 type Shim struct {
 	Value any
