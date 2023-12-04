@@ -6,6 +6,7 @@ package builtin
 import (
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/eval/util"
+	"go.xrstf.de/rudi/pkg/eval/util/native"
 )
 
 var (
@@ -96,18 +97,18 @@ var (
 	}
 
 	HashingFunctions = types.Functions{
-		"sha1":   util.NewLiteralFunction(sha1Function, "return the lowercase hex representation of the SHA-1 hash").MinArgs(1).MaxArgs(1),
-		"sha256": util.NewLiteralFunction(sha256Function, "return the lowercase hex representation of the SHA-256 hash").MinArgs(1).MaxArgs(1),
-		"sha512": util.NewLiteralFunction(sha512Function, "return the lowercase hex representation of the SHA-512 hash").MinArgs(1).MaxArgs(1),
+		"sha1":   native.NewFunction("return the lowercase hex representation of the SHA-1 hash", sha1Function),
+		"sha256": native.NewFunction("return the lowercase hex representation of the SHA-256 hash", sha256Function),
+		"sha512": native.NewFunction("return the lowercase hex representation of the SHA-512 hash", sha512Function),
 	}
 
 	EncodingFunctions = types.Functions{
-		"to-base64":   util.NewLiteralFunction(toBase64Function, "apply base64 encoding to the given string").MinArgs(1).MaxArgs(1),
-		"from-base64": util.NewLiteralFunction(fromBase64Function, "decode a base64 encoded string").MinArgs(1).MaxArgs(1),
+		"to-base64":   native.NewFunction("apply base64 encoding to the given string", toBase64Function),
+		"from-base64": native.NewFunction("decode a base64 encoded string", fromBase64Function),
 	}
 
 	DateTimeFunctions = types.Functions{
-		"now": util.NewLiteralFunction(nowFunction, "returns the current date & time (UTC), formatted like a Go date").MinArgs(1).MaxArgs(1),
+		"now": native.NewFunction("returns the current date & time (UTC), formatted like a Go date", nowFunction),
 	}
 
 	TypeFunctions = types.Functions{
