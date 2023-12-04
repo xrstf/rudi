@@ -18,6 +18,7 @@ applied to all functions (so technically `eq?!` is valid, though weird looking).
 * [`delete`](../functions/core-delete.md) – removes a key from an object or an item from a vector
 * [`do`](../functions/core-do.md) – eval a sequence of statements where only one expression is valid
 * [`empty?`](../functions/core-empty.md) – returns true when the given value is empty-ish (0, false, null, "", ...)
+* [`error`](../functions/core-error.md) – returns an error
 * [`has?`](../functions/core-has.md) – returns true if the given symbol's path expression points to an existing value
 * [`if`](../functions/core-if.md) – evaluate one of two expressions based on a condition
 * [`set`](../functions/core-set.md) – set a value in a variable/document, only really useful with ! modifier (set!)

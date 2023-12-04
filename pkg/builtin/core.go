@@ -307,6 +307,17 @@ func isEmptyFunction(ctx types.Context, args []any) (any, error) {
 	return !boolified, nil
 }
 
+// (error MSG:string)
+// (error FMT:string ARGS+)
+func errorFunction(ctx types.Context, args []any) (any, error) {
+	format, err := ctx.Coalesce().ToString(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, fmt.Errorf(format, args[1:]...)
+}
+
 // (strictly EXPR+)
 func strictlyFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return coalescingChangerFunction(ctx, args, coalescing.NewStrict())

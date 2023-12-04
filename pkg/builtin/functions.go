@@ -14,6 +14,7 @@ var (
 		"delete":  deleteFunction{},
 		"do":      util.NewRawFunction(doFunction, "eval a sequence of statements where only one expression is valid").MinArgs(1),
 		"empty?":  util.NewLiteralFunction(isEmptyFunction, "returns true when the given value is empty-ish (0, false, null, \"\", ...)").MinArgs(1).MaxArgs(1),
+		"error":   util.NewLiteralFunction(errorFunction, "returns an error").MinArgs(1),
 		"has?":    util.NewRawFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value").MinArgs(1).MaxArgs(1),
 		"if":      util.NewRawFunction(ifFunction, "evaluate one of two expressions based on a condition").MinArgs(2).MaxArgs(3),
 		"set":     util.NewRawFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)").MinArgs(2).MaxArgs(2),
