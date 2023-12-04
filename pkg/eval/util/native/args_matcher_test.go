@@ -172,6 +172,10 @@ func TestNewArgsMatcherSignatures(t *testing.T) {
 			fun:  func(ExpressionCopy) (any, error) { panic("") },
 		},
 		{
+			name: "accept types.Context arg",
+			fun:  func(types.Context) (any, error) { panic("") },
+		},
+		{
 			name:    "reject custom emptyInterface arg",
 			fun:     func(emptyInterface) (any, error) { panic("") },
 			invalid: true,

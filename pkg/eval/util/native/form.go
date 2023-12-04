@@ -60,8 +60,13 @@ func (f *form) Match(ctx types.Context, args []cachedExpression) (bool, error) {
 
 func (f *form) Call(ctx types.Context) (any, error) {
 	reflectArgs := make([]reflect.Value, len(f.args))
-	for i := range f.args {
-		reflectArgs[i] = reflect.ValueOf(f.args[i])
+	for i, arg := range f.args {
+		if arg == nil {
+			var e any
+			reflectArgs[i] = reflect.ValueOf(&e).Elem()
+		} else {
+			reflectArgs[i] = reflect.ValueOf(f.args[i])
+		}
 	}
 
 	results := reflect.ValueOf(f.fun).Call(reflectArgs)

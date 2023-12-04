@@ -161,6 +161,14 @@ func TestAnyConsumer(t *testing.T) {
 			remaining: 2,
 		},
 		{
+			name: "allows nulls",
+			args: []ast.Expression{
+				ast.Null{},
+			},
+			expected:  []any{nil},
+			remaining: 0,
+		},
+		{
 			name: "no coalescing",
 			args: []ast.Expression{
 				// no coalescer would ever handle anything but []any;

@@ -4,6 +4,7 @@
 package native
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -24,6 +25,19 @@ func TestFormCalling(t *testing.T) {
 				return true, nil
 			},
 			args: []ast.Expression{},
+		},
+		{
+			name: "nil values",
+			fun: func(v any) (any, error) {
+				if v != nil {
+					return false, fmt.Errorf("expectednil, got %v", v)
+				}
+
+				return true, nil
+			},
+			args: []ast.Expression{
+				ast.Null{},
+			},
 		},
 		{
 			name: "basic arguments",
@@ -159,6 +173,30 @@ func TestFormCalling(t *testing.T) {
 						ast.Number{Value: 3},
 					},
 				},
+			},
+		},
+		{
+			name: "context support",
+			fun: func(ctx types.Context) (any, error) {
+				if ctx.Coalesce() == nil {
+					return false, errors.New("got empty context")
+				}
+
+				return true, nil
+			},
+			args: []ast.Expression{},
+		},
+		{
+			name: "context support with other args",
+			fun: func(ctx types.Context, c string) (any, error) {
+				if c != "foo" {
+					return false, fmt.Errorf("expected %q, got %q", "foo", c)
+				}
+
+				return true, nil
+			},
+			args: []ast.Expression{
+				ast.String("foo"),
 			},
 		},
 	}

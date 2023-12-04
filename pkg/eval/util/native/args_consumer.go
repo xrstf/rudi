@@ -13,6 +13,7 @@ import (
 var (
 	dummy          ast.Expression
 	expressionType = reflect.TypeOf(&dummy).Elem()
+	contextType    = reflect.TypeOf(&types.Context{}).Elem()
 )
 
 type argsConsumer func(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error)
@@ -53,6 +54,12 @@ func newConsumerFunc(t reflect.Type) argsConsumer {
 		// allow unevaluated access to the argument expression
 		if t.AssignableTo(expressionType) {
 			return expressionConsumer
+		}
+
+	case reflect.Struct:
+		// allow to inject the context when required
+		if t.AssignableTo(contextType) {
+			return contextConsumer
 		}
 	}
 
@@ -186,6 +193,10 @@ func expressionConsumer(ctx types.Context, args []cachedExpression) (asserted []
 	}
 
 	return []any{args[0].expr}, args[1:], nil
+}
+
+func contextConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
+	return []any{ctx}, args, nil
 }
 
 func toVariadicConsumer(singleConsumer argsConsumer) argsConsumer {
