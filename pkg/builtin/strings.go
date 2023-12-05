@@ -50,6 +50,18 @@ func splitFunction(sep string, source string) (any, error) {
 	return result, nil
 }
 
+func splitnFunction(sep string, source string, limit int64) (any, error) {
+	parts := strings.SplitN(source, sep, int(limit))
+
+	// to []any
+	result := make([]any, len(parts))
+	for i, part := range parts {
+		result[i] = part
+	}
+
+	return result, nil
+}
+
 func hasSuffixFunction(source string, suffix string) (any, error) {
 	return strings.HasSuffix(source, suffix), nil
 }
@@ -76,4 +88,12 @@ func toUpperFunction(s string) (any, error) {
 
 func trimFunction(s string) (any, error) {
 	return strings.TrimSpace(s), nil
+}
+
+func replaceAllFunction(s, old, new string) (any, error) {
+	return strings.ReplaceAll(s, old, new), nil
+}
+
+func replaceLimitFunction(s, old, new string, limit int64) (any, error) {
+	return strings.Replace(s, old, new, int(limit)), nil
 }

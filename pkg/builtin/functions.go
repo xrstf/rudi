@@ -76,7 +76,7 @@ var (
 		"contains?": containsRudiFunction,
 
 		"concat":      functions.NewBuilder(concatFunction).WithDescription("concatenates items in a vector using a common glue string").Build(),
-		"split":       functions.NewBuilder(splitFunction).WithDescription("splits a string into a vector").Build(),
+		"split":       functions.NewBuilder(splitFunction, splitnFunction).WithDescription("splits a string into a vector").Build(),
 		"has-prefix?": functions.NewBuilder(hasPrefixFunction).WithDescription("returns true if the given string has the prefix").Build(),
 		"has-suffix?": functions.NewBuilder(hasSuffixFunction).WithDescription("returns true if the given string has the suffix").Build(),
 		"trim-prefix": functions.NewBuilder(trimPrefixFunction).WithDescription("removes the prefix from the string, if it exists").Build(),
@@ -84,6 +84,7 @@ var (
 		"to-lower":    functions.NewBuilder(toLowerFunction).WithDescription("returns the lowercased version of the given string").Build(),
 		"to-upper":    functions.NewBuilder(toUpperFunction).WithDescription("returns the uppercased version of the given string").Build(),
 		"trim":        functions.NewBuilder(trimFunction).WithDescription("returns the given whitespace with leading/trailing whitespace removed").Build(),
+		"replace":     functions.NewBuilder(replaceAllFunction, replaceLimitFunction).WithDescription("returns a copy of a string with the a substring replaced by another").Build(),
 	}
 
 	ListsFunctions = types.Functions{
@@ -132,6 +133,8 @@ var (
 	EncodingFunctions = types.Functions{
 		"to-base64":   functions.NewBuilder(toBase64Function).WithDescription("apply base64 encoding to the given string").Build(),
 		"from-base64": functions.NewBuilder(fromBase64Function).WithDescription("decode a base64 encoded string").Build(),
+		"to-json":     functions.NewBuilder(toJSONFunction).WithDescription("encode the given value using JSON").Build(),
+		"from-json":   functions.NewBuilder(fromJSONFunction).WithDescription("decode a JSON string").Build(),
 	}
 
 	DateTimeFunctions = types.Functions{
