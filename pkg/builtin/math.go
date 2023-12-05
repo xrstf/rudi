@@ -5,104 +5,95 @@ package builtin
 
 import (
 	"errors"
-	"fmt"
 
-	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/eval/util"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-type numberifiedLiteralFunction func(ctx types.Context, values []ast.Number, int64sOnly bool) (any, error)
-
-func numberifyArgs(fun numberifiedLiteralFunction) util.LiteralFunction {
-	return func(ctx types.Context, args []any) (any, error) {
-		values := make([]ast.Number, len(args))
-		int64sOnly := true
-
-		for i, arg := range args {
-			num, err := ctx.Coalesce().ToNumber(arg)
-			if err != nil {
-				return nil, fmt.Errorf("argument #%d: %w", i, err)
-			}
-
-			values[i] = num
-
-			if _, isInt := num.ToInteger(); !isInt {
-				int64sOnly = false
-			}
-		}
-
-		return fun(ctx, values, int64sOnly)
+func integerAddFunction(a, b int64, extra ...int64) (any, error) {
+	sum := a + b
+	for _, num := range extra {
+		sum += num
 	}
+
+	return sum, nil
 }
 
-func addFunction(ctx types.Context, values []ast.Number, int64sOnly bool) (any, error) {
-	if int64sOnly {
-		sum := int64(0)
-		for _, num := range values {
-			val, _ := num.ToInteger()
-			sum += val
-		}
-
-		return sum, nil
-	}
-
-	sum := float64(0)
-	for _, num := range values {
+func numberAddFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
+	sum := a.MustToFloat() + b.MustToFloat()
+	for _, num := range extra {
 		sum += num.MustToFloat()
 	}
 
 	return sum, nil
 }
 
-func subFunction(ctx types.Context, values []ast.Number, int64sOnly bool) (any, error) {
-	if int64sOnly {
-		difference, _ := values[0].ToInteger()
-		for _, num := range values[1:] {
-			val, _ := num.ToInteger()
-			difference -= val
-		}
-
-		return difference, nil
+func integerSubFunction(a, b int64, extra ...int64) (any, error) {
+	diff := a - b
+	for _, num := range extra {
+		diff -= num
 	}
 
-	difference := values[0].MustToFloat()
-	for _, num := range values[1:] {
-		difference -= num.MustToFloat()
-	}
-
-	return difference, nil
+	return diff, nil
 }
 
-func multiplyFunction(ctx types.Context, values []ast.Number, int64sOnly bool) (any, error) {
-	if int64sOnly {
-		product := int64(1)
-		for _, num := range values {
-			factor, _ := num.ToInteger()
-			product *= factor
-		}
-
-		return product, nil
+func numberSubFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
+	diff := a.MustToFloat() - b.MustToFloat()
+	for _, num := range extra {
+		diff -= num.MustToFloat()
 	}
 
-	product := float64(1)
-	for _, num := range values {
+	return diff, nil
+}
+
+func integerMultFunction(a, b int64, extra ...int64) (any, error) {
+	product := a * b
+	for _, num := range extra {
+		product *= num
+	}
+
+	return product, nil
+}
+
+func numberMultFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
+	product := a.MustToFloat() * b.MustToFloat()
+	for _, num := range extra {
 		product *= num.MustToFloat()
 	}
 
 	return product, nil
 }
 
-func divideFunction(ctx types.Context, values []ast.Number, int64sOnly bool) (any, error) {
-	result := values[0].MustToFloat()
+func integerDivFunction(a, b int64, extra ...int64) (any, error) {
+	if b == 0 {
+		return nil, errors.New("division by zero")
+	}
 
-	for _, num := range values[1:] {
-		divisor := num.MustToFloat()
-		if divisor == 0 {
+	result := a / b
+
+	for _, num := range extra {
+		if num == 0 {
 			return nil, errors.New("division by zero")
 		}
 
-		result /= divisor
+		result /= num
+	}
+
+	return result, nil
+}
+
+func numberDivFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
+	if b.MustToFloat() == 0 {
+		return nil, errors.New("division by zero")
+	}
+
+	result := a.MustToFloat() / b.MustToFloat()
+
+	for _, num := range extra {
+		if num.MustToFloat() == 0 {
+			return nil, errors.New("division by zero")
+		}
+
+		result /= num.MustToFloat()
 	}
 
 	return result, nil

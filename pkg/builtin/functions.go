@@ -45,10 +45,10 @@ var (
 	}
 
 	// aliases to make bang functions nicer (add! vs +!)
-	addRudiFunction      = util.NewLiteralFunction(numberifyArgs(addFunction), "returns the sum of all of its arguments").MinArgs(2)
-	subRudiFunction      = util.NewLiteralFunction(numberifyArgs(subFunction), "returns arg1 - arg2 - .. - argN").MinArgs(2)
-	multiplyRudiFunction = util.NewLiteralFunction(numberifyArgs(multiplyFunction), "returns the product of all of its arguments").MinArgs(2)
-	divideRudiFunction   = util.NewLiteralFunction(numberifyArgs(divideFunction), "returns arg1 / arg2 / .. / argN").MinArgs(2)
+	addRudiFunction      = native.NewFunction("returns the sum of all of its arguments", numberAddFunction, integerAddFunction)
+	subRudiFunction      = native.NewFunction("returns arg1 - arg2 - .. - argN", numberSubFunction, integerSubFunction)
+	multiplyRudiFunction = native.NewFunction("returns the product of all of its arguments", numberMultFunction, integerMultFunction)
+	divideRudiFunction   = native.NewFunction("returns arg1 / arg2 / .. / argN", numberDivFunction, integerDivFunction)
 
 	MathFunctions = types.Functions{
 		"+": addRudiFunction,
