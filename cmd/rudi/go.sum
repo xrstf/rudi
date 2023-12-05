@@ -15,6 +15,8 @@ github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4Nij
 github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd h1:PppHBegd3uPZ3Y/Iax/2mlCFJm1w4Qf/zP1MdW4ju2o=
 github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd/go.mod h1:JDGcbDT52eL4fju3sZ4TeHGsQwhG9nbDV21aMyhwPoA=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
+github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f h1:7LYC+Yfkj3CTRcShK0KOL/w6iTiKyqqBA9a41Wnggw8=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f/go.mod h1:pFlLw2CfqZiIBOx6BuCeRLCrfxBJipTY0nIOF/VbGcI=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
@@ -41,6 +43,8 @@ go.xrstf.de/go-term-markdown v0.0.0-20231119170546-73a1852b91cc h1:0vqYzllpoI4x5
 go.xrstf.de/go-term-markdown v0.0.0-20231119170546-73a1852b91cc/go.mod h1:0bARjSNhCWOffbH9lX3J7QoLkjuTf3oEV8OhZHPenMg=
 go.xrstf.de/rudi-contrib/semver v0.1.1 h1:RICbDTzLDYQg5MoWZhSs2XV94tIIySf06YSYzaNQPUU=
 go.xrstf.de/rudi-contrib/semver v0.1.1/go.mod h1:7NKxC25Rn2BnigjKg1yx78lMhWOug8ohWjXyp5avR1w=
+go.xrstf.de/rudi-contrib/uuid v0.1.0 h1:VB+Pjfld0su/AJC41vUdu6xrztJx7WwQEDFOIbmk7Rk=
+go.xrstf.de/rudi-contrib/uuid v0.1.0/go.mod h1:dDF81g8+CBl0UyZHi8v/VQ3ekyd6qFGsjKsqyOCzX5Y=
 go.xrstf.de/rudi-contrib/yaml v0.1.1 h1:ZvmyDaPa+veO8dw+u/PwiWo2cAweAiUvVd9JF9UXlqo=
 go.xrstf.de/rudi-contrib/yaml v0.1.1/go.mod h1:SuYonfFIxflUGzanG2mFLOLACHeRK5Jl0G++bCPLZNU=
 golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

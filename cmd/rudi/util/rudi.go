@@ -11,6 +11,7 @@ import (
 	"go.xrstf.de/rudi/pkg/coalescing"
 
 	"go.xrstf.de/rudi-contrib/semver"
+	"go.xrstf.de/rudi-contrib/uuid"
 	"go.xrstf.de/rudi-contrib/yaml"
 )
 
@@ -46,6 +47,7 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 
 	funcs := rudi.NewBuiltInFunctions().
 		Add(semver.Functions).
+		Add(uuid.Functions).
 		Add(yaml.Functions)
 
 	ctx := rudi.NewContext(document, vars, funcs, coalescer)
