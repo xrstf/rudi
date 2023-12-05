@@ -7,18 +7,20 @@ import (
 	"errors"
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-type function struct {
+type Function struct {
 	forms       []form
+	coalescer   coalescing.Coalescer
 	description string
 }
 
-var _ types.Function = &function{}
+var _ types.Function = &Function{}
 
-func NewFunction(description string, funcs ...any) types.Function {
+func NewFunction(description string, funcs ...any) *Function {
 	forms := make([]form, len(funcs))
 
 	for i := range funcs {
@@ -30,18 +32,27 @@ func NewFunction(description string, funcs ...any) types.Function {
 		forms[i] = funcForm
 	}
 
-	return &function{
+	return &Function{
 		forms:       forms,
 		description: description,
 	}
 }
 
-func (f *function) Description() string {
+func (f *Function) Description() string {
 	return f.description
 }
 
-func (f *function) Evaluate(ctx types.Context, args []ast.Expression) (any, error) {
+func (f *Function) WithCoalescer(c coalescing.Coalescer) *Function {
+	f.coalescer = c
+	return f
+}
+
+func (f *Function) Evaluate(ctx types.Context, args []ast.Expression) (any, error) {
 	cachedArgs := convertArgs(args)
+
+	if f.coalescer != nil {
+		ctx = ctx.WithCoalescer(f.coalescer)
+	}
 
 	for i, form := range f.forms {
 		matched, err := form.Match(ctx, cachedArgs)
