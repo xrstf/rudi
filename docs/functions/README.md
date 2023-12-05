@@ -11,6 +11,8 @@ not stateless but meant to modify their first argument (see the
 question mark is part of the function name itself, but the bang modifier can be
 applied to all functions (so technically `eq?!` is valid, though weird looking).
 
+Additional functionality is available in the [extended library](../modules.md).
+
 <!-- BEGIN_TOC -->
 ## Core Functions
 

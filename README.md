@@ -31,6 +31,7 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
   * [Language Description](docs/language.md)
   * [Type Handling](docs/coalescing.md)
   * [Standard Library](docs/functions/README.md)
+  * [Extended Library](docs/modules.md)
 * [Usage](#usage)
   * [Command Line](#command-line)
   * [Embedding](#embedding)
@@ -75,6 +76,7 @@ Make yourself familiar with Rudi using the documentation:
 
 * The [Language Description](docs/language.md) describes the Rudi syntax and semantics.
 * All built-in functions are described in the [standard library](docs/functions/README.md).
+* Additional functions are available in the [extended library](docs/modules.md).
 * [Type Handling](docs/coalescing.md) describes how Rudi handles, converts and compares values.
 
 ## Usage
@@ -193,6 +195,14 @@ out there, allbeit with slightly different ideas and goals than Rudi:
 * [Starlark](https://github.com/google/starlark-go) – Is the language behind Bazel and actually has
   an optional nun-Turing-complete mode. However I am really no fan of its syntax and have not
   investigated it further.
+* [Go Templates](https://pkg.go.dev/text/template) – I really don't like Go's template syntax for
+  more than simple one-liners. I liked and copied its concept of ranging over things, as templates
+  do not allow unbounded loops (just like Rudi), but apart from being safe to embed, Go templates do
+  not offer enough functionality to modify a data structure. Like Jsonnet, templates shine whe
+  creating/outputting entire _new_ documents.
+
+  _Bonus mention:_ Mastermind's [sprig](https://github.com/Masterminds/sprig) served as inspiration
+  for quite a few of the functions in Rudi.
 
 ## Credits
 
