@@ -60,18 +60,6 @@ func numberMultFunction(base ast.Number, extra ...ast.Number) (any, error) {
 	return product, nil
 }
 
-func integerDivFunction(base int64, extra ...int64) (any, error) {
-	for _, num := range extra {
-		if num == 0 {
-			return nil, errors.New("division by zero")
-		}
-
-		base /= num
-	}
-
-	return base, nil
-}
-
 func numberDivFunction(base ast.Number, extra ...ast.Number) (any, error) {
 	result := base.MustToFloat()
 

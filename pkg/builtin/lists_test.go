@@ -315,7 +315,7 @@ func TestRangeFunction(t *testing.T) {
 		},
 		{
 			// multiple expressions that use a common context
-			Expression: `(range [1 2 3] [a] (set! $foo $a) (+ $foo 3))`,
+			Expression: `(range [1 2 3] [a] (do (set! $foo $a) (+ $foo 3)))`,
 			Expected:   int64(6),
 		},
 		{
@@ -442,12 +442,12 @@ func TestMapFunction(t *testing.T) {
 		},
 		{
 			// last expression controls the result
-			Expression: `(map [1 2 3] [val] (+ $val 3) "foo")`,
+			Expression: `(map [1 2 3] [val] (do (+ $val 3) "foo"))`,
 			Expected:   []any{"foo", "foo", "foo"},
 		},
 		{
 			// multiple expressions that use a common context
-			Expression: `(map [1 2 3] [val] (set! $foo $val) (+ $foo 3))`,
+			Expression: `(map [1 2 3] [val] (do (set! $foo $val) (+ $foo 3)))`,
 			Expected:   []any{int64(4), int64(5), int64(6)},
 		},
 		{

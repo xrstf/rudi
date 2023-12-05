@@ -43,11 +43,10 @@ var (
 		"gte?": functions.NewBuilder(gteCoalescer).WithDescription("returns a >= b").Build(),
 	}
 
-	// aliases to make bang functions nicer (add! vs +!)
-	addRudiFunction      = functions.NewBuilder(numberAddFunction, integerAddFunction).WithDescription("returns the sum of all of its arguments").Build()
-	subRudiFunction      = functions.NewBuilder(numberSubFunction, integerSubFunction).WithDescription("returns arg1 - arg2 - .. - argN").Build()
-	multiplyRudiFunction = functions.NewBuilder(numberMultFunction, integerMultFunction).WithDescription("returns the product of all of its arguments").Build()
-	divideRudiFunction   = functions.NewBuilder(numberDivFunction, integerDivFunction).WithDescription("returns arg1 / arg2 / .. / argN").Build()
+	addRudiFunction      = functions.NewBuilder(integerAddFunction, numberAddFunction).WithDescription("returns the sum of all of its arguments").Build()
+	subRudiFunction      = functions.NewBuilder(integerSubFunction, numberSubFunction).WithDescription("returns arg1 - arg2 - .. - argN").Build()
+	multiplyRudiFunction = functions.NewBuilder(integerMultFunction, numberMultFunction).WithDescription("returns the product of all of its arguments").Build()
+	divideRudiFunction   = functions.NewBuilder(numberDivFunction).WithDescription("returns arg1 / arg2 / .. / argN (always a floating point division, regardless of arguments)").Build()
 
 	MathFunctions = types.Functions{
 		"+": addRudiFunction,
@@ -65,7 +64,7 @@ var (
 	lenRudiFunction      = functions.NewBuilder(stringLenFunction, vectorLenFunction, objectLenFunction).WithDescription("returns the length of a string, vector or object").Build()
 	appendRudiFunction   = functions.NewBuilder(appendToVectorFunction, appendToStringFunction).WithDescription("appends more strings to a string or arbitrary items into a vector").Build()
 	prependRudiFunction  = functions.NewBuilder(prependToVectorFunction, prependToStringFunction).WithDescription("prepends more strings to a string or arbitrary items into a vector").Build()
-	reverseRudiFunction  = functions.NewBuilder(reverseVectorFunction, reverseStringFunction).WithDescription("reverses a string or the elements of a vector").Build()
+	reverseRudiFunction  = functions.NewBuilder(reverseStringFunction, reverseVectorFunction).WithDescription("reverses a string or the elements of a vector").Build()
 	containsRudiFunction = functions.NewBuilder(stringContainsFunction, vectorContainsFunction).WithDescription("returns true if a string contains a substring or a vector contains the given element").Build()
 
 	StringsFunctions = types.Functions{
