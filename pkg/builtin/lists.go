@@ -25,6 +25,7 @@ func stringLenFunction(s string) (any, error) {
 	return len(s), nil
 }
 
+// (append VEC ITEMS+)
 func appendToVectorFunction(base []any, args ...any) (any, error) {
 	result := []any{}
 	result = append(result, base...)
@@ -33,18 +34,22 @@ func appendToVectorFunction(base []any, args ...any) (any, error) {
 	return result, nil
 }
 
+// (append STR ITEMS+)
 func appendToStringFunction(base string, args ...string) (any, error) {
 	return base + strings.Join(args, ""), nil
 }
 
+// (prepend VEC ITEMS+)
 func prependToVectorFunction(base []any, args ...any) (any, error) {
 	return append(args, base...), nil
 }
 
+// (prepend STR ITEMS+)
 func prependToStringFunction(base string, args ...string) (any, error) {
 	return strings.Join(args, "") + base, nil
 }
 
+// (reverse STR)
 func reverseStringFunction(s string) (any, error) {
 	// thank you https://stackoverflow.com/a/10030772
 	result := []rune(s)
@@ -55,6 +60,7 @@ func reverseStringFunction(s string) (any, error) {
 	return string(result), nil
 }
 
+// (reverse VEC)
 func reverseVectorFunction(vec []any) (any, error) {
 	// clone original data
 	result := append([]any{}, vec...)
@@ -409,10 +415,12 @@ func decodeNamingVector(expr ast.Expression) (indexName string, valueName string
 	return indexName, valueName, nil
 }
 
+// (contains? STR STR)
 func stringContainsFunction(haystack string, needle string) (any, error) {
 	return strings.Contains(haystack, needle), nil
 }
 
+// (contains? VEC ITEM)
 func vectorContainsFunction(ctx types.Context, haystack []any, needle any) (any, error) {
 	for _, val := range haystack {
 		equal, err := equality.Equal(ctx.Coalesce(), val, needle)

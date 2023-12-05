@@ -11,11 +11,7 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func andFunction(ctx types.Context, base bool, args ...ast.Expression) (any, error) {
-	if !base {
-		return false, nil
-	}
-
+func andFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	for i, arg := range args {
 		_, evaluated, err := eval.EvalExpression(ctx, arg)
 		if err != nil {
@@ -35,11 +31,7 @@ func andFunction(ctx types.Context, base bool, args ...ast.Expression) (any, err
 	return true, nil
 }
 
-func orFunction(ctx types.Context, base bool, args ...ast.Expression) (any, error) {
-	if base {
-		return true, nil
-	}
-
+func orFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	for i, arg := range args {
 		_, evaluated, err := eval.EvalExpression(ctx, arg)
 		if err != nil {

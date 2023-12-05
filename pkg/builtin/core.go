@@ -34,19 +34,19 @@ func ifElseFunction(ctx types.Context, test bool, yes, no ast.Expression) (any, 
 	return result, err
 }
 
-// (This signature ensures do is always called with 1 expression at least.)
-
-func doFunction(ctx types.Context, arg ast.Expression, args ...ast.Expression) (any, error) {
-	tupleCtx, result, err := eval.EvalExpression(ctx, arg)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
+// NB: Variadic functions always require at least 1 argument in Rudi to match.
+func doFunction(ctx types.Context, args ...ast.Expression) (any, error) {
+	var (
+		tupleCtx = ctx
+		result   any
+		err      error
+	)
 
 	// do not use evalArgs(), as we want to inherit the context between expressions
-	for i, arg := range args {
+	for _, arg := range args {
 		tupleCtx, result, err = eval.EvalExpression(tupleCtx, arg)
 		if err != nil {
-			return nil, fmt.Errorf("argument #%d: %w", i+1, err)
+			return nil, err
 		}
 	}
 
@@ -121,28 +121,23 @@ func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
 }
 
 // (default TEST:Expression FALLBACK:any)
-func defaultFunction(ctx types.Context, test ast.Expression, fallback ast.Expression) (any, error) {
-	_, result, err := eval.EvalExpression(ctx, test)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	// this function purposefully always uses humane coalescing for this check
-	boolified, err := coalescing.NewHumane().ToBool(result)
+func defaultFunction(ctx types.Context, value any, fallback ast.Expression) (any, error) {
+	// this function purposefully always uses humane coalescing, but only for this check
+	boolified, err := coalescing.NewHumane().ToBool(value)
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
 	if boolified {
-		return result, nil
+		return value, nil
 	}
 
-	_, result, err = eval.EvalExpression(ctx, fallback)
+	_, value, err = eval.EvalExpression(ctx, fallback)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
 
-	return result, nil
+	return value, nil
 }
 
 func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
@@ -283,6 +278,10 @@ func isEmptyFunction(val bool) (any, error) {
 	return !val, nil
 }
 
-func errorFunction(ctx types.Context, format string, args ...any) (any, error) {
+func errorFunction(message string) (any, error) {
+	return nil, errors.New(message)
+}
+
+func fmtErrorFunction(format string, args ...any) (any, error) {
 	return nil, fmt.Errorf(format, args...)
 }

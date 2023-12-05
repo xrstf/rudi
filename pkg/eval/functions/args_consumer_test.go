@@ -221,3 +221,33 @@ func TestExpressionConsumer(t *testing.T) {
 		})
 	}
 }
+
+func TestVariadicConsumer(t *testing.T) {
+	testcases := []argsConsumerTestcase{
+		{
+			name:      "variadic request at least 1 item",
+			args:      []ast.Expression{},
+			expected:  nil,
+			remaining: 0,
+		},
+		{
+			name: "consume all strings",
+			args: []ast.Expression{
+				ast.String("foo"),
+				ast.Bool(true),
+				ast.Null{},
+			},
+			expected:  []any{"foo", "true", ""},
+			remaining: 0,
+		},
+	}
+
+	coalescer := coalescing.NewHumane()
+	ctx := types.NewContext(types.Document{}, nil, nil, coalescer)
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.Test(t, ctx, toVariadicConsumer(stringConsumer))
+		})
+	}
+}

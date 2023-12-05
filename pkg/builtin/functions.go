@@ -19,7 +19,7 @@ var (
 		"delete":  functions.NewBuilder(deleteFunction).WithBangHandler(deleteBangHandler).WithDescription("removes a key from an object or an item from a vector").Build(),
 		"do":      functions.NewBuilder(doFunction).WithDescription("eval a sequence of statements where only one expression is valid").Build(),
 		"empty?":  functions.NewBuilder(isEmptyFunction).WithCoalescer(humaneCoalescer).WithDescription("returns true when the given value is empty-ish (0, false, null, \"\", ...)").Build(),
-		"error":   functions.NewBuilder(errorFunction).WithDescription("returns an error").Build(),
+		"error":   functions.NewBuilder(errorFunction, fmtErrorFunction).WithDescription("returns an error").Build(),
 		"has?":    functions.NewBuilder(hasFunction).WithDescription("returns true if the given symbol's path expression points to an existing value").Build(),
 		"if":      functions.NewBuilder(ifElseFunction, ifFunction).WithDescription("evaluate one of two expressions based on a condition").Build(),
 		"set":     functions.NewBuilder(setFunction).WithDescription("set a value in a variable/document, only really useful with ! modifier (set!)").Build(),

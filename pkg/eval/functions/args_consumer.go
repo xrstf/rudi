@@ -222,8 +222,16 @@ func contextConsumer(ctx types.Context, args []cachedExpression) (asserted []any
 	return []any{ctx}, args, nil
 }
 
+// toVariadicConsumer wraps a singular consumer to consume all remaining args. In constrast to
+// Go, variadic arguments must have at least 1 item (i.e. calling func(foo string, a ...int) with
+// ("abc") only is invalid).
 func toVariadicConsumer(singleConsumer argsConsumer) argsConsumer {
 	return func(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
+		// at least one argument is required, otherwise variadics do not match
+		if len(args) == 0 {
+			return nil, nil, nil
+		}
+
 		leftover := args
 		result := []any{}
 

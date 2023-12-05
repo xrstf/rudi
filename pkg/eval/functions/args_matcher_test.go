@@ -217,6 +217,10 @@ func TestNewArgsMatcherSignatures(t *testing.T) {
 			invalid: true,
 		},
 		{
+			name: "accept only variadic arg",
+			fun:  func(...int64) (any, error) { panic("") },
+		},
+		{
 			name: "accept variadic basic arg",
 			fun:  func(string, []any, ...int64) (any, error) { panic("") },
 		},
@@ -332,11 +336,10 @@ func TestArgsMatcher(t *testing.T) {
 			expected: []any{ast.Shim{Value: 1}},
 		},
 		{
-			name:     "basic variadic parameter with no args",
-			fun:      func(...string) (any, error) { return nil, nil },
-			args:     []ast.Expression{},
-			match:    true,
-			expected: []any{},
+			name:  "variadic parameters require at least 1 item",
+			fun:   func(...string) (any, error) { return nil, nil },
+			args:  []ast.Expression{},
+			match: false,
 		},
 		{
 			name:     "basic variadic parameter",
@@ -353,11 +356,10 @@ func TestArgsMatcher(t *testing.T) {
 			expected: []any{"foo", "bar"},
 		},
 		{
-			name:     "variadic can be empty",
-			fun:      func(string, ...string) (any, error) { return nil, nil },
-			args:     []ast.Expression{ast.String("foo")},
-			match:    true,
-			expected: []any{"foo"},
+			name:  "variadic cannot be empty",
+			fun:   func(string, ...string) (any, error) { return nil, nil },
+			args:  []ast.Expression{ast.String("foo")},
+			match: false,
 		},
 		{
 			name: "variadic slices",

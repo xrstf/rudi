@@ -9,17 +9,16 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func integerAddFunction(a, b int64, extra ...int64) (any, error) {
-	sum := a + b
+func integerAddFunction(base int64, extra ...int64) (any, error) {
 	for _, num := range extra {
-		sum += num
+		base += num
 	}
 
-	return sum, nil
+	return base, nil
 }
 
-func numberAddFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
-	sum := a.MustToFloat() + b.MustToFloat()
+func numberAddFunction(base ast.Number, extra ...ast.Number) (any, error) {
+	sum := base.MustToFloat()
 	for _, num := range extra {
 		sum += num.MustToFloat()
 	}
@@ -27,17 +26,16 @@ func numberAddFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
 	return sum, nil
 }
 
-func integerSubFunction(a, b int64, extra ...int64) (any, error) {
-	diff := a - b
+func integerSubFunction(base int64, extra ...int64) (any, error) {
 	for _, num := range extra {
-		diff -= num
+		base -= num
 	}
 
-	return diff, nil
+	return base, nil
 }
 
-func numberSubFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
-	diff := a.MustToFloat() - b.MustToFloat()
+func numberSubFunction(base ast.Number, extra ...ast.Number) (any, error) {
+	diff := base.MustToFloat()
 	for _, num := range extra {
 		diff -= num.MustToFloat()
 	}
@@ -45,17 +43,16 @@ func numberSubFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
 	return diff, nil
 }
 
-func integerMultFunction(a, b int64, extra ...int64) (any, error) {
-	product := a * b
+func integerMultFunction(base int64, extra ...int64) (any, error) {
 	for _, num := range extra {
-		product *= num
+		base *= num
 	}
 
-	return product, nil
+	return base, nil
 }
 
-func numberMultFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
-	product := a.MustToFloat() * b.MustToFloat()
+func numberMultFunction(base ast.Number, extra ...ast.Number) (any, error) {
+	product := base.MustToFloat()
 	for _, num := range extra {
 		product *= num.MustToFloat()
 	}
@@ -63,30 +60,20 @@ func numberMultFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
 	return product, nil
 }
 
-func integerDivFunction(a, b int64, extra ...int64) (any, error) {
-	if b == 0 {
-		return nil, errors.New("division by zero")
-	}
-
-	result := a / b
-
+func integerDivFunction(base int64, extra ...int64) (any, error) {
 	for _, num := range extra {
 		if num == 0 {
 			return nil, errors.New("division by zero")
 		}
 
-		result /= num
+		base /= num
 	}
 
-	return result, nil
+	return base, nil
 }
 
-func numberDivFunction(a, b ast.Number, extra ...ast.Number) (any, error) {
-	if b.MustToFloat() == 0 {
-		return nil, errors.New("division by zero")
-	}
-
-	result := a.MustToFloat() / b.MustToFloat()
+func numberDivFunction(base ast.Number, extra ...ast.Number) (any, error) {
+	result := base.MustToFloat()
 
 	for _, num := range extra {
 		if num.MustToFloat() == 0 {

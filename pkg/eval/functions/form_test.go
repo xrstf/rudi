@@ -83,39 +83,6 @@ func TestFormCalling(t *testing.T) {
 			},
 		},
 		{
-			name: "additional variadic parameter without args",
-			fun: func(a string, b string, c ...int64) (any, error) {
-				if a != "foo" {
-					return false, fmt.Errorf("expected %q, got %q", "foo", a)
-				}
-
-				if b != "bar" {
-					return false, fmt.Errorf("expected %q, got %q", "bar", b)
-				}
-
-				if len(c) != 0 {
-					return false, fmt.Errorf("expected 0 ints, got %d", len(c))
-				}
-
-				return true, nil
-			},
-			args: []ast.Expression{
-				ast.String("foo"),
-				ast.String("bar"),
-			},
-		},
-		{
-			name: "empty variadic function",
-			fun: func(c ...int64) (any, error) {
-				if len(c) != 0 {
-					return false, fmt.Errorf("expected 0 ints, got %d", len(c))
-				}
-
-				return true, nil
-			},
-			args: []ast.Expression{},
-		},
-		{
 			name: "only variadic arguments",
 			fun: func(c ...int64) (any, error) {
 				if len(c) != 3 {
