@@ -20,26 +20,30 @@ type Function struct {
 
 var _ types.Function = &Function{}
 
-func NewFunction(description string, funcs ...any) *Function {
-	forms := make([]form, len(funcs))
+func NewFunction(forms ...any) *Function {
+	funcForms := make([]form, len(forms))
 
-	for i := range funcs {
-		funcForm, err := newForm(funcs[i])
+	for i := range forms {
+		funcForm, err := newForm(forms[i])
 		if err != nil {
 			panic(fmt.Sprintf("Form #%d is invalid: %v", i, err))
 		}
 
-		forms[i] = funcForm
+		funcForms[i] = funcForm
 	}
 
 	return &Function{
-		forms:       forms,
-		description: description,
+		forms: funcForms,
 	}
 }
 
 func (f *Function) Description() string {
 	return f.description
+}
+
+func (f *Function) WithDescription(s string) *Function {
+	f.description = s
+	return f
 }
 
 func (f *Function) WithCoalescer(c coalescing.Coalescer) *Function {
