@@ -5,6 +5,7 @@ package builtin
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 )
 
@@ -21,4 +22,22 @@ func fromBase64Function(encoded string) (any, error) {
 	}
 
 	return string(decoded), nil
+}
+
+func toJSONFunction(value any) (any, error) {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return string(encoded), nil
+}
+
+func fromJSONFunction(encoded string) (any, error) {
+	var result any
+	if err := json.Unmarshal([]byte(encoded), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
