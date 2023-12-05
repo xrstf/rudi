@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -361,88 +362,178 @@ func TestLikeFunction(t *testing.T) {
 	}
 }
 
-func TestLtFunction(t *testing.T) {
-	testcases := []testutil.Testcase{
+type comparisonTestcase struct {
+	left  any
+	right any
+	lt    bool
+	lte   bool
+	gt    bool
+	gte   bool
+}
+
+func TestInvalidComparisonFunctions(t *testing.T) {
+	testcases := []comparisonTestcase{
 		{
-			Expression: `(lt?)`,
-			Invalid:    true,
+			left:  3,
+			right: []any{},
 		},
 		{
-			Expression: `(lt? true)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? "too" "many" "args")`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? identifier "foo")`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? "foo" identifier)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? 3 "strings")`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? 3 3.1)`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? 3 [1 2 3])`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? 3 {foo "bar"})`,
-			Invalid:    true,
-		},
-		{
-			Expression: `(lt? 3 3)`,
-			Expected:   false,
-		},
-		{
-			Expression: `(lt? 2 (+ 1 2))`,
-			Expected:   true,
-		},
-		{
-			Expression: `(lt? 2 3)`,
-			Expected:   true,
-		},
-		{
-			Expression: `(lt? -3 2)`,
-			Expected:   true,
-		},
-		{
-			Expression: `(lt? -3 -5)`,
-			Expected:   false,
-		},
-		{
-			Expression: `(lt? 3.4 3.4)`,
-			Expected:   false,
-		},
-		{
-			Expression: `(lt? 2.4 (+ 1.4 2))`,
-			Expected:   true,
-		},
-		{
-			Expression: `(lt? 2.4 3.4)`,
-			Expected:   true,
-		},
-		{
-			Expression: `(lt? -3.4 2.4)`,
-			Expected:   true,
-		},
-		{
-			Expression: `(lt? -3.4 -5.4)`,
-			Expected:   false,
+			left:  []any{},
+			right: 3,
 		},
 	}
 
-	for _, testcase := range testcases {
-		testcase.Functions = AllFunctions
-		t.Run(testcase.String(), testcase.Run)
+	funcs := []func(ctx types.Context, left, right any) (any, error){
+		ltFunction,
+		lteFunction,
+		gtFunction,
+		gteFunction,
+	}
+
+	ctx := types.NewContext(types.Document{}, nil, nil, nil)
+
+	for _, tc := range testcases {
+		for _, f := range funcs {
+			_, err := f(ctx, tc.left, tc.right)
+			if err == nil {
+				t.Errorf("Should have errored on %v <-> %v", tc.left, tc.right)
+			}
+		}
+	}
+}
+
+func TestComparisonFunctions(t *testing.T) {
+	testcases := []comparisonTestcase{
+		{
+			left:  0,
+			right: 0,
+			lt:    false,
+			lte:   true,
+			gt:    false,
+			gte:   true,
+		},
+		{
+			left:  0,
+			right: 1,
+			lt:    true,
+			lte:   true,
+			gt:    false,
+			gte:   false,
+		},
+		{
+			left:  0,
+			right: -1,
+			lt:    false,
+			lte:   false,
+			gt:    true,
+			gte:   true,
+		},
+		{
+			left:  -3,
+			right: 4.1,
+			lt:    true,
+			lte:   true,
+			gt:    false,
+			gte:   false,
+		},
+		{
+			left:  "0",
+			right: "-1",
+			lt:    false,
+			lte:   false,
+			gt:    true,
+			gte:   true,
+		},
+		{
+			left:  true,
+			right: false,
+			lt:    false,
+			lte:   false,
+			gt:    true,
+			gte:   true,
+		},
+		{
+			left:  "foo",
+			right: "bar",
+			lt:    false,
+			lte:   false,
+			gt:    true,
+			gte:   true,
+		},
+	}
+
+	ctx := types.NewContext(types.Document{}, nil, nil, nil)
+
+	for _, tc := range testcases {
+		t.Run("", func(t *testing.T) {
+			lt, err := ltFunction(ctx, tc.left, tc.right)
+			if err != nil {
+				t.Errorf("lt returned error: %v", err)
+			} else if lt != tc.lt {
+				t.Errorf("Expected %v < %v, but didn't get that result", tc.left, tc.right)
+			}
+
+			lte, err := lteFunction(ctx, tc.left, tc.right)
+			if err != nil {
+				t.Errorf("lte returned error: %v", err)
+			} else if lte != tc.lte {
+				t.Errorf("Expected %v <= %v, but didn't get that result", tc.left, tc.right)
+			}
+
+			gt, err := gtFunction(ctx, tc.left, tc.right)
+			if err != nil {
+				t.Errorf("gt returned error: %v", err)
+			} else if gt != tc.gt {
+				t.Errorf("Expected %v > %v, but didn't get that result", tc.left, tc.right)
+			}
+
+			gte, err := gteFunction(ctx, tc.left, tc.right)
+			if err != nil {
+				t.Errorf("gte returned error: %v", err)
+			} else if gte != tc.gte {
+				t.Errorf("Expected %v >= %v, but didn't get that result", tc.left, tc.right)
+			}
+		})
+	}
+}
+
+func TestComparisonRudiFunctions(t *testing.T) {
+	testcases := []testutil.Testcase{
+		{
+			Expression: `(%s?)`,
+		},
+		{
+			Expression: `(%s? true)`,
+		},
+		{
+			Expression: `(%s? "too" "many" "args")`,
+		},
+		{
+			Expression: `(%s? identifier "foo")`,
+		},
+		{
+			Expression: `(%s? "foo" identifier)`,
+		},
+		{
+			Expression: `(%s? 3 "strings")`,
+		},
+		{
+			Expression: `(%s? 3 [1 2 3])`,
+		},
+		{
+			Expression: `(%s? 3 {foo "bar"})`,
+		},
+	}
+
+	for _, fun := range []string{"lt", "lte", "gt", "gte"} {
+		for _, tc := range testcases {
+			test := testutil.Testcase{
+				Expression: fmt.Sprintf(tc.Expression, fun),
+				Functions:  AllFunctions,
+				Invalid:    true,
+			}
+
+			t.Run(test.String(), test.Run)
+		}
 	}
 }

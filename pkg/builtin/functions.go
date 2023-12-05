@@ -37,10 +37,10 @@ var (
 		"identical?": functions.NewBuilder(identicalFunction).WithDescription("like `eq?`, but always uses strict coalecsing").Build(),
 		"like?":      functions.NewBuilder(likeFunction).WithDescription("like `eq?`, but always uses humane coalecsing").Build(),
 
-		"lt?":  functions.NewBuilder(ltCoalescer).WithDescription("returns a < b").Build(),
-		"lte?": functions.NewBuilder(lteCoalescer).WithDescription("returns a <= b").Build(),
-		"gt?":  functions.NewBuilder(gtCoalescer).WithDescription("returns a > b").Build(),
-		"gte?": functions.NewBuilder(gteCoalescer).WithDescription("returns a >= b").Build(),
+		"lt?":  functions.NewBuilder(ltFunction).WithDescription("returns a < b").Build(),
+		"lte?": functions.NewBuilder(lteFunction).WithDescription("returns a <= b").Build(),
+		"gt?":  functions.NewBuilder(gtFunction).WithDescription("returns a > b").Build(),
+		"gte?": functions.NewBuilder(gteFunction).WithDescription("returns a >= b").Build(),
 	}
 
 	addRudiFunction      = functions.NewBuilder(integerAddFunction, numberAddFunction).WithDescription("returns the sum of all of its arguments").Build()

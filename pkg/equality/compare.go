@@ -61,8 +61,8 @@ func Compare(c coalescing.Coalescer, left, right any) (int, error) {
 		return compared, nil
 	}
 
-	// if either of the sides is a int, convert the other to a int
-	matched, compared, err = compareIntish(c, left, right)
+	// if either of the sides is a float, convert the other to a float
+	matched, compared, err = compareFloatish(c, left, right)
 	if err != nil {
 		return doNotCare, err
 	}
@@ -70,8 +70,8 @@ func Compare(c coalescing.Coalescer, left, right any) (int, error) {
 		return compared, nil
 	}
 
-	// if either of the sides is a float, convert the other to a float
-	matched, compared, err = compareFloatish(c, left, right)
+	// if either of the sides is a int, convert the other to a int
+	matched, compared, err = compareIntish(c, left, right)
 	if err != nil {
 		return doNotCare, err
 	}

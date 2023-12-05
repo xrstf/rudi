@@ -23,7 +23,7 @@ func identicalFunction(ctx types.Context, left, right any) (any, error) {
 	return equality.Equal(coalescing.NewStrict(), left, right)
 }
 
-func ltCoalescer(ctx types.Context, left, right any) (any, error) {
+func ltFunction(ctx types.Context, left, right any) (any, error) {
 	compared, err := equality.Compare(ctx.Coalesce(), left, right)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func ltCoalescer(ctx types.Context, left, right any) (any, error) {
 	}
 }
 
-func lteCoalescer(ctx types.Context, left, right any) (any, error) {
+func lteFunction(ctx types.Context, left, right any) (any, error) {
 	compared, err := equality.Compare(ctx.Coalesce(), left, right)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func lteCoalescer(ctx types.Context, left, right any) (any, error) {
 	}
 }
 
-func gtCoalescer(ctx types.Context, left, right any) (any, error) {
+func gtFunction(ctx types.Context, left, right any) (any, error) {
 	compared, err := equality.Compare(ctx.Coalesce(), left, right)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func gtCoalescer(ctx types.Context, left, right any) (any, error) {
 	}
 }
 
-func gteCoalescer(ctx types.Context, left, right any) (any, error) {
+func gteFunction(ctx types.Context, left, right any) (any, error) {
 	compared, err := equality.Compare(ctx.Coalesce(), left, right)
 	if err != nil {
 		return nil, err
