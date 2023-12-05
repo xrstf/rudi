@@ -67,7 +67,7 @@ Welcome to the Rudi documentation :smile:
 * [`*`](functions/math-mult.md) – returns the product of all of its arguments
 * [`+`](functions/math-add.md) – returns the sum of all of its arguments
 * [`-`](functions/math-sub.md) – returns arg1 - arg2 - .. - argN
-* [`/`](functions/math-div.md) – returns arg1 / arg2 / .. / argN
+* [`/`](functions/math-div.md) – returns arg1 / arg2 / .. / argN (always a floating point division, regardless of arguments)
 
 ## Strings Functions
 

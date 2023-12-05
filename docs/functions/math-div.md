@@ -3,9 +3,12 @@
 `/` returns the quotient of dividing all arguments. Arguments must evaluate to
 numeric values. `div` is an alias for this function.
 
+To prevent ambiguity, this function always performs floating point divisions,
+regardless if all its arguments are integer numbers.
+
 ## Examples
 
-* `(/ 9 3 2)` -> `1.5` ((9 / 3) / 2)
+* `(/ 9 3 2)` -> `1.5` ((9.0 / 3.0) / 2.0)
 * `(/ 1 0)` -> invalid: division by zero
 
 ## Forms
