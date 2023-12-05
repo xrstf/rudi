@@ -66,411 +66,310 @@ func reverseVectorFunction(vec []any) (any, error) {
 	return result, nil
 }
 
-// (range VECTOR [item] expr+)
-// (range VECTOR [i item] expr+)
-// (range OBJECT [val] expr+)
-// (range OBJECT [key val] expr+)
-func rangeFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	// decode desired loop variable namings, as that's cheap to do
-	loopIndexName, loopVarName, err := evalNamingVector(ctx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
-	}
-
-	// evaluate source list
-	var source any
-
-	innerCtx := ctx
-
-	innerCtx, source, err = eval.EvalExpression(innerCtx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate source: %w", err)
-	}
-
-	var result any
-
-	// list over vector elements
-	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
-		for i, item := range sourceVector {
-			// do not use separate contexts for each loop iteration, as the loop might build up a counter
-			innerCtx = innerCtx.WithVariable(loopVarName, item)
-			if loopIndexName != "" {
-				innerCtx = innerCtx.WithVariable(loopIndexName, i)
-			}
-
-			for _, expr := range args[2:] {
-				innerCtx, result, err = eval.EvalExpression(innerCtx, expr)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		return result, nil
-	}
-
-	// list over object elements
-	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
-		for key, value := range sourceObject {
-			// do not use separate contexts for each loop iteration, as the loop might build up a counter
-			innerCtx = innerCtx.WithVariable(loopVarName, value)
-			if loopIndexName != "" {
-				innerCtx = innerCtx.WithVariable(loopIndexName, key)
-			}
-
-			for _, expr := range args[2:] {
-				innerCtx, result, err = eval.EvalExpression(innerCtx, expr)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		return result, nil
-	}
-
-	return nil, fmt.Errorf("cannot range over %T", source)
-}
-
-// (map VECTOR identifier)
-// (map VECTOR [item] expr+)
-// (map VECTOR [i item] expr+)
-// (map OBJECT identifier)
-// (map OBJECT [item] expr+)
-// (map OBJECT [i item] expr+)
-func mapFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	// evaluate the first argument;
-	// (map (map .foo +) stuff) should work, so the first argument only needs to _evaluate_
-	// to a vector/object, it doesn't need to be a literal objectnode/vectornode.
-	innerCtx, source, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	if err := checkIterable(ctx, source); err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	// handle plain function calls
-	// (map VECTOR identifier)
-	// (map OBJECT identifier)
-	if len(args) == 2 {
-		return anonymousMapFunction(innerCtx, source, args[1])
-	}
-
-	// all further forms are (map THING NAMING_VEC EXPR+)
-
+// (range VECTOR [item] expr)
+// (range VECTOR [i item] expr)
+func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression, expr ast.Expression) (any, error) {
 	// decode desired loop variable namings
-	indexVarName, valueVarName, err := evalNamingVector(innerCtx, args[1])
+	loopIndexName, loopVarName, err := decodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	mapItem := func(ctx types.Context) (types.Context, any, error) {
-		var result any
+	var (
+		result  any
+		loopCtx = ctx
+	)
 
-		for _, expr := range args[2:] {
-			ctx, result, err = eval.EvalExpression(ctx, expr)
-			if err != nil {
-				return ctx, nil, err
-			}
+	for i, item := range data {
+		// do not use separate contexts for each loop iteration, as the loop might build up a counter
+		loopCtx = loopCtx.WithVariable(loopVarName, item)
+		if loopIndexName != "" {
+			loopCtx = loopCtx.WithVariable(loopIndexName, i)
 		}
 
-		return ctx, result, nil
-	}
-
-	// list over vector elements
-	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := make([]any, len(sourceVector))
-
-		for i, item := range sourceVector {
-			// do not use separate contexts for each loop iteration, as the loop might build up a counter
-			innerCtx = innerCtx.WithVariable(valueVarName, item)
-			if indexVarName != "" {
-				innerCtx = innerCtx.WithVariable(indexVarName, i)
-			}
-
-			var result any
-			innerCtx, result, err = mapItem(innerCtx)
-			if err != nil {
-				return nil, err
-			}
-
-			output[i] = result
-		}
-
-		return output, nil
-	}
-
-	// list over object elements
-	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := map[string]any{}
-
-		for key, value := range sourceObject {
-			// do not use separate contexts for each loop iteration, as the loop might build up a counter
-			innerCtx = innerCtx.WithVariable(valueVarName, value)
-			if indexVarName != "" {
-				innerCtx = innerCtx.WithVariable(indexVarName, key)
-			}
-
-			var result any
-			innerCtx, result, err = mapItem(innerCtx)
-			if err != nil {
-				return nil, err
-			}
-
-			output[key] = result
-		}
-
-		return output, nil
-	}
-
-	return nil, fmt.Errorf("cannot map %T", source)
-}
-
-// (map VECTOR identifier)
-// (map OBJECT identifier)
-func anonymousMapFunction(ctx types.Context, source any, expr ast.Expression) (any, error) {
-	identifier, ok := expr.(ast.Identifier)
-	if !ok {
-		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
-	}
-
-	// call the function
-	innerCtx := ctx
-
-	mapItem := func(ctx types.Context, item any) (types.Context, any, error) {
-		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(item)})
-	}
-
-	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := make([]any, len(vector))
-
-		for i, item := range vector {
-			var (
-				result any
-				err    error
-			)
-
-			innerCtx, result, err = mapItem(innerCtx, item)
-			if err != nil {
-				return nil, err
-			}
-
-			output[i] = result
-		}
-
-		return output, nil
-	}
-
-	if object, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := map[string]any{}
-
-		for key, value := range object {
-			var (
-				result any
-				err    error
-			)
-
-			innerCtx, result, err = mapItem(innerCtx, value)
-			if err != nil {
-				return nil, err
-			}
-
-			output[key] = result
-		}
-
-		return output, nil
-	}
-
-	// should never happen, as this function call is already gated by a type check
-	return nil, fmt.Errorf("cannot apply map to %T", source)
-}
-
-// (filter VECTOR identifier)
-// (filter VECTOR [item] expr+)
-// (filter VECTOR [i item] expr+)
-// (filter OBJECT identifier)
-// (filter OBJECT [val] expr+)
-// (filter OBJECT [key val] expr+)
-func filterFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	// evaluate the first argument;
-	// (filter (filter .foo +) stuff) should work, so the first argument only needs to _evaluate_
-	// to a vector/object, it doesn't need to be a literal objectnode/vectornode.
-	innerCtx, source, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	if err := checkIterable(ctx, source); err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
-	// handle plain function calls
-	// (filter VECTOR identifier)
-	// (filter OBJECT identifier)
-	if len(args) == 2 {
-		return anonymousFilterFunction(innerCtx, source, args[1])
-	}
-
-	// all further forms are (map THING NAMING_VEC EXPR+)
-
-	// decode desired loop variable namings
-	indexVarName, valueVarName, err := evalNamingVector(innerCtx, args[1])
-	if err != nil {
-		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
-	}
-
-	filter := func(ctx types.Context) (types.Context, bool, error) {
-		var result any
-
-		for _, expr := range args[2:] {
-			ctx, result, err = eval.EvalExpression(ctx, expr)
-			if err != nil {
-				return ctx, false, err
-			}
-		}
-
-		valid, err := ctx.Coalesce().ToBool(result)
+		loopCtx, result, err = eval.EvalExpression(loopCtx, expr)
 		if err != nil {
-			return ctx, false, fmt.Errorf("expression: %w", err)
+			return nil, err
 		}
-
-		return ctx, valid, nil
 	}
 
-	// list over vector elements
-	if sourceVector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := []any{}
-
-		for i, item := range sourceVector {
-			// do not use separate contexts for each loop iteration, as the loop might build up a counter
-			innerCtx = innerCtx.WithVariable(valueVarName, item)
-			if indexVarName != "" {
-				innerCtx = innerCtx.WithVariable(indexVarName, i)
-			}
-
-			var result bool
-			innerCtx, result, err = filter(innerCtx)
-			if err != nil {
-				return nil, err
-			}
-
-			if result {
-				output = append(output, sourceVector[i])
-			}
-		}
-
-		return output, nil
-	}
-
-	// list over object elements
-	if sourceObject, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := map[string]any{}
-
-		for key, value := range sourceObject {
-			// do not use separate contexts for each loop iteration, as the loop might build up a counter
-			innerCtx = innerCtx.WithVariable(valueVarName, value)
-			if indexVarName != "" {
-				innerCtx = innerCtx.WithVariable(indexVarName, key)
-			}
-
-			var result bool
-			innerCtx, result, err = filter(innerCtx)
-			if err != nil {
-				return nil, err
-			}
-
-			if result {
-				output[key] = result
-			}
-		}
-
-		return output, nil
-	}
-
-	return nil, fmt.Errorf("cannot map %T", source)
+	return result, nil
 }
 
-// (filter VECTOR identifier)
-// (filter OBJECT identifier)
-func anonymousFilterFunction(ctx types.Context, source any, expr ast.Expression) (any, error) {
-	identifier, ok := expr.(ast.Identifier)
-	if !ok {
-		return nil, fmt.Errorf("argument #1: expected identifier, got %T", expr)
+// (range OBJECT [val] expr)
+// (range OBJECT [key val] expr)
+func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.Expression, expr ast.Expression) (any, error) {
+	// decode desired loop variable namings
+	loopIndexName, loopVarName, err := decodeNamingVector(namingVec)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	// call the function
-	innerCtx := ctx
+	var (
+		result  any
+		loopCtx = ctx
+	)
 
-	filterItem := func(ctx types.Context, item any) (types.Context, bool, error) {
+	for key, value := range data {
+		// do not use separate contexts for each loop iteration, as the loop might build up a counter
+		loopCtx = loopCtx.WithVariable(loopVarName, value)
+		if loopIndexName != "" {
+			loopCtx = loopCtx.WithVariable(loopIndexName, key)
+		}
+
+		loopCtx, result, err = eval.EvalExpression(loopCtx, expr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
+}
+
+// itemHandlerFunc works for iterating over vectors as well as over objects.
+type itemHandlerFunc func(ctx types.Context, _ any, value any) (types.Context, any, error)
+
+// (map VECTOR identifier)
+func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expression) (any, error) {
+	// type check
+	identifier, ok := ident.(ast.Identifier)
+	if !ok {
+		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
+	}
+
+	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+	}
+
+	return mapVector(ctx, data, mapHandler)
+}
+
+// (map VECTOR [item] expr)
+// (map VECTOR [i item] expr)
+func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Expression, expr ast.Expression) (any, error) {
+	indexVarName, valueVarName, err := decodeNamingVector(namingVec)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
+	}
+
+	mapHandler := func(ctx types.Context, index any, value any) (types.Context, any, error) {
+		ctx = ctx.WithVariable(valueVarName, value)
+		if indexVarName != "" {
+			ctx = ctx.WithVariable(indexVarName, index)
+		}
+
+		return eval.EvalExpression(ctx, expr)
+	}
+
+	return mapVector(ctx, data, mapHandler)
+}
+
+func mapVector(ctx types.Context, data []any, f itemHandlerFunc) (any, error) {
+	output := make([]any, len(data))
+	loopCtx := ctx
+
+	for i, item := range data {
 		var (
 			result any
 			err    error
 		)
 
-		ctx, result, err = eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(item)})
+		// do not use separate contexts for each loop iteration, as the loop might build up a counter
+		loopCtx, result, err = f(loopCtx, i, item)
 		if err != nil {
-			return ctx, false, err
+			return nil, err
+		}
+
+		output[i] = result
+	}
+
+	return output, nil
+}
+
+// (map OBJECT identifier)
+func mapObjectAnonymousFunction(ctx types.Context, data map[string]any, ident ast.Expression) (any, error) {
+	// type check
+	identifier, ok := ident.(ast.Identifier)
+	if !ok {
+		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
+	}
+
+	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+	}
+
+	return mapObject(ctx, data, mapHandler)
+}
+
+// (map OBJECT [item] expr)
+// (map OBJECT [i item] expr)
+func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingVec ast.Expression, expr ast.Expression) (any, error) {
+	keyVarName, valueVarName, err := decodeNamingVector(namingVec)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
+	}
+
+	mapHandler := func(ctx types.Context, key any, value any) (types.Context, any, error) {
+		ctx = ctx.WithVariable(valueVarName, value)
+		if keyVarName != "" {
+			ctx = ctx.WithVariable(keyVarName, key)
+		}
+
+		return eval.EvalExpression(ctx, expr)
+	}
+
+	return mapObject(ctx, data, mapHandler)
+}
+
+func mapObject(ctx types.Context, data map[string]any, f itemHandlerFunc) (any, error) {
+	output := map[string]any{}
+	loopCtx := ctx
+
+	for key, value := range data {
+		var (
+			result any
+			err    error
+		)
+
+		// do not use separate contexts for each loop iteration, as the loop might build up a counter
+		loopCtx, result, err = f(loopCtx, key, value)
+		if err != nil {
+			return nil, err
+		}
+
+		output[key] = result
+	}
+
+	return output, nil
+}
+
+// (filter VECTOR identifier)
+func filterVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expression) (any, error) {
+	// type check
+	identifier, ok := ident.(ast.Identifier)
+	if !ok {
+		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
+	}
+
+	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+	}
+
+	return filterVector(ctx, data, mapHandler)
+}
+
+// (filter VECTOR [item] expr)
+// (filter VECTOR [i item] expr)
+func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Expression, expr ast.Expression) (any, error) {
+	indexVarName, valueVarName, err := decodeNamingVector(namingVec)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
+	}
+
+	mapHandler := func(ctx types.Context, index any, value any) (types.Context, any, error) {
+		ctx = ctx.WithVariable(valueVarName, value)
+		if indexVarName != "" {
+			ctx = ctx.WithVariable(indexVarName, index)
+		}
+
+		return eval.EvalExpression(ctx, expr)
+	}
+
+	return filterVector(ctx, data, mapHandler)
+}
+
+func filterVector(ctx types.Context, data []any, f itemHandlerFunc) (any, error) {
+	output := []any{}
+	loopCtx := ctx
+
+	for i, item := range data {
+		var (
+			result any
+			err    error
+		)
+
+		loopCtx, result, err = f(loopCtx, i, item)
+		if err != nil {
+			return nil, err
 		}
 
 		valid, err := ctx.Coalesce().ToBool(result)
 		if err != nil {
-			return ctx, false, fmt.Errorf("expression: %w", err)
+			return nil, fmt.Errorf("expression: %w", err)
 		}
 
-		return ctx, valid, nil
-	}
-
-	if vector, err := ctx.Coalesce().ToVector(source); err == nil {
-		output := []any{}
-
-		for i, item := range vector {
-			var (
-				result bool
-				err    error
-			)
-
-			innerCtx, result, err = filterItem(innerCtx, item)
-			if err != nil {
-				return nil, err
-			}
-
-			if result {
-				output = append(output, vector[i])
-			}
+		if valid {
+			output = append(output, data[i])
 		}
-
-		return output, nil
 	}
 
-	if object, err := ctx.Coalesce().ToObject(source); err == nil {
-		output := map[string]any{}
-
-		for key, value := range object {
-			var (
-				result bool
-				err    error
-			)
-
-			innerCtx, result, err = filterItem(innerCtx, value)
-			if err != nil {
-				return nil, err
-			}
-
-			if result {
-				output[key] = result
-			}
-		}
-
-		return output, nil
-	}
-
-	// should never happen, as this function call is already gated by a type check
-	return nil, fmt.Errorf("cannot apply filter to %T", source)
+	return output, nil
 }
 
-func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string, valueName string, err error) {
+// (filter OBJECT identifier)
+func filterObjectAnonymousFunction(ctx types.Context, data map[string]any, ident ast.Expression) (any, error) {
+	// type check
+	identifier, ok := ident.(ast.Identifier)
+	if !ok {
+		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
+	}
+
+	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+	}
+
+	return filterObject(ctx, data, mapHandler)
+}
+
+// (filter OBJECT [item] expr)
+// (filter OBJECT [i item] expr)
+func filterObjectExpressionFunction(ctx types.Context, data map[string]any, namingVec ast.Expression, expr ast.Expression) (any, error) {
+	keyVarName, valueVarName, err := decodeNamingVector(namingVec)
+	if err != nil {
+		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
+	}
+
+	mapHandler := func(ctx types.Context, key any, value any) (types.Context, any, error) {
+		ctx = ctx.WithVariable(valueVarName, value)
+		if keyVarName != "" {
+			ctx = ctx.WithVariable(keyVarName, key)
+		}
+
+		return eval.EvalExpression(ctx, expr)
+	}
+
+	return filterObject(ctx, data, mapHandler)
+}
+
+func filterObject(ctx types.Context, data map[string]any, f itemHandlerFunc) (any, error) {
+	output := map[string]any{}
+	loopCtx := ctx
+
+	for key, value := range data {
+		var (
+			result any
+			err    error
+		)
+
+		loopCtx, result, err = f(loopCtx, key, value)
+		if err != nil {
+			return nil, err
+		}
+
+		valid, err := ctx.Coalesce().ToBool(result)
+		if err != nil {
+			return nil, fmt.Errorf("expression: %w", err)
+		}
+
+		if valid {
+			output[key] = data[key]
+		}
+	}
+
+	return output, nil
+}
+
+func decodeNamingVector(expr ast.Expression) (indexName string, valueName string, err error) {
 	namingVector, ok := expr.(ast.VectorNode)
 	if !ok {
 		return "", "", fmt.Errorf("expected a vector, but got %T", expr)

@@ -6,7 +6,6 @@ package builtin
 import (
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/eval/util"
 	"go.xrstf.de/rudi/pkg/eval/util/native"
 )
 
@@ -96,9 +95,24 @@ var (
 		"reverse":   reverseRudiFunction,
 		"contains?": containsRudiFunction,
 
-		"range":  util.NewRawFunction(rangeFunction, "allows to iterate (loop) over a vector or object").MinArgs(3),
-		"map":    util.NewRawFunction(mapFunction, "applies an expression to every element in a vector or object").MinArgs(2),
-		"filter": util.NewRawFunction(filterFunction, "returns a copy of a given vector/object with only those elements remaining that satisfy a condition").MinArgs(2),
+		"range": native.NewFunction(
+			rangeVectorFunction,
+			rangeObjectFunction,
+		).WithDescription("allows to iterate (loop) over a vector or object"),
+
+		"map": native.NewFunction(
+			mapVectorExpressionFunction,
+			mapObjectExpressionFunction,
+			mapVectorAnonymousFunction,
+			mapObjectAnonymousFunction,
+		).WithDescription("applies an expression to every element in a vector or object"),
+
+		"filter": native.NewFunction(
+			filterVectorExpressionFunction,
+			filterObjectExpressionFunction,
+			filterVectorAnonymousFunction,
+			filterObjectAnonymousFunction,
+		).WithDescription("returns a copy of a given vector/object with only those elements remaining that satisfy a condition"),
 	}
 
 	HashingFunctions = types.Functions{
