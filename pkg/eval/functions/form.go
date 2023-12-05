@@ -13,10 +13,6 @@ import (
 type form struct {
 	fun any
 
-	// TODO: Implement these to optimize matching by exlucing impossible arg sizes right away
-	minArgs int
-	maxArgs int
-
 	matcher *argsMatcher
 
 	// args is filled when calling Match(), so than when calling Call(), we do not have to
@@ -37,8 +33,6 @@ func newForm(fun any) (form, error) {
 
 	return form{
 		fun:     fun,
-		minArgs: -1,
-		maxArgs: -1,
 		matcher: matcher,
 	}, nil
 }

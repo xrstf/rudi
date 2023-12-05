@@ -23,52 +23,53 @@ func isAny(t reflect.Type) bool {
 	return t.Kind() == reflect.Interface && t.Name() == ""
 }
 
-func newConsumerFunc(t reflect.Type) argsConsumer {
+func newConsumerFunc(t reflect.Type) (consumer argsConsumer, argsConsumed int) {
 	switch t.Kind() {
 	case reflect.Bool:
-		return boolConsumer
+		return boolConsumer, 1
 	case reflect.Int64:
-		return intConsumer
+		return intConsumer, 1
 	case reflect.Float64:
-		return floatConsumer
+		return floatConsumer, 1
 	case reflect.String:
-		return stringConsumer
+		return stringConsumer, 1
 	case reflect.Slice:
 		// we only support []any
 		if isAny(t.Elem()) {
-			return vectorConsumer
+			return vectorConsumer, 1
 		}
 
 	case reflect.Map:
 		// we only support map[string]any
 		// TODO: Check key as well.
 		if isAny(t.Elem()) {
-			return objectConsumer
+			return objectConsumer, 1
 		}
 
 	case reflect.Interface:
 		// empty interface (any)
 		if isAny(t) {
-			return anyConsumer
+			return anyConsumer, 1
 		}
 
 		// allow unevaluated access to the argument expression
 		if t.AssignableTo(expressionType) {
-			return expressionConsumer
+			return expressionConsumer, 1
 		}
 
 	case reflect.Struct:
 		// allow to inject the context when required
 		if t.AssignableTo(contextType) {
-			return contextConsumer
+			// this consumer does not consume an argument expression
+			return contextConsumer, 0
 		}
 
 		if t.AssignableTo(numberType) {
-			return numberConsumer
+			return numberConsumer, 1
 		}
 	}
 
-	return nil
+	return nil, 0
 }
 
 func boolConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {

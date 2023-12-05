@@ -216,6 +216,9 @@ func TestNewArgsMatcherSignatures(t *testing.T) {
 			fun:     func(map[string][]any) (any, error) { panic("") },
 			invalid: true,
 		},
+
+		// variadic handling
+
 		{
 			name: "accept only variadic arg",
 			fun:  func(...int64) (any, error) { panic("") },
@@ -241,6 +244,16 @@ func TestNewArgsMatcherSignatures(t *testing.T) {
 			fun:     func(string, ...[]map[string]any) (any, error) { panic("") },
 			invalid: true,
 		},
+		{
+			name:    "reject non-consuming variadics",
+			fun:     func(...types.Context) (any, error) { panic("") },
+			invalid: true,
+		},
+		{
+			name:    "reject non-consuming variadics",
+			fun:     func(string, ...types.Context) (any, error) { panic("") },
+			invalid: true,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -256,6 +269,63 @@ func TestNewArgsMatcherSignatures(t *testing.T) {
 
 			if tc.invalid {
 				t.Fatalf("Should not have accepted the invalid function signature, but did.")
+			}
+		})
+	}
+}
+
+func TestNewArgsMatcherMinMaxArgs(t *testing.T) {
+	testcases := []struct {
+		name    string
+		fun     any
+		minArgs int
+		maxArgs int
+	}{
+		{
+			name:    "no parameters",
+			fun:     func() (any, error) { panic("") },
+			minArgs: 0,
+			maxArgs: 0,
+		},
+		{
+			name:    "simple parameters",
+			fun:     func(string, int64) (any, error) { panic("") },
+			minArgs: 2,
+			maxArgs: 2,
+		},
+		{
+			name:    "contexts do not count",
+			fun:     func(string, int64, types.Context, string, types.Context) (any, error) { panic("") },
+			minArgs: 3,
+			maxArgs: 3,
+		},
+		{
+			name:    "simple parameters with variadic",
+			fun:     func(string, int64, ...string) (any, error) { panic("") },
+			minArgs: 3, // remember, variadics in Rudi require at least 1 arg
+			maxArgs: noLimit,
+		},
+		{
+			name:    "pure variadic",
+			fun:     func(...string) (any, error) { panic("") },
+			minArgs: 1,
+			maxArgs: noLimit,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			matcher, err := newArgsMatcher(tc.fun)
+			if err != nil {
+				t.Fatalf("Failed to accept signature: %v", err)
+			}
+
+			if matcher.minArgs != tc.minArgs {
+				t.Errorf("expected minArgs=%d, got %d", tc.minArgs, matcher.minArgs)
+			}
+
+			if matcher.maxArgs != tc.maxArgs {
+				t.Errorf("expected maxArgs=%d, got %d", tc.maxArgs, matcher.maxArgs)
 			}
 		})
 	}
@@ -444,47 +514,3 @@ func TestArgsMatcher(t *testing.T) {
 		})
 	}
 }
-
-// func mySingleStringFunc(a string, b int64) (any, error) {
-// 	fmt.Printf("a: %q\n", a)
-// 	fmt.Printf("b: %d\n", b)
-// 	return "i was called!", nil
-// }
-
-// func TestFoo(t *testing.T) {
-// 	native, err := newNativeFunction(mySingleStringFunc)
-// 	if err != nil {
-// 		t.Fatalf("Failed to create native func: %v", err)
-// 	}
-
-// 	args := []ast.Expression{
-// 		ast.Number{Value: 3.14},
-// 		ast.Tuple{
-// 			Expressions: []ast.Expression{
-// 				ast.Identifier{Name: "+"},
-// 				ast.Number{Value: 1},
-// 				ast.Number{Value: 2},
-// 			},
-// 		},
-// 	}
-
-// 	ctx := types.NewContext(types.Document{}, nil, builtin.AllFunctions, coalescing.NewHumane())
-// 	cachedArgs := convertArgs(args)
-
-// 	matches, err := native.Match(ctx, cachedArgs)
-// 	if err != nil {
-// 		t.Fatalf("Match() failed: %v", err)
-// 	}
-
-// 	if !matches {
-// 		fmt.Println("does not match")
-// 		return
-// 	}
-
-// 	result, err := native.Call(ctx)
-// 	if err != nil {
-// 		t.Fatalf("Call() failed: %v", err)
-// 	}
-
-// 	fmt.Println(result)
-// }

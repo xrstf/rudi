@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 builds:
-  - dir: cmd/rudi
-    binary: rudi
+  - binary: rudi
+    dir: cmd/rudi
     env:
       # goreleaser does not work with CGO, it could also complicate
       # usage by users in CI/CD systems like Terraform Cloud where

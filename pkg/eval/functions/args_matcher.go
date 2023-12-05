@@ -11,8 +11,13 @@ import (
 	"go.xrstf.de/rudi/pkg/eval/types"
 )
 
+const noLimit = -1
+
 type argsMatcher struct {
 	consumers []argsConsumer
+
+	minArgs int
+	maxArgs int
 }
 
 // newArgsMatcher creates a new argsMatcher for a given function. The function must follow the
@@ -26,13 +31,15 @@ func newArgsMatcher(fun any) (*argsMatcher, error) {
 	}
 
 	// create a list of consumers that will match the function's signature
-	consumers, err := createConsumers(funType)
+	consumers, minArgs, maxArgs, err := createConsumers(funType)
 	if err != nil {
 		return nil, err
 	}
 
 	return &argsMatcher{
 		consumers: consumers,
+		minArgs:   minArgs,
+		maxArgs:   maxArgs,
 	}, nil
 }
 
@@ -53,8 +60,7 @@ func checkReturnValueSignature(funType reflect.Type) error {
 
 // createConsumers converts each function parameter into a consumer, returning the stack of
 // consumers.
-func createConsumers(funType reflect.Type) ([]argsConsumer, error) {
-	consumers := []argsConsumer{}
+func createConsumers(funType reflect.Type) (consumers []argsConsumer, minArgs int, maxArgs int, err error) {
 	variadic := funType.IsVariadic()
 	totalParams := funType.NumIn()
 
@@ -71,24 +77,38 @@ func createConsumers(funType reflect.Type) ([]argsConsumer, error) {
 			parameterType = parameterType.Elem()
 		}
 
-		consumer := newConsumerFunc(parameterType)
+		consumer, argsConsumed := newConsumerFunc(parameterType)
 		if consumer == nil {
-			return nil, fmt.Errorf("cannot handle %v parameters", parameterType)
+			return nil, 0, noLimit, fmt.Errorf("cannot handle %v parameters", parameterType)
 		}
 
 		// Wrap the single consumer into a variadic consumer
 		// that just keeps consuming until all args are gone.
 		if variadicArg {
+			if argsConsumed == 0 {
+				return nil, 0, noLimit, errors.New("cannot have variadic parameter that uses a value that does not consume arguments")
+			}
+
 			consumer = toVariadicConsumer(consumer)
+			maxArgs = noLimit
+			minArgs += argsConsumed
+		} else {
+			maxArgs += argsConsumed
+			minArgs += argsConsumed
 		}
 
 		consumers = append(consumers, consumer)
 	}
 
-	return consumers, nil
+	return
 }
 
 func (c *argsMatcher) Match(ctx types.Context, args []cachedExpression) ([]any, bool, error) {
+	// skip everything if the argument count is already impossible to lead to a match
+	if !c.matchArgCount(len(args)) {
+		return nil, false, nil
+	}
+
 	result := []any{}
 	remaining := args
 
@@ -118,4 +138,16 @@ func (c *argsMatcher) Match(ctx types.Context, args []cachedExpression) ([]any, 
 	}
 
 	return result, true, nil
+}
+
+func (c *argsMatcher) matchArgCount(args int) bool {
+	if args < c.minArgs {
+		return false
+	}
+
+	if c.maxArgs != noLimit && args > c.maxArgs {
+		return false
+	}
+
+	return true
 }
