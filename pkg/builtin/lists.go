@@ -4,7 +4,6 @@
 package builtin
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -14,101 +13,57 @@ import (
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
-func lenFunction(ctx types.Context, args []any) (any, error) {
-	if vector, err := ctx.Coalesce().ToVector(args[0]); err == nil {
-		return len(vector), nil
-	}
-
-	if obj, err := ctx.Coalesce().ToObject(args[0]); err == nil {
-		return len(obj), nil
-	}
-
-	if str, err := ctx.Coalesce().ToString(args[0]); err == nil {
-		return len(str), nil
-	}
-
-	return nil, errors.New("argument is neither a string, vector nor object")
+func vectorLenFunction(vec []any) (any, error) {
+	return len(vec), nil
 }
 
-func appendFunction(ctx types.Context, args []any) (any, error) {
-	acc := args[0]
-	tail := args[1:]
-
-	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
-		result := []any{}
-		result = append(result, vector...)
-		result = append(result, tail...)
-
-		return result, nil
-	}
-
-	str, err := ctx.Coalesce().ToString(acc)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", acc)
-	}
-
-	suffix := ""
-	for i, arg := range tail {
-		argString, err := ctx.Coalesce().ToString(arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, arg)
-		}
-
-		suffix += string(argString)
-	}
-
-	return string(str) + suffix, nil
+func objectLenFunction(obj map[string]any) (any, error) {
+	return len(obj), nil
 }
 
-func prependFunction(ctx types.Context, args []any) (any, error) {
-	acc := args[0]
-	tail := args[1:]
-
-	if vector, err := ctx.Coalesce().ToVector(acc); err == nil {
-		return append(tail, vector...), nil
-	}
-
-	str, err := ctx.Coalesce().ToString(acc)
-	if err != nil {
-		return nil, fmt.Errorf("argument #0 is not neither vector nor string, but %T", acc)
-	}
-
-	prefix := ""
-	for i, arg := range tail {
-		argString, err := ctx.Coalesce().ToString(arg)
-		if err != nil {
-			return nil, fmt.Errorf("argument #%d is not a string, but %T", i+1, arg)
-		}
-
-		prefix += string(argString)
-	}
-
-	return prefix + string(str), nil
+func stringLenFunction(s string) (any, error) {
+	return len(s), nil
 }
 
-func reverseFunction(ctx types.Context, args []any) (any, error) {
-	if str, err := ctx.Coalesce().ToString(args[0]); err == nil {
-		// thank you https://stackoverflow.com/a/10030772
-		result := []rune(str)
-		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-			result[i], result[j] = result[j], result[i]
-		}
+func appendToVectorFunction(base []any, args ...any) (any, error) {
+	result := []any{}
+	result = append(result, base...)
+	result = append(result, args...)
 
-		return string(result), nil
+	return result, nil
+}
+
+func appendToStringFunction(base string, args ...string) (any, error) {
+	return base + strings.Join(args, ""), nil
+}
+
+func prependToVectorFunction(base []any, args ...any) (any, error) {
+	return append(args, base...), nil
+}
+
+func prependToStringFunction(base string, args ...string) (any, error) {
+	return strings.Join(args, "") + base, nil
+}
+
+func reverseStringFunction(s string) (any, error) {
+	// thank you https://stackoverflow.com/a/10030772
+	result := []rune(s)
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
 	}
 
-	if vector, err := ctx.Coalesce().ToVector(args[0]); err == nil {
-		// clone original data
-		result := append([]any{}, vector...)
+	return string(result), nil
+}
 
-		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-			result[i], result[j] = result[j], result[i]
-		}
+func reverseVectorFunction(vec []any) (any, error) {
+	// clone original data
+	result := append([]any{}, vec...)
 
-		return result, nil
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
 	}
 
-	return nil, fmt.Errorf("argument is neither a vector nor a string, but %T", args[0])
+	return result, nil
 }
 
 // (range VECTOR [item] expr+)
@@ -555,29 +510,18 @@ func evalNamingVector(ctx types.Context, expr ast.Expression) (indexName string,
 	return indexName, valueName, nil
 }
 
-func containsFunction(ctx types.Context, args []any) (any, error) {
-	haystack := args[0]
-	needle := args[1]
+func stringContainsFunction(haystack string, needle string) (any, error) {
+	return strings.Contains(haystack, needle), nil
+}
 
-	if strHaystack, err := ctx.Coalesce().ToString(haystack); err == nil {
-		if strNeedle, err := ctx.Coalesce().ToString(needle); err == nil {
-			contains := strings.Contains(strHaystack, strNeedle)
-
-			return contains, nil
+func vectorContainsFunction(ctx types.Context, haystack []any, needle any) (any, error) {
+	for _, val := range haystack {
+		equal, err := equality.Equal(ctx.Coalesce(), val, needle)
+		if err != nil {
+			return false, err
 		}
-
-		return nil, fmt.Errorf("argument #1: expected string, got %T", needle)
-	}
-
-	if vec, err := ctx.Coalesce().ToVector(haystack); err == nil {
-		for _, val := range vec {
-			equal, err := equality.Equal(ctx.Coalesce(), val, needle)
-			if err != nil {
-				return false, err
-			}
-			if equal {
-				return true, nil
-			}
+		if equal {
+			return true, nil
 		}
 	}
 

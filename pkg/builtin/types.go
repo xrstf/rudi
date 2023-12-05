@@ -5,40 +5,31 @@ package builtin
 
 import (
 	"fmt"
-
-	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/eval/types"
 )
 
-// (to-string VAL:any)
-func toStringFunction(ctx types.Context, args []any) (any, error) {
-	// this function purposefully always uses humane coalescing
-	return coalescing.NewHumane().ToString(args[0])
+// The actual conversions happen in the pattern matching, since the functions
+// are already configured to use the human coalescer for that process.
+
+func toBoolFunction(b bool) (any, error) {
+	return b, nil
 }
 
-// (to-int VAL:any)
-func toIntFunction(ctx types.Context, args []any) (any, error) {
-	// this function purposefully always uses humane coalescing
-	return coalescing.NewHumane().ToInt64(args[0])
+func toIntFunction(i int64) (any, error) {
+	return i, nil
 }
 
-// (to-float VAL:any)
-func toFloatFunction(ctx types.Context, args []any) (any, error) {
-	// this function purposefully always uses humane coalescing
-	return coalescing.NewHumane().ToFloat64(args[0])
+func toFloatFunction(f float64) (any, error) {
+	return f, nil
 }
 
-// (to-bool VAL:any)
-func toBoolFunction(ctx types.Context, args []any) (any, error) {
-	// this function purposefully always uses humane coalescing
-	return coalescing.NewHumane().ToBool(args[0])
+func toStringFunction(s string) (any, error) {
+	return s, nil
 }
 
-// (type-of VAL:any)
-func typeOfFunction(ctx types.Context, args []any) (any, error) {
+func typeOfFunction(value any) (any, error) {
 	var typeName string
 
-	switch val := args[0].(type) {
+	switch value.(type) {
 	case nil:
 		typeName = "null"
 	case bool:
@@ -55,7 +46,7 @@ func typeOfFunction(ctx types.Context, args []any) (any, error) {
 		typeName = "object"
 	default:
 		// should never happen
-		typeName = fmt.Sprintf("%T", val)
+		typeName = fmt.Sprintf("%T", value)
 	}
 
 	return typeName, nil

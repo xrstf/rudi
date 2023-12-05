@@ -4,39 +4,44 @@
 package builtin
 
 import (
+	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/eval/util"
 	"go.xrstf.de/rudi/pkg/eval/util/native"
 )
 
 var (
+	strictCoalescer   = coalescing.NewStrict()
+	pedanticCoalescer = coalescing.NewPedantic()
+	humaneCoalescer   = coalescing.NewHumane()
+
 	CoreFunctions = types.Functions{
-		"default": util.NewRawFunction(defaultFunction, "returns the default value if the first argument is empty").MinArgs(2).MaxArgs(2),
+		"default": native.NewFunction("returns the default value if the first argument is empty", defaultFunction),
 		"delete":  deleteFunction{},
-		"do":      util.NewRawFunction(doFunction, "eval a sequence of statements where only one expression is valid").MinArgs(1),
-		"empty?":  util.NewLiteralFunction(isEmptyFunction, "returns true when the given value is empty-ish (0, false, null, \"\", ...)").MinArgs(1).MaxArgs(1),
-		"error":   util.NewLiteralFunction(errorFunction, "returns an error").MinArgs(1),
-		"has?":    util.NewRawFunction(hasFunction, "returns true if the given symbol's path expression points to an existing value").MinArgs(1).MaxArgs(1),
-		"if":      util.NewRawFunction(ifFunction, "evaluate one of two expressions based on a condition").MinArgs(2).MaxArgs(3),
-		"set":     util.NewRawFunction(setFunction, "set a value in a variable/document, only really useful with ! modifier (set!)").MinArgs(2).MaxArgs(2),
-		"try":     util.NewRawFunction(tryFunction, "returns the fallback if the first expression errors out").MinArgs(1).MaxArgs(2),
+		"do":      native.NewFunction("eval a sequence of statements where only one expression is valid", doFunction),
+		"empty?":  native.NewFunction("returns true when the given value is empty-ish (0, false, null, \"\", ...)", isEmptyFunction).WithCoalescer(humaneCoalescer),
+		"error":   native.NewFunction("returns an error", errorFunction),
+		"has?":    native.NewFunction("returns true if the given symbol's path expression points to an existing value", hasFunction),
+		"if":      native.NewFunction("evaluate one of two expressions based on a condition", ifElseFunction, ifFunction),
+		"set":     native.NewFunction("set a value in a variable/document, only really useful with ! modifier (set!)", setFunction),
+		"try":     native.NewFunction("returns the fallback if the first expression errors out", tryWithFallbackFunction, tryFunction),
 	}
 
 	LogicFunctions = types.Functions{
-		"and": util.NewRawFunction(andFunction, "returns true if all arguments are true").MinArgs(1),
-		"or":  util.NewRawFunction(orFunction, "returns true if any of the arguments is true").MinArgs(1),
-		"not": util.NewLiteralFunction(notFunction, "negates the given argument").MinArgs(1).MaxArgs(1),
+		"and": native.NewFunction("returns true if all arguments are true", andFunction),
+		"or":  native.NewFunction("returns true if any of the arguments is true", orFunction),
+		"not": native.NewFunction("negates the given argument", notFunction),
 	}
 
 	ComparisonFunctions = types.Functions{
-		"eq?":        util.NewLiteralFunction(eqFunction, "equality check: return true if both arguments are the same").MinArgs(2).MaxArgs(2),
-		"identical?": util.NewLiteralFunction(identicalFunction, "like `eq?`, but always uses strict coalecsing").MinArgs(2).MaxArgs(2),
-		"like?":      util.NewLiteralFunction(likeFunction, "like `eq?`, but always uses humane coalecsing").MinArgs(2).MaxArgs(2),
+		"eq?":        native.NewFunction("equality check: return true if both arguments are the same", eqFunction),
+		"identical?": native.NewFunction("like `eq?`, but always uses strict coalecsing", identicalFunction),
+		"like?":      native.NewFunction("like `eq?`, but always uses humane coalecsing", likeFunction),
 
-		"lt?":  util.NewLiteralFunction(ltCoalescer, "returns a < b").MinArgs(2).MaxArgs(2),
-		"lte?": util.NewLiteralFunction(lteCoalescer, "returns a <= b").MinArgs(2).MaxArgs(2),
-		"gt?":  util.NewLiteralFunction(gtCoalescer, "returns a > b").MinArgs(2).MaxArgs(2),
-		"gte?": util.NewLiteralFunction(gteCoalescer, "returns a >= b").MinArgs(2).MaxArgs(2),
+		"lt?":  native.NewFunction("returns a < b", ltCoalescer),
+		"lte?": native.NewFunction("returns a <= b", lteCoalescer),
+		"gt?":  native.NewFunction("returns a > b", gtCoalescer),
+		"gte?": native.NewFunction("returns a >= b", gteCoalescer),
 	}
 
 	// aliases to make bang functions nicer (add! vs +!)
@@ -58,11 +63,11 @@ var (
 		"div":  divideRudiFunction,
 	}
 
-	lenRudiFunction      = util.NewLiteralFunction(lenFunction, "returns the length of a string, vector or object").MinArgs(1).MaxArgs(1)
-	appendRudiFunction   = util.NewLiteralFunction(appendFunction, "appends more strings to a string or arbitrary items into a vector").MinArgs(2)
-	prependRudiFunction  = util.NewLiteralFunction(prependFunction, "prepends more strings to a string or arbitrary items into a vector").MinArgs(2)
-	reverseRudiFunction  = util.NewLiteralFunction(reverseFunction, "reverses a string or the elements of a vector").MinArgs(1).MaxArgs(1)
-	containsRudiFunction = util.NewLiteralFunction(containsFunction, "returns true if a string contains a substring or a vector contains the given element").MinArgs(2).MaxArgs(2)
+	lenRudiFunction      = native.NewFunction("returns the length of a string, vector or object", stringLenFunction, vectorLenFunction, objectLenFunction)
+	appendRudiFunction   = native.NewFunction("appends more strings to a string or arbitrary items into a vector", appendToVectorFunction, appendToStringFunction)
+	prependRudiFunction  = native.NewFunction("prepends more strings to a string or arbitrary items into a vector", prependToVectorFunction, prependToStringFunction)
+	reverseRudiFunction  = native.NewFunction("reverses a string or the elements of a vector", reverseVectorFunction, reverseStringFunction)
+	containsRudiFunction = native.NewFunction("returns true if a string contains a substring or a vector contains the given element", stringContainsFunction, vectorContainsFunction)
 
 	StringsFunctions = types.Functions{
 		// these ones are shared with ListsFunctions
@@ -72,15 +77,15 @@ var (
 		"reverse":   reverseRudiFunction,
 		"contains?": containsRudiFunction,
 
-		"concat":      util.NewLiteralFunction(concatFunction, "concatenates items in a vector using a common glue string").MinArgs(2),
-		"split":       util.NewLiteralFunction(stringifyArgs(splitFunction), "splits a string into a vector").MinArgs(2).MaxArgs(2),
-		"has-prefix?": util.NewLiteralFunction(stringifyArgs(hasPrefixFunction), "returns true if the given string has the prefix").MinArgs(2).MaxArgs(2),
-		"has-suffix?": util.NewLiteralFunction(stringifyArgs(hasSuffixFunction), "returns true if the given string has the suffix").MinArgs(2).MaxArgs(2),
-		"trim-prefix": util.NewLiteralFunction(stringifyArgs(trimPrefixFunction), "removes the prefix from the string, if it exists").MinArgs(2).MaxArgs(2),
-		"trim-suffix": util.NewLiteralFunction(stringifyArgs(trimSuffixFunction), "removes the suffix from the string, if it exists").MinArgs(2).MaxArgs(2),
-		"to-lower":    util.NewLiteralFunction(stringifyArgs(toLowerFunction), "returns the lowercased version of the given string").MinArgs(1).MaxArgs(1),
-		"to-upper":    util.NewLiteralFunction(stringifyArgs(toUpperFunction), "returns the uppercased version of the given string").MinArgs(1).MaxArgs(1),
-		"trim":        util.NewLiteralFunction(stringifyArgs(trimFunction), "returns the given whitespace with leading/trailing whitespace removed").MinArgs(1).MaxArgs(1),
+		"concat":      native.NewFunction("concatenates items in a vector using a common glue string", concatFunction),
+		"split":       native.NewFunction("splits a string into a vector", splitFunction),
+		"has-prefix?": native.NewFunction("returns true if the given string has the prefix", hasPrefixFunction),
+		"has-suffix?": native.NewFunction("returns true if the given string has the suffix", hasSuffixFunction),
+		"trim-prefix": native.NewFunction("removes the prefix from the string, if it exists", trimPrefixFunction),
+		"trim-suffix": native.NewFunction("removes the suffix from the string, if it exists", trimSuffixFunction),
+		"to-lower":    native.NewFunction("returns the lowercased version of the given string", toLowerFunction),
+		"to-upper":    native.NewFunction("returns the uppercased version of the given string", toUpperFunction),
+		"trim":        native.NewFunction("returns the given whitespace with leading/trailing whitespace removed", trimFunction),
 	}
 
 	ListsFunctions = types.Functions{
@@ -112,17 +117,19 @@ var (
 	}
 
 	TypeFunctions = types.Functions{
-		"type-of":   util.NewLiteralFunction(typeOfFunction, `returns the type of a given value (e.g. "string" or "number")`).MinArgs(1).MaxArgs(1),
-		"to-bool":   util.NewLiteralFunction(toBoolFunction, "try to convert the given argument losslessly to a bool").MinArgs(1).MaxArgs(1),
-		"to-float":  util.NewLiteralFunction(toFloatFunction, "try to convert the given argument losslessly to a float64").MinArgs(1).MaxArgs(1),
-		"to-int":    util.NewLiteralFunction(toIntFunction, "try to convert the given argument losslessly to an int64").MinArgs(1).MaxArgs(1),
-		"to-string": util.NewLiteralFunction(toStringFunction, "try to convert the given argument losslessly to a string").MinArgs(1).MaxArgs(1),
+		"type-of": native.NewFunction(`returns the type of a given value (e.g. "string" or "number")`, typeOfFunction),
+
+		// these functions purposefully always uses humane coalescing
+		"to-bool":   native.NewFunction("try to convert the given argument losslessly to a bool", toBoolFunction).WithCoalescer(humaneCoalescer),
+		"to-float":  native.NewFunction("try to convert the given argument losslessly to a float64", toFloatFunction).WithCoalescer(humaneCoalescer),
+		"to-int":    native.NewFunction("try to convert the given argument losslessly to an int64", toIntFunction).WithCoalescer(humaneCoalescer),
+		"to-string": native.NewFunction("try to convert the given argument losslessly to a string", toStringFunction).WithCoalescer(humaneCoalescer),
 	}
 
 	CoalescingContextFunctions = types.Functions{
-		"strictly":     util.NewRawFunction(strictlyFunction, "evaluates the child expressions using strict coalescing").MinArgs(1).MaxArgs(1),
-		"pedantically": util.NewRawFunction(pedanticallyFunction, "evaluates the child expressions using pedantic coalescing").MinArgs(1).MaxArgs(1),
-		"humanely":     util.NewRawFunction(humanelyFunction, "evaluates the child expressions using humane coalescing").MinArgs(1).MaxArgs(1),
+		"strictly":     native.NewFunction("evaluates the child expressions using strict coalescing", doFunction).WithCoalescer(strictCoalescer),
+		"pedantically": native.NewFunction("evaluates the child expressions using pedantic coalescing", doFunction).WithCoalescer(pedanticCoalescer),
+		"humanely":     native.NewFunction("evaluates the child expressions using humane coalescing", doFunction).WithCoalescer(humaneCoalescer),
 	}
 
 	AllFunctions = types.Functions{}.

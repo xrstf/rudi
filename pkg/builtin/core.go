@@ -15,56 +15,45 @@ import (
 	"go.xrstf.de/rudi/pkg/pathexpr"
 )
 
-// (if COND:Expr YES:Expr NO:Expr?)
-func ifFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	_, condition, err := eval.EvalExpression(ctx, args[0])
-	if err != nil {
-		return nil, fmt.Errorf("condition: %w", err)
-	}
-
-	success, err := ctx.Coalesce().ToBool(condition)
-	if err != nil {
-		return nil, fmt.Errorf("condition: %w", err)
-	}
-
-	if success {
-		// discard context changes from the true path
-		_, result, err := eval.EvalExpression(ctx, args[1])
-		return result, err
-	}
-
-	// optional else part
-	if len(args) > 2 {
-		// discard context changes from the false path
-		_, result, err := eval.EvalExpression(ctx, args[2])
+func ifFunction(ctx types.Context, test bool, yes ast.Expression) (any, error) {
+	if test {
+		_, result, err := eval.EvalExpression(ctx, yes)
 		return result, err
 	}
 
 	return nil, nil
 }
 
-// (do STEP:Expr+)
-func doFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	tupleCtx := ctx
+func ifElseFunction(ctx types.Context, test bool, yes, no ast.Expression) (any, error) {
+	if test {
+		_, result, err := eval.EvalExpression(ctx, yes)
+		return result, err
+	}
 
-	var (
-		result any
-		err    error
-	)
+	_, result, err := eval.EvalExpression(ctx, no)
+	return result, err
+}
+
+// (This signature ensures do is always called with 1 expression at least.)
+
+func doFunction(ctx types.Context, arg ast.Expression, args ...ast.Expression) (any, error) {
+	tupleCtx, result, err := eval.EvalExpression(ctx, arg)
+	if err != nil {
+		return nil, fmt.Errorf("argument #0: %w", err)
+	}
 
 	// do not use evalArgs(), as we want to inherit the context between expressions
 	for i, arg := range args {
 		tupleCtx, result, err = eval.EvalExpression(tupleCtx, arg)
 		if err != nil {
-			return nil, fmt.Errorf("argument #%d: %w", i, err)
+			return nil, fmt.Errorf("argument #%d: %w", i+1, err)
 		}
 	}
 
 	return result, nil
 }
 
-// (has? SYM:SymbolWithPathExpression)
-func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
+func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
 	var (
 		expr     ast.Expression
 		pathExpr *ast.PathExpression
@@ -72,7 +61,7 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 	// separate base value expression from the path expression
 
-	if symbol, ok := args[0].(ast.Symbol); ok {
+	if symbol, ok := arg.(ast.Symbol); ok {
 		pathExpr = symbol.PathExpression
 
 		if symbol.Variable != nil {
@@ -85,26 +74,26 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		expr = symbol
 	}
 
-	if vectorNode, ok := args[0].(ast.VectorNode); ok {
+	if vectorNode, ok := arg.(ast.VectorNode); ok {
 		pathExpr = vectorNode.PathExpression
 		vectorNode.PathExpression = nil
 		expr = vectorNode
 	}
 
-	if objectNode, ok := args[0].(ast.ObjectNode); ok {
+	if objectNode, ok := arg.(ast.ObjectNode); ok {
 		pathExpr = objectNode.PathExpression
 		objectNode.PathExpression = nil
 		expr = objectNode
 	}
 
-	if tuple, ok := args[0].(ast.Tuple); ok {
+	if tuple, ok := arg.(ast.Tuple); ok {
 		pathExpr = tuple.PathExpression
 		tuple.PathExpression = nil
 		expr = tuple
 	}
 
 	if expr == nil {
-		return nil, fmt.Errorf("expected Symbol, Vector, Object or Tuple, got %T", args[0])
+		return nil, fmt.Errorf("expected Symbol, Vector, Object or Tuple, got %T", arg)
 	}
 
 	if pathExpr == nil {
@@ -132,13 +121,13 @@ func hasFunction(ctx types.Context, args []ast.Expression) (any, error) {
 }
 
 // (default TEST:Expression FALLBACK:any)
-func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	_, result, err := eval.EvalExpression(ctx, args[0])
+func defaultFunction(ctx types.Context, test ast.Expression, fallback ast.Expression) (any, error) {
+	_, result, err := eval.EvalExpression(ctx, test)
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
 	}
 
-	// this function purposefully always uses humane coalescing
+	// this function purposefully always uses humane coalescing for this check
 	boolified, err := coalescing.NewHumane().ToBool(result)
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: %w", err)
@@ -148,7 +137,7 @@ func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 		return result, nil
 	}
 
-	_, result, err = eval.EvalExpression(ctx, args[1])
+	_, result, err = eval.EvalExpression(ctx, fallback)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
@@ -156,15 +145,19 @@ func defaultFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	return result, nil
 }
 
-// (try TEST:Expression FALLBACK:any?)
-func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	_, result, err := eval.EvalExpression(ctx, args[0])
+func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
+	_, result, err := eval.EvalExpression(ctx, test)
 	if err != nil {
-		if len(args) == 1 {
-			return nil, nil
-		}
+		return nil, nil
+	}
 
-		_, result, err = eval.EvalExpression(ctx, args[1])
+	return result, nil
+}
+
+func tryWithFallbackFunction(ctx types.Context, test ast.Expression, fallback ast.Expression) (any, error) {
+	_, result, err := eval.EvalExpression(ctx, test)
+	if err != nil {
+		_, result, err = eval.EvalExpression(ctx, fallback)
 		if err != nil {
 			return nil, fmt.Errorf("argument #1: %w", err)
 		}
@@ -175,10 +168,10 @@ func tryFunction(ctx types.Context, args []ast.Expression) (any, error) {
 
 // (set VAR:Variable VALUE:any)
 // (set EXPR:PathExpression VALUE:any)
-func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	symbol, ok := args[0].(ast.Symbol)
+func setFunction(ctx types.Context, target, value ast.Expression) (any, error) {
+	symbol, ok := target.(ast.Symbol)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
+		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", target)
 	}
 
 	// catch symbols that are technically invalid
@@ -187,7 +180,7 @@ func setFunction(ctx types.Context, args []ast.Expression) (any, error) {
 	}
 
 	// discard any context changes within the newValue expression
-	_, newValue, err := eval.EvalExpression(ctx, args[1])
+	_, newValue, err := eval.EvalExpression(ctx, value)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
@@ -296,44 +289,10 @@ func (deleteFunction) BangHandler(ctx types.Context, sym ast.Symbol, value any) 
 	return ctx, value, nil
 }
 
-// (empty? VALUE:any)
-func isEmptyFunction(ctx types.Context, args []any) (any, error) {
-	// this function purposefully always uses humane coalescing
-	boolified, err := coalescing.NewHumane().ToBool(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return !boolified, nil
+func isEmptyFunction(val bool) (any, error) {
+	return !val, nil
 }
 
-// (error MSG:string)
-// (error FMT:string ARGS+)
-func errorFunction(ctx types.Context, args []any) (any, error) {
-	format, err := ctx.Coalesce().ToString(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, fmt.Errorf(format, args[1:]...)
-}
-
-// (strictly EXPR+)
-func strictlyFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	return coalescingChangerFunction(ctx, args, coalescing.NewStrict())
-}
-
-// (humanely EXPR+)
-func humanelyFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	return coalescingChangerFunction(ctx, args, coalescing.NewHumane())
-}
-
-// (pedantically EXPR+)
-func pedanticallyFunction(ctx types.Context, args []ast.Expression) (any, error) {
-	return coalescingChangerFunction(ctx, args, coalescing.NewPedantic())
-}
-
-func coalescingChangerFunction(ctx types.Context, args []ast.Expression, c coalescing.Coalescer) (any, error) {
-	_, result, err := eval.EvalExpression(ctx.WithCoalescer(c), args[0])
-	return result, err
+func errorFunction(ctx types.Context, format string, args ...any) (any, error) {
+	return nil, fmt.Errorf(format, args...)
 }

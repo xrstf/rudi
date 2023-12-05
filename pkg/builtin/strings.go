@@ -8,18 +8,12 @@ import (
 	"strings"
 
 	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/eval/util"
 )
 
 // (concat GLUE:String ELEMENTS:(Vector/String)+)
-func concatFunction(ctx types.Context, args []any) (any, error) {
-	glue, err := ctx.Coalesce().ToString(args[0])
-	if err != nil {
-		return nil, fmt.Errorf("argument #0: %w", err)
-	}
-
+func concatFunction(ctx types.Context, glue string, args ...any) (any, error) {
 	parts := []string{}
-	for i, value := range args[1:] {
+	for i, value := range args {
 		vector, err := ctx.Coalesce().ToVector(value)
 		if err != nil {
 			part, err := ctx.Coalesce().ToString(value)
@@ -44,27 +38,8 @@ func concatFunction(ctx types.Context, args []any) (any, error) {
 	return strings.Join(parts, string(glue)), nil
 }
 
-type stringifiedLiteralFunction func(args []string) (any, error)
-
-func stringifyArgs(fun stringifiedLiteralFunction) util.LiteralFunction {
-	return func(ctx types.Context, args []any) (any, error) {
-		stringValues := make([]string, len(args))
-		for i, value := range args {
-			strValue, err := ctx.Coalesce().ToString(value)
-			if err != nil {
-				return nil, fmt.Errorf("argument #%d is not a string: %w", i, err)
-			}
-
-			stringValues[i] = string(strValue)
-		}
-
-		return fun(stringValues)
-	}
-}
-
-// (split SEP:String SOURCE:String)
-func splitFunction(args []string) (any, error) {
-	parts := strings.Split(args[1], args[0])
+func splitFunction(sep string, source string) (any, error) {
+	parts := strings.Split(source, sep)
 
 	// to []any
 	result := make([]any, len(parts))
@@ -75,51 +50,30 @@ func splitFunction(args []string) (any, error) {
 	return result, nil
 }
 
-// (has-suffix SOURCE:String SUFFIX:String)
-func hasSuffixFunction(args []string) (any, error) {
-	result := strings.HasSuffix(args[0], args[1])
-
-	return result, nil
+func hasSuffixFunction(source string, suffix string) (any, error) {
+	return strings.HasSuffix(source, suffix), nil
 }
 
-// (has-prefix SOURCE:String PREFIX:String)
-func hasPrefixFunction(args []string) (any, error) {
-	result := strings.HasPrefix(args[0], args[1])
-
-	return result, nil
+func hasPrefixFunction(source string, prefix string) (any, error) {
+	return strings.HasPrefix(source, prefix), nil
 }
 
-// (trim-suffix SOURCE:String SUFFIX:String)
-func trimSuffixFunction(args []string) (any, error) {
-	result := strings.TrimSuffix(args[0], args[1])
-
-	return result, nil
+func trimSuffixFunction(source string, suffix string) (any, error) {
+	return strings.TrimSuffix(source, suffix), nil
 }
 
-// (trim-prefix SOURCE:String PREFIX:String)
-func trimPrefixFunction(args []string) (any, error) {
-	result := strings.TrimPrefix(args[0], args[1])
-
-	return result, nil
+func trimPrefixFunction(source string, prefix string) (any, error) {
+	return strings.TrimPrefix(source, prefix), nil
 }
 
-// (to-lower SOURCE:String)
-func toLowerFunction(args []string) (any, error) {
-	result := strings.ToLower(args[0])
-
-	return result, nil
+func toLowerFunction(s string) (any, error) {
+	return strings.ToLower(s), nil
 }
 
-// (to-upper SOURCE:String)
-func toUpperFunction(args []string) (any, error) {
-	result := strings.ToUpper(args[0])
-
-	return result, nil
+func toUpperFunction(s string) (any, error) {
+	return strings.ToUpper(s), nil
 }
 
-// (trim SOURCE:String)
-func trimFunction(args []string) (any, error) {
-	result := strings.TrimSpace(args[0])
-
-	return result, nil
+func trimFunction(s string) (any, error) {
+	return strings.TrimSpace(s), nil
 }
