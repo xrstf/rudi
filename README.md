@@ -42,7 +42,7 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 
 * **Safe** evaluation: Rudi is not Turing-complete and so Rudi programs are always guaranteed to
   complete in a reasonable time frame.
-* **Lightweight**: Rudi comes with only a single dependency on `go-cmp`, nothing else.
+* **Lightweight**: Rudi comes with no runtime dependencies.
 * **Hackable**: Rudi tries to keep the language itself approachable, so that modifications are
   easier and newcomers have an easier time to get started.
 * **Variables** can be pre-defined or set at runtime.
