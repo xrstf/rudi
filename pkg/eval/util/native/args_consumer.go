@@ -14,6 +14,7 @@ var (
 	dummy          ast.Expression
 	expressionType = reflect.TypeOf(&dummy).Elem()
 	contextType    = reflect.TypeOf(&types.Context{}).Elem()
+	numberType     = reflect.TypeOf(&ast.Number{}).Elem()
 )
 
 type argsConsumer func(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error)
@@ -60,6 +61,10 @@ func newConsumerFunc(t reflect.Type) argsConsumer {
 		// allow to inject the context when required
 		if t.AssignableTo(contextType) {
 			return contextConsumer
+		}
+
+		if t.AssignableTo(numberType) {
+			return numberConsumer
 		}
 	}
 
@@ -113,6 +118,24 @@ func floatConsumer(ctx types.Context, args []cachedExpression) (asserted []any, 
 	}
 
 	coalesced, err := ctx.Coalesce().ToFloat64(evaluated)
+	if err != nil {
+		return nil, args, nil
+	}
+
+	return []any{coalesced}, args[1:], nil
+}
+
+func numberConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
+	if len(args) == 0 {
+		return nil, nil, nil
+	}
+
+	evaluated, err := args[0].Eval(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	coalesced, err := ctx.Coalesce().ToNumber(evaluated)
 	if err != nil {
 		return nil, args, nil
 	}
