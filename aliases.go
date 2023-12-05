@@ -6,8 +6,8 @@ package rudi
 import (
 	"go.xrstf.de/rudi/pkg/builtin"
 	"go.xrstf.de/rudi/pkg/coalescing"
+	"go.xrstf.de/rudi/pkg/eval/functions"
 	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/eval/util"
 )
 
 // Context is the evaluation context for a Rudi program, consisting of
@@ -61,21 +61,18 @@ func NewDocument(data any) (Document, error) {
 	return types.NewDocument(data)
 }
 
-// RawFunction is a function that receives its raw, unevaluated child expressions as arguments.
-// This is the lowest level a function can be, allowing to selectively evaluate the arguments to
-// control side effects.
-type RawFunction = util.RawFunction
-
-// NewRawFunction wraps a raw function to be used in Rudi.
-func NewRawFunction(f RawFunction, description string) util.Function {
-	return util.NewRawFunction(f, description)
+// NewFunctionBuilder is the recommended way to define new Rudi functions. The function builder can
+// take multiple forms (e.g. if you have (foo INT) and (foo STRING)) and will create a function that
+// automatically evaluates and coalesces Rudi expressions and matches them to the given forms. The
+// first matching form is then evaluated.
+func NewFunctionBuilder(forms ...any) *functions.Builder {
+	return functions.NewBuilder(forms...)
 }
 
-// LiteralFunction is a function that receives all of its arguments already evaluated, but not yet
-// coalesced into specific types.
-type LiteralFunction = util.LiteralFunction
-
-// NewLiteralFunction wraps a literal function to be used in Rudi.
-func NewLiteralFunction(f LiteralFunction, description string) util.Function {
-	return util.NewLiteralFunction(f, description)
+// NewLowLevelFunction wraps a raw tuple function to be used in Rudi. This is mostly useful for
+// defining really low-level functions and functions with special side effects. Most of the time,
+// you'd want to use NewFunctionBuilder(), which will use reflection to make it much more straight
+// forward to make a Go function available in Rudi.
+func NewLowLevelFunction(f types.TupleFunction, description string) Function {
+	return types.NewFunction(f, description)
 }

@@ -4,25 +4,36 @@
 package test
 
 import (
+	"fmt"
+
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/eval/types"
-	"go.xrstf.de/rudi/pkg/eval/util"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
 
 var (
 	dummyFunctions = types.Functions{
-		"eval": util.NewLiteralFunction(func(ctx types.Context, args []any) (any, error) {
-			return args[0], nil
-		}, "").MinArgs(1).MaxArgs(1),
+		"eval": types.NewFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
+			if len(args) != 1 {
+				return nil, fmt.Errorf("expected 1 argument, got %d", len(args))
+			}
+
+			_, value, err := eval.EvalExpression(ctx, args[0])
+
+			return value, err
+		}, "evaluates the given expression and returns its value"),
 
 		// Funny enough, due to the way functions work in Rudi, "set" does not
 		// actually set anything, it relies on the function magic behind the
 		// scenes to handle the bang modifier.
-		"set": util.NewRawFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
+		"set": types.NewFunction(func(ctx types.Context, args []ast.Expression) (any, error) {
+			if len(args) != 2 {
+				return nil, fmt.Errorf("expected 2 arguments, got %d", len(args))
+			}
+
 			_, value, err := eval.EvalExpression(ctx, args[1])
 
 			return value, err
-		}, "").MinArgs(2).MaxArgs(2),
+		}, "sets a variable or accesses the global document, most often used with the bang modifier"),
 	}
 )

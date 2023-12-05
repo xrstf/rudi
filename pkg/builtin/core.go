@@ -194,20 +194,10 @@ func setFunction(ctx types.Context, target, value ast.Expression) (any, error) {
 
 // (delete VAR:Variable)
 // (delete EXPR:PathExpression)
-type deleteFunction struct{}
-
-func (deleteFunction) Description() string {
-	return "removes a key from an object or an item from a vector"
-}
-
-func (deleteFunction) Evaluate(ctx types.Context, args []ast.Expression) (any, error) {
-	if size := len(args); size != 1 {
-		return nil, fmt.Errorf("expected 1 argument, got %d", size)
-	}
-
-	symbol, ok := args[0].(ast.Symbol)
+func deleteFunction(ctx types.Context, expr ast.Expression) (any, error) {
+	symbol, ok := expr.(ast.Symbol)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", args[0])
+		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", expr)
 	}
 
 	// catch symbols that are technically invalid
@@ -249,7 +239,7 @@ func (deleteFunction) Evaluate(ctx types.Context, args []ast.Expression) (any, e
 	return updatedValue, nil
 }
 
-func (deleteFunction) BangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error) {
+func deleteBangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error) {
 	updatedValue := value
 
 	// if the symbol has a path to traverse, do so
