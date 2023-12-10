@@ -1,0 +1,22 @@
+# sha256
+
+`sha256` returns the lowercase hex string presenration of the SHA-256 hash of
+the given input value.
+
+## Examples
+
+(Hashes are truncated here for readability.)
+
+* `(sha256 "")` -> `"e3b0c44298fc1c149af…49b934ca495991b7852b855"`
+* `(sha256 "hello")` -> `"2cf24dba5fb0a30e26e…fa7425e73043362938b9824"`
+
+## Forms
+
+### `(sha256 data)`
+
+* `data` is an arbitrary expression.
+
+`sha256` evaluates the given expression and coalesces the result to a
+string. If either of those steps fail, an error is returned. Otherwise the
+function will calculate the SHA-256 hash and return the hex presentation
+(a string of 64 characters).

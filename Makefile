@@ -22,7 +22,8 @@ generate:
 
 .PHONY: docs
 docs:
-	go run hack/docs-toc/main.go
+	cd hack/docs-toc && go run .
+	cd hack/docs-prerender && go run .
 
 .PHONY: clean
 clean:
@@ -32,6 +33,7 @@ clean:
 build:
 	mkdir -p _build
 	cd cmd/rudi && go build $(GO_BUILD_FLAGS) -o ../../_build .
+	cd cmd/example && go build $(GO_BUILD_FLAGS) -o ../../_build .
 
 .PHONY: install
 install:

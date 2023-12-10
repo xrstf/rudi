@@ -4,47 +4,32 @@
 package util
 
 import (
-	_ "embed"
 	"fmt"
 	"strings"
 
-	"go.xrstf.de/rudi/docs"
-
-	markdown "go.xrstf.de/go-term-markdown"
+	"go.xrstf.de/rudi/cmd/rudi/batteries"
+	"go.xrstf.de/rudi/cmd/rudi/docs"
 )
 
-func RenderMarkdown(markup string, indent int) string {
-	return string(markdown.Render(markup, 80, indent))
-}
+func RenderHelpTopic(selectedTopic string, indent int) (string, error) {
+	// Did the user request a regular documentation page?
+	topics := docs.Topics()
 
-func RenderHelpTopics(helpTopics []docs.Topic, indent int) string {
-	width := 0
-	for _, topic := range helpTopics {
-		if l := len(topic.CliNames[0]); l > width {
-			width = l
+	for _, topic := range topics {
+		for _, cliName := range topic.CliNames {
+			if strings.EqualFold(cliName, selectedTopic) {
+				return topic.Render(nil)
+			}
 		}
 	}
 
-	format := fmt.Sprintf("* %%-%ds – %%s\n", width)
+	// Check if a function of that name is available with documentation.
+	modules := append(batteries.BuiltInModules, batteries.ExtendedModules...)
 
-	var builder strings.Builder
-	for _, topic := range helpTopics {
-		builder.WriteString(fmt.Sprintf(format, topic.CliNames[0], topic.Description))
-	}
-
-	return RenderMarkdown(builder.String(), indent)
-}
-
-func RenderHelpTopic(helpTopics []docs.Topic, selectedTopic string, indent int) (string, error) {
-	for _, topic := range helpTopics {
-		for _, cliName := range topic.CliNames {
-			if strings.EqualFold(cliName, selectedTopic) {
-				content, err := topic.Content()
-				if err != nil {
-					return "", fmt.Errorf("failed to render docs: %w", err)
-				}
-
-				return RenderMarkdown(string(content), indent), nil
+	for _, mod := range modules {
+		for funcName := range mod.Functions {
+			if strings.EqualFold(funcName, selectedTopic) {
+				return docs.RenderFunction(funcName, nil)
 			}
 		}
 	}

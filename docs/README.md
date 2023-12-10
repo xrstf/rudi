@@ -2,90 +2,126 @@
 
 Welcome to the Rudi documentation :smile:
 
-<!-- BEGIN_TOC -->
 ## General
 
-* [Type Handling & Conversions](coalescing.md) – A short introduction to the Rudi languageHow Rudi handles, converts and compares values
+<!-- BEGIN_TOPICS_TOC -->
 * [The Rudi Language](language.md) – A short introduction to the Rudi language
+* [Type Handling & Conversions](coalescing.md) – How Rudi handles, converts and compares values
+<!-- END_TOPICS_TOC -->
 
-## Core Functions
+## Standard Library
 
-* [`default`](functions/core-default.md) – returns the default value if the first argument is empty
-* [`delete`](functions/core-delete.md) – removes a key from an object or an item from a vector
-* [`do`](functions/core-do.md) – eval a sequence of statements where only one expression is valid
-* [`empty?`](functions/core-empty.md) – returns true when the given value is empty-ish (0, false, null, "", ...)
-* [`error`](functions/core-error.md) – returns an error
-* [`has?`](functions/core-has.md) – returns true if the given symbol's path expression points to an existing value
-* [`if`](functions/core-if.md) – evaluate one of two expressions based on a condition
-* [`set`](functions/core-set.md) – set a value in a variable/document, only really useful with ! modifier (set!)
-* [`try`](functions/core-try.md) – returns the fallback if the first expression errors out
+These are all the built-in functions, available in the `rudi` interpreter and when embedding Rudi
+and not specifying another, custom function set.
 
-## Comparisons Functions
+<!-- BEGIN_STDLIB_TOC -->
+### core
 
-* [`eq?`](functions/comparisons-eq.md) – equality check: return true if both arguments are the same
-* [`gt?`](functions/comparisons-gt.md) – returns a > b
-* [`gte?`](functions/comparisons-gte.md) – returns a >= b
-* [`identical?`](functions/comparisons-identical.md) – like `eq?`, but always uses strict coalecsing
-* [`like?`](functions/comparisons-like.md) – like `eq?`, but always uses humane coalecsing
-* [`lt?`](functions/comparisons-lt.md) – returns a < b
-* [`lte?`](functions/comparisons-lte.md) – returns a <= b
+* [`default`](stdlib/core/default.md) – returns the default value if the first argument is empty
+* [`delete`](stdlib/core/delete.md) – removes a key from an object or an item from a vector
+* [`do`](stdlib/core/do.md) – eval a sequence of statements where only one expression is valid
+* [`empty?`](stdlib/core/empty.md) – returns true when the given value is empty-ish (0, false, null, "", ...)
+* [`error`](stdlib/core/error.md) – returns an error
+* [`has?`](stdlib/core/has.md) – returns true if the given symbol's path expression points to an existing value
+* [`if`](stdlib/core/if.md) – evaluate one of two expressions based on a condition
+* [`set`](stdlib/core/set.md) – set a value in a variable/document, only really useful with ! modifier (set!)
+* [`try`](stdlib/core/try.md) – returns the fallback if the first expression errors out
 
-## Dates Functions
+### coalesce
 
-* [`now`](functions/dates-now.md) – returns the current date & time (UTC), formatted like a Go date
+* [`humanely`](stdlib/coalesce/humanely.md) – evaluates the child expressions using humane coalescing
+* [`pedantically`](stdlib/coalesce/pedantically.md) – evaluates the child expressions using pedantic coalescing
+* [`strictly`](stdlib/coalesce/strictly.md) – evaluates the child expressions using strict coalescing
 
-## Encoding Functions
+### compare
 
-* [`from-base64`](functions/encoding-from-base64.md) – decode a base64 encoded string
-* [`to-base64`](functions/encoding-to-base64.md) – apply base64 encoding to the given string
+* [`eq?`](stdlib/compare/eq.md) – equality check: return true if both arguments are the same
+* [`gt?`](stdlib/compare/gt.md) – returns a > b
+* [`gte?`](stdlib/compare/gte.md) – returns a >= b
+* [`identical?`](stdlib/compare/identical.md) – like `eq?`, but always uses strict coalecsing
+* [`like?`](stdlib/compare/like.md) – like `eq?`, but always uses humane coalecsing
+* [`lt?`](stdlib/compare/lt.md) – returns a < b
+* [`lte?`](stdlib/compare/lte.md) – returns a <= b
 
-## Hashes Functions
+### datetime
 
-* [`sha1`](functions/hashes-sha1.md) – return the lowercase hex representation of the SHA-1 hash
-* [`sha256`](functions/hashes-sha256.md) – return the lowercase hex representation of the SHA-256 hash
-* [`sha512`](functions/hashes-sha512.md) – return the lowercase hex representation of the SHA-512 hash
+* [`now`](stdlib/datetime/now.md) – returns the current date & time (UTC), formatted like a Go date
 
-## Lists Functions
+### encoding
 
-* [`append`](functions/lists-append.md) – appends more strings to a string or arbitrary items into a vector
-* [`contains?`](functions/lists-contains.md) – returns true if a string contains a substring or a vector contains the given element
-* [`filter`](functions/lists-filter.md) – returns a copy of a given vector/object with only those elements remaining that satisfy a condition
-* [`len`](functions/lists-len.md) – returns the length of a string, vector or object
-* [`map`](functions/lists-map.md) – applies an expression to every element in a vector or object
-* [`prepend`](functions/lists-prepend.md) – prepends more strings to a string or arbitrary items into a vector
-* [`range`](functions/lists-range.md) – allows to iterate (loop) over a vector or object
-* [`reverse`](functions/lists-reverse.md) – reverses a string or the elements of a vector
+* [`from-base64`](stdlib/encoding/from-base64.md) – decode a base64 encoded string
+* [`from-json`](stdlib/encoding/from-json.md) – decode a JSON string
+* [`to-base64`](stdlib/encoding/to-base64.md) – apply base64 encoding to the given string
+* [`to-json`](stdlib/encoding/to-json.md) – encode the given value using JSON
 
-## Logic Functions
+### hashing
 
-* [`and`](functions/logic-and.md) – returns true if all arguments are true
-* [`not`](functions/logic-not.md) – negates the given argument
-* [`or`](functions/logic-or.md) – returns true if any of the arguments is true
+* [`sha1`](stdlib/hashing/sha1.md) – return the lowercase hex representation of the SHA-1 hash
+* [`sha256`](stdlib/hashing/sha256.md) – return the lowercase hex representation of the SHA-256 hash
+* [`sha512`](stdlib/hashing/sha512.md) – return the lowercase hex representation of the SHA-512 hash
 
-## Math Functions
+### lists
 
-* [`*`](functions/math-mult.md) – returns the product of all of its arguments
-* [`+`](functions/math-add.md) – returns the sum of all of its arguments
-* [`-`](functions/math-sub.md) – returns arg1 - arg2 - .. - argN
-* [`/`](functions/math-div.md) – returns arg1 / arg2 / .. / argN (always a floating point division, regardless of arguments)
+* [`filter`](stdlib/lists/filter.md) – returns a copy of a given vector/object with only those elements remaining that satisfy a condition
+* [`map`](stdlib/lists/map.md) – applies an expression to every element in a vector or object
+* [`range`](stdlib/lists/range.md) – allows to iterate (loop) over a vector or object
 
-## Strings Functions
+### logic
 
-* [`concat`](functions/strings-concat.md) – concatenates items in a vector using a common glue string
-* [`has-prefix?`](functions/strings-has-prefix.md) – returns true if the given string has the prefix
-* [`has-suffix?`](functions/strings-has-suffix.md) – returns true if the given string has the suffix
-* [`split`](functions/strings-split.md) – splits a string into a vector
-* [`to-lower`](functions/strings-to-lower.md) – returns the lowercased version of the given string
-* [`to-upper`](functions/strings-to-upper.md) – returns the uppercased version of the given string
-* [`trim`](functions/strings-trim.md) – returns the given whitespace with leading/trailing whitespace removed
-* [`trim-prefix`](functions/strings-trim-prefix.md) – removes the prefix from the string, if it exists
-* [`trim-suffix`](functions/strings-trim-suffix.md) – removes the suffix from the string, if it exists
+* [`and`](stdlib/logic/and.md) – returns true if all arguments are true
+* [`not`](stdlib/logic/not.md) – negates the given argument
+* [`or`](stdlib/logic/or.md) – returns true if any of the arguments is true
 
-## Types Functions
+### math
 
-* [`to-bool`](functions/types-to-bool.md) – try to convert the given argument losslessly to a bool
-* [`to-float`](functions/types-to-float.md) – try to convert the given argument losslessly to a float64
-* [`to-int`](functions/types-to-int.md) – try to convert the given argument losslessly to an int64
-* [`to-string`](functions/types-to-string.md) – try to convert the given argument losslessly to a string
-* [`type-of`](functions/types-type-of.md) – returns the type of a given value (e.g. "string" or "number")
-<!-- END_TOC -->
+* [`add`](stdlib/math/add.md) – returns the sum of all of its arguments
+* [`div`](stdlib/math/div.md) – returns arg1 / arg2 / .. / argN (always a floating point division, regardless of arguments)
+* [`mult`](stdlib/math/mult.md) – returns the product of all of its arguments
+* [`sub`](stdlib/math/sub.md) – returns arg1 - arg2 - .. - argN
+
+### strings
+
+* [`append`](stdlib/strings/append.md) – appends more strings to a string or arbitrary items into a vector
+* [`concat`](stdlib/strings/concat.md) – concatenates items in a vector using a common glue string
+* [`contains?`](stdlib/strings/contains.md) – returns true if a string contains a substring or a vector contains the given element
+* [`has-prefix?`](stdlib/strings/has-prefix.md) – returns true if the given string has the prefix
+* [`has-suffix?`](stdlib/strings/has-suffix.md) – returns true if the given string has the suffix
+* [`len`](stdlib/strings/len.md) – returns the length of a string, vector or object
+* [`prepend`](stdlib/strings/prepend.md) – prepends more strings to a string or arbitrary items into a vector
+* [`replace`](stdlib/strings/replace.md) – returns a copy of a string with the a substring replaced by another
+* [`reverse`](stdlib/strings/reverse.md) – reverses a string or the elements of a vector
+* [`split`](stdlib/strings/split.md) – splits a string into a vector
+* [`to-lower`](stdlib/strings/to-lower.md) – returns the lowercased version of the given string
+* [`to-upper`](stdlib/strings/to-upper.md) – returns the uppercased version of the given string
+* [`trim`](stdlib/strings/trim.md) – returns the given whitespace with leading/trailing whitespace removed
+* [`trim-prefix`](stdlib/strings/trim-prefix.md) – removes the prefix from the string, if it exists
+* [`trim-suffix`](stdlib/strings/trim-suffix.md) – removes the suffix from the string, if it exists
+
+### types
+
+* [`to-bool`](stdlib/types/to-bool.md) – try to convert the given argument losslessly to a bool
+* [`to-float`](stdlib/types/to-float.md) – try to convert the given argument losslessly to a float64
+* [`to-int`](stdlib/types/to-int.md) – try to convert the given argument losslessly to an int64
+* [`to-string`](stdlib/types/to-string.md) – try to convert the given argument losslessly to a string
+* [`type-of`](stdlib/types/type-of.md) – returns the type of a given value (e.g. "string" or "number")
+<!-- END_STDLIB_TOC -->
+
+## Extended Library
+
+These modules are only available when explicitly importing their Go modules and adding them to the
+Rudi function set. They are however all available by default in the `rudi` interpreter.
+
+<!-- BEGIN_EXTLIB_TOC -->
+### semver
+
+* [`semver`](extlib/semver/semver.md) – parses a string as a semantic version
+
+### uuid
+
+* [`uuidv4`](extlib/uuid/uuidv4.md) – returns a new, randomly generated v4 UUID
+
+### yaml
+
+* [`from-yaml`](extlib/yaml/from-yaml.md) – decodes a YAML string into a Go value
+* [`to-yaml`](extlib/yaml/to-yaml.md) – encodes the given value as YAML
+<!-- END_EXTLIB_TOC -->

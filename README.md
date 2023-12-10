@@ -30,8 +30,8 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 * [Documentation](#documentation)
   * [Language Description](docs/language.md)
   * [Type Handling](docs/coalescing.md)
-  * [Standard Library](docs/functions/README.md)
-  * [Extended Library](docs/modules.md)
+  * [Standard Library](docs/stdlib/README.md)
+  * [Extended Library](docs/extlib/README.md)
 * [Usage](#usage)
   * [Command Line](#command-line)
   * [Embedding](#embedding)
@@ -75,8 +75,8 @@ from GitHub.
 Make yourself familiar with Rudi using the documentation:
 
 * The [Language Description](docs/language.md) describes the Rudi syntax and semantics.
-* All built-in functions are described in the [standard library](docs/functions/README.md).
-* Additional functions are available in the [extended library](docs/modules.md).
+* All built-in functions are described in the [standard library](docs/stdlib/README.md).
+* Additional functions are available in the [extended library](docs/extlib/README.md).
 * [Type Handling](docs/coalescing.md) describes how Rudi handles, converts and compares values.
 
 ## Usage
@@ -132,6 +132,7 @@ import (
    "log"
 
    "go.xrstf.de/rudi"
+   "go.xrstf.de/rudi/pkg/coalescing"
 )
 
 const script = `(set! .foo 42) (+ $myvar 42 .foo)`
@@ -143,7 +144,7 @@ func main() {
    documentData := map[string]any{"foo": 9000}
 
    // parse the script (the name is used when generating error strings)
-   program, err := rudi.ParseScript("myscript", script)
+   program, err := rudi.Parse("myscript", script)
    if err != nil {
       log.Fatalf("The script is invalid: %v", err)
    }
@@ -198,7 +199,7 @@ out there, allbeit with slightly different ideas and goals than Rudi:
 * [Go Templates](https://pkg.go.dev/text/template) – I really don't like Go's template syntax for
   more than simple one-liners. I liked and copied its concept of ranging over things, as templates
   do not allow unbounded loops (just like Rudi), but apart from being safe to embed, Go templates do
-  not offer enough functionality to modify a data structure. Like Jsonnet, templates shine whe
+  not offer enough functionality to modify a data structure. Like Jsonnet, templates shine when
   creating/outputting entire _new_ documents.
 
   _Bonus mention:_ Mastermind's [sprig](https://github.com/Masterminds/sprig) served as inspiration

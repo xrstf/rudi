@@ -97,8 +97,8 @@ instance, be converted to strings, so `{foo "bar"}` is equivalent to `{"foo" "ba
 
 Empty objects are permitted (`{}`).
 
-Note that objects are internally unordered and functions like [map](functions/lists-map.md) or
-[range](functions/lists-range.md) will have a random iteration order. Due to the fact that Go's
+Note that objects are internally unordered and functions like [map](stdlib/lists/map.md) or
+[range](stdlib/lists/range.md) will have a random iteration order. Due to the fact that Go's
 JSON encoder sorts keys alphabetically when writing JSON, this should rarely be of concern.
 
 ### Statement
@@ -336,7 +336,7 @@ path expressions that start with a vector step must have a leading dot, like `.[
 
 Path expressions must be traversable, or else an error is returned: Trying to descend with `.foo`
 into a vector would result in an error, likewise using `[3]` to descend into a string is an error.
-Use the [`has?`](functions/core-has.md) and [`try`](functions/core-try.md) functions to deal with
+Use the [`has?`](stdlib/core/has.md) and [`try`](stdlib/core/try.md) functions to deal with
 possibly misfitting path expressions.
 
 Path expressions can be used on

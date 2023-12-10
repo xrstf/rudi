@@ -32,4 +32,4 @@ for `set` for more information).
 ## Help
 
 Help is available by using `help` as the first argument to Rudi. This can be
-followed by a topic, like `help if`.
+followed by a topic, like `help language` or a function name, like `help map`.

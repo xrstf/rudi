@@ -21,8 +21,8 @@ like [Helm](https://helm.sh/) values, where a flag like `enabled: "false"` would
 using `--enabled={{ .enabled }}` to `--enabled=false`. In these cases, types are less important than
 the user's actual intent.
 
-The built-in functions in Rudi already contain helpers like [`to-string`](functions/types-to-string.md)
-or [`to-int`](functions/types-to-int.md) to deal with conversions, but it can be tedious to have
+The built-in functions in Rudi already contain helpers like [`to-string`](stdlib/types/to-string.md)
+or [`to-int`](stdlib/types/to-int.md) to deal with conversions, but it can be tedious to have
 type conversions in many places in a Rudi program, just to deal with untyped data.
 
 To help with this, Rudi offers a choice, both to the Rudi program author by having, as well as
@@ -137,19 +137,19 @@ Let's look closer at each type's conversion logic:
 
 Rudi offers explicit conversion functions. These always apply the humane coalescing logic.
 
-* [`to-int`](functions/types-to-int.md) converts its argument to an int64 or returns an error if not possible.
-* [`to-float`](functions/types-to-float.md) does the same for float64.
-* [`to-string`](functions/types-to-string.md) does the same for strings.
-* [`to-bool`](functions/types-to-bool.md) does the same for booleans.
+* [`to-int`](stdlib/types/to-int.md) converts its argument to an int64 or returns an error if not possible.
+* [`to-float`](stdlib/types/to-float.md) does the same for float64.
+* [`to-string`](stdlib/types/to-string.md) does the same for strings.
+* [`to-bool`](stdlib/types/to-bool.md) does the same for booleans.
 
 ## Comparisons
 
 Rudi has 3 functions built-in to check for equality between 2 values:
 
-* [`eq?`](functions/comparisons-eq.md) uses the current coalescer (i.e. by default, strict). If a Rudi program is configured to
+* [`eq?`](stdlib/compare/eq.md) uses the current coalescer (i.e. by default, strict). If a Rudi program is configured to
   use humane coalescing however, this function will use that coalescing to determine equality.
-* [`like?`](functions/comparisons-like.md) always uses humane coalescing.
-* [`identical?`](functions/comparisons-identical.md) always uses strict coalescing.
+* [`like?`](stdlib/compare/like.md) always uses humane coalescing.
+* [`identical?`](stdlib/compare/identical.md) always uses strict coalescing.
 
 Comparisons work by converting the two values into (hopefully) compatible types that can be compared.
 This is done in steps:

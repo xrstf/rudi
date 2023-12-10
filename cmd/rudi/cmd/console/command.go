@@ -4,47 +4,47 @@
 package console
 
 import (
-	_ "embed"
 	"errors"
 	"fmt"
 	"strings"
 
 	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/docs"
 	cmdtypes "go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
-	"go.xrstf.de/rudi/docs"
 	"go.xrstf.de/rudi/pkg/eval/types"
 
 	colorjson "github.com/TylerBrock/colorjson"
 	"github.com/chzyer/readline"
 )
 
-//go:embed help.md
-var helpText string
-
 func printPrompt() {
 	fmt.Print("⮞ ")
 }
 
-func helpCommand(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Options) error {
-	fmt.Println(util.RenderMarkdown(strings.TrimSpace(helpText), 2))
-	fmt.Println(util.RenderHelpTopics(helpTopics, 2))
-
-	return nil
-}
-
-func helpTopicCommand(helpTopics []docs.Topic, topic string) error {
-	rendered, err := util.RenderHelpTopic(helpTopics, topic, 2)
+func helpCommand(ctx types.Context, opts *cmdtypes.Options) error {
+	content, err := docs.RenderFile("cmd-console.md", nil)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(rendered)
+	fmt.Print(content)
 
 	return nil
 }
 
-type replCommandFunc func(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Options) error
+func helpTopicCommand(topic string) error {
+	rendered, err := util.RenderHelpTopic(topic, 2)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(rendered)
+
+	return nil
+}
+
+type replCommandFunc func(ctx types.Context, opts *cmdtypes.Options) error
 
 var replCommands = map[string]replCommandFunc{
 	"help": helpCommand,
@@ -70,8 +70,6 @@ func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 	fmt.Println("Type `help` fore more information, `exit` or Ctrl-C to exit.")
 	fmt.Println("")
 
-	helpTopics := docs.Topics()
-
 	for {
 		line, err := rl.Readline()
 		if err != nil { // io.EOF
@@ -82,7 +80,7 @@ func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 			continue
 		}
 
-		newCtx, stop, err := processInput(ctx, helpTopics, opts, line)
+		newCtx, stop, err := processInput(ctx, opts, line)
 		if err != nil {
 			parseErr := &rudi.ParseError{}
 			if errors.As(err, parseErr) {
@@ -104,14 +102,14 @@ func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 	return nil
 }
 
-func processInput(ctx types.Context, helpTopics []docs.Topic, opts *cmdtypes.Options, input string) (newCtx types.Context, stop bool, err error) {
+func processInput(ctx types.Context, opts *cmdtypes.Options, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
-		return ctx, false, command(ctx, helpTopics, opts)
+		return ctx, false, command(ctx, opts)
 	}
 
 	if prefix := "help "; strings.HasPrefix(input, prefix) {
 		topicName := strings.TrimPrefix(input, prefix)
-		return ctx, false, helpTopicCommand(helpTopics, topicName)
+		return ctx, false, helpTopicCommand(topicName)
 	}
 
 	if strings.EqualFold("exit", input) {

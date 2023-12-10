@@ -8,137 +8,72 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"sort"
-	"strings"
 
-	"go.xrstf.de/rudi/docs"
+	"go.xrstf.de/rudi/cmd/rudi/batteries"
 )
 
 const (
-	readme          = "docs/README.md"
-	functionsReadme = "docs/functions/README.md"
-	beginMarker     = `<!-- BEGIN_TOC -->`
-	endMarker       = `<!-- END_TOC -->`
+	rudiReadme   = "../../docs/README.md"
+	stdlibReadme = "../../docs/stdlib/README.md"
+	extlibReadme = "../../docs/extlib/README.md"
+	consoleHelp  = "../../cmd/rudi/cmd/console/help.md"
 )
 
 func main() {
-	topics := docs.Topics()
-	groups := getGroups(topics)
-
-	// the main readme gets all topics
-	if err := updateFileWithTopics(readme, topics, groups, ""); err != nil {
-		log.Fatalf("Failed to update %s: %v", readme, err)
+	if err := updateFile(rudiReadme, ""); err != nil {
+		log.Fatalf("Failed to update %s: %v", rudiReadme, err)
 	}
 
-	// the functions readme does not get the first section ("general")
-	if err := updateFileWithTopics(functionsReadme, topics, groups[1:], "../"); err != nil {
-		log.Fatalf("Failed to update %s: %v", functionsReadme, err)
+	if err := updateFile(stdlibReadme, "../"); err != nil {
+		log.Fatalf("Failed to update %s: %v", stdlibReadme, err)
+	}
+
+	if err := updateFile(extlibReadme, "../"); err != nil {
+		log.Fatalf("Failed to update %s: %v", extlibReadme, err)
+	}
+
+	if err := updateFile(consoleHelp, "../"); err != nil {
+		log.Fatalf("Failed to update %s: %v", consoleHelp, err)
 	}
 }
 
-func updateFileWithTopics(filename string, topics []docs.Topic, groups []string, linkPrefix string) error {
-	rendered := renderTopics(topics, groups, linkPrefix)
-	rendered = fmt.Sprintf("%s\n%s\n%s", beginMarker, rendered, endMarker)
-
+func updateFile(filename string, linkPrefix string) error {
+	// read current file
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("failed to read %s: %w", filename, err)
 	}
+	body := string(content)
 
-	regex := regexp.MustCompile(`(?s)` + beginMarker + `.+` + endMarker)
-	output := regex.ReplaceAllString(string(content), rendered)
+	// inject standard topics TOC
+	body = inject(body, renderTopicsTOC(linkPrefix), "TOPICS")
 
-	if err := os.WriteFile(filename, []byte(output), 0644); err != nil {
+	// inject help topics TOC (like the other topics, but lists names instead of titles)
+	body = inject(body, renderHelpTopicsTOC(), "HELP_TOPICS")
+
+	// inject stdlib TOC
+	body = inject(body, renderLibraryTOC(batteries.BuiltInModules, linkPrefix+"stdlib/"), "STDLIB")
+
+	// inject extlib TOC
+	body = inject(body, renderLibraryTOC(batteries.ExtendedModules, linkPrefix+"extlib/"), "EXTLIB")
+
+	// inject help lib TOC
+	body = inject(body, renderHelpLibraryTOC(append(batteries.BuiltInModules, batteries.ExtendedModules...)), "HELP_LIB")
+
+	// write updated file
+	if err := os.WriteFile(filename, []byte(body), 0644); err != nil {
 		return fmt.Errorf("failed to write %s: %w", filename, err)
 	}
 
 	return nil
 }
 
-func strSliceHas(haystack []string, needle string) bool {
-	for _, val := range haystack {
-		if val == needle {
-			return true
-		}
-	}
+func inject(body string, injected string, marker string) string {
+	beginMarker := fmt.Sprintf("<!-- BEGIN_%s_TOC -->", marker)
+	endMarker := fmt.Sprintf("<!-- END_%s_TOC -->", marker)
 
-	return false
-}
+	fullReplacement := fmt.Sprintf("%s\n%s%s", beginMarker, injected, endMarker)
+	regex := regexp.MustCompile(`(?s)` + beginMarker + `.+` + endMarker)
 
-func getGroups(topics []docs.Topic) []string {
-	// determine a sorted list of functions, with some groups
-	// hardcoded to be at the top, regardless of their name
-	prioritizedGroups := []string{
-		"General",
-		"Core Functions",
-	}
-
-	remainingGroups := []string{}
-
-	for _, topic := range topics {
-		if !strSliceHas(prioritizedGroups, topic.Group) {
-			if !strSliceHas(remainingGroups, topic.Group) {
-				remainingGroups = append(remainingGroups, topic.Group)
-			}
-		}
-	}
-
-	sort.Strings(remainingGroups)
-
-	return append(prioritizedGroups, remainingGroups...)
-}
-
-func renderTopics(topics []docs.Topic, groups []string, linkPrefix string) string {
-	var out strings.Builder
-
-	for _, group := range groups {
-		out.WriteString(fmt.Sprintf("## %s\n", group))
-		out.WriteString("\n")
-
-		topicNames := getTopicNames(topics, group)
-		for _, topicName := range topicNames {
-			topic := getTopic(topics, topicName)
-			linkTitle := topic.Title
-
-			if topic.IsFunction {
-				linkTitle = fmt.Sprintf("`%s`", linkTitle)
-			}
-
-			out.WriteString(fmt.Sprintf("* [%s](%s) – %s\n", linkTitle, linkPrefix+topic.Filename, topic.Description))
-		}
-
-		out.WriteString("\n")
-	}
-
-	return strings.TrimSpace(out.String())
-}
-
-func getTopicNames(topics []docs.Topic, group string) []string {
-	names := []string{}
-
-	for _, topic := range topics {
-		if topic.Group != group {
-			continue
-		}
-
-		primaryName := topic.CliNames[0]
-
-		if !strSliceHas(names, primaryName) {
-			names = append(names, primaryName)
-		}
-	}
-
-	sort.Strings(names)
-
-	return names
-}
-
-func getTopic(topics []docs.Topic, name string) docs.Topic {
-	for _, topic := range topics {
-		if topic.CliNames[0] == name {
-			return topic
-		}
-	}
-
-	panic("this should never happen")
+	return regex.ReplaceAllString(body, fullReplacement)
 }

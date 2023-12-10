@@ -1,0 +1,22 @@
+# sha512
+
+`sha512` returns the lowercase hex string presenration of the SHA-512 hash of
+the given input value.
+
+## Examples
+
+(Hashes are truncated here for readability.)
+
+* `(sha512 "")` -> `"cf83e1357eefb8bdf154…47417a81a538327af927da3e"`
+* `(sha512 "hello")` -> `"9b71d224bd62f3785d96…5c2e5c3adef46f73bcdec043"`
+
+## Forms
+
+### `(sha512 data)`
+
+* `data` is an arbitrary expression.
+
+`sha512` evaluates the given expression and coalesces the result to a
+string. If either of those steps fail, an error is returned. Otherwise the
+function will calculate the SHA-512 hash and return the hex presentation
+(a string of 128 characters).
