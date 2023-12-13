@@ -13,4 +13,5 @@ type Module struct {
 	Name          string
 	Functions     types.Functions
 	Documentation FunctionProvider
+	GoModule      string
 }

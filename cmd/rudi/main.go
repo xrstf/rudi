@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"runtime/debug"
 
 	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/batteries"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/console"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/help"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/script"
@@ -25,6 +27,11 @@ var (
 	BuildDate   string // RFC3339 format ("2006-01-02T15:04:05Z07:00")
 )
 
+type moduleVersion struct {
+	module  string
+	version string
+}
+
 func printVersion() {
 	fmt.Printf(
 		"Rudi %s (%s), built with %s on %s\n",
@@ -33,6 +40,50 @@ func printVersion() {
 		runtime.Version(),
 		BuildDate,
 	)
+
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+
+	extlibVersions := []moduleVersion{}
+	maxModuleLength := 0
+
+	for _, extMod := range batteries.ExtendedModules {
+		// This should never happen.
+		if extMod.GoModule == "" {
+			continue
+		}
+
+		for _, dep := range info.Deps {
+			if dep.Path == extMod.GoModule {
+				if len(dep.Path) > maxModuleLength {
+					maxModuleLength = len(dep.Path)
+				}
+
+				extlibVersions = append(extlibVersions, moduleVersion{
+					module:  dep.Path,
+					version: dep.Version,
+				})
+			}
+		}
+	}
+
+	if len(extlibVersions) == 0 {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("Extended Library:")
+	fmt.Println()
+
+	format := fmt.Sprintf("%%-%ds %%s\n", maxModuleLength)
+
+	for _, v := range extlibVersions {
+		fmt.Printf(format, v.module, v.version)
+	}
+
+	return
 }
 
 func main() {

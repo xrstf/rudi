@@ -103,16 +103,19 @@ var (
 			Name:          "semver",
 			Functions:     semvermod.Functions,
 			Documentation: semverdocs.Functions,
+			GoModule:      "go.xrstf.de/rudi-contrib/semver",
 		},
 		{
 			Name:          "uuid",
 			Functions:     uuidmod.Functions,
 			Documentation: uuiddocs.Functions,
+			GoModule:      "go.xrstf.de/rudi-contrib/uuid",
 		},
 		{
 			Name:          "yaml",
 			Functions:     yamlmod.Functions,
 			Documentation: yamldocs.Functions,
+			GoModule:      "go.xrstf.de/rudi-contrib/yaml",
 		},
 	}
 )
