@@ -82,8 +82,6 @@ func printVersion() {
 	for _, v := range extlibVersions {
 		fmt.Printf(format, v.module, v.version)
 	}
-
-	return
 }
 
 func main() {

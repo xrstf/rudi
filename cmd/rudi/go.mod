@@ -7,10 +7,10 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/muesli/termenv v0.15.2
 	github.com/spf13/pflag v1.0.5
-	go.xrstf.de/rudi v0.2.1-0.20231205152938-7272c971e798
-	go.xrstf.de/rudi-contrib/semver v0.1.2-0.20231210181347-e6342878d0cd
-	go.xrstf.de/rudi-contrib/uuid v0.1.1-0.20231210181347-e6342878d0cd
-	go.xrstf.de/rudi-contrib/yaml v0.1.2-0.20231210181347-e6342878d0cd
+	go.xrstf.de/rudi v0.3.1-0.20231213154017-00deb3910d92
+	go.xrstf.de/rudi-contrib/semver v0.1.2
+	go.xrstf.de/rudi-contrib/uuid v0.1.2
+	go.xrstf.de/rudi-contrib/yaml v0.1.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -18,7 +18,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
-	github.com/google/uuid v1.1.1 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

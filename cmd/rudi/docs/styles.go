@@ -3,10 +3,6 @@
 
 package docs
 
-func ptrTo[T any](v T) *T {
-	return &v
-}
-
 var (
 	darkStyle = map[Node]TextStyle{
 		DocumentNode: {
