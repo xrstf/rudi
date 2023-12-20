@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -27,6 +28,7 @@ func main() {
 	// that was evaluated, plus the final document state (the updatedData) after
 	// the script has finished.
 	updatedData, result, err := program.Run(
+		context.Background(),
 		documentData,
 		// setup the set of variables available by default in the script
 		rudi.NewVariables().Set("myvar", 42),

@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -111,8 +112,10 @@ func main() {
 		return
 	}
 
+	ctx := context.Background()
+
 	if opts.Interactive || len(args) == 0 {
-		if err := console.Run(&opts, args, BuildTag); err != nil {
+		if err := console.Run(ctx, &opts, args, BuildTag); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -120,7 +123,7 @@ func main() {
 		return
 	}
 
-	if err := script.Run(&opts, args); err != nil {
+	if err := script.Run(ctx, &opts, args); err != nil {
 		parseErr := &rudi.ParseError{}
 		if errors.As(err, parseErr) {
 			fmt.Println(parseErr.Snippet())

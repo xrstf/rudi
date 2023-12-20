@@ -4,6 +4,7 @@
 package util
 
 import (
+	"context"
 	"fmt"
 
 	"go.xrstf.de/rudi"
@@ -12,7 +13,7 @@ import (
 	"go.xrstf.de/rudi/pkg/coalescing"
 )
 
-func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
+func SetupRudiContext(ctx context.Context, opts *types.Options, files []any) (rudi.Context, error) {
 	var (
 		document rudi.Document
 		err      error
@@ -58,7 +59,5 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 		funcs.Add(mod.Functions)
 	}
 
-	ctx := rudi.NewContext(document, vars, funcs, coalescer)
-
-	return ctx, nil
+	return rudi.NewContext(ctx, document, vars, funcs, coalescer), nil
 }

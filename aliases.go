@@ -4,6 +4,8 @@
 package rudi
 
 import (
+	"context"
+
 	"go.xrstf.de/rudi/pkg/builtin"
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/eval/functions"
@@ -37,8 +39,8 @@ type Document = types.Document
 type Coalescer = coalescing.Coalescer
 
 // NewContext wraps the document, variables and functions into a Context.
-func NewContext(doc Document, variables Variables, funcs Functions, coalescer Coalescer) Context {
-	return types.NewContext(doc, variables, funcs, coalescer)
+func NewContext(ctx context.Context, doc Document, variables Variables, funcs Functions, coalescer Coalescer) Context {
+	return types.NewContext(ctx, doc, variables, funcs, coalescer)
 }
 
 // NewFunctions returns an empty set of runtime functions.

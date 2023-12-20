@@ -4,6 +4,8 @@
 package types
 
 import (
+	"context"
+
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 )
@@ -27,6 +29,7 @@ func (d *Document) Set(wrappedData any) {
 }
 
 type Context struct {
+	ctx        context.Context
 	document   *Document
 	fixedFuncs Functions
 	userFuncs  Functions
@@ -34,13 +37,17 @@ type Context struct {
 	coalescer  coalescing.Coalescer
 }
 
-func NewContext(doc Document, variables Variables, funcs Functions, coalescer coalescing.Coalescer) Context {
-	if funcs == nil {
-		funcs = NewFunctions()
+func NewContext(ctx context.Context, doc Document, variables Variables, funcs Functions, coalescer coalescing.Coalescer) Context {
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
 	if variables == nil {
 		variables = NewVariables()
+	}
+
+	if funcs == nil {
+		funcs = NewFunctions()
 	}
 
 	if coalescer == nil {
@@ -48,6 +55,7 @@ func NewContext(doc Document, variables Variables, funcs Functions, coalescer co
 	}
 
 	return Context{
+		ctx:        ctx,
 		document:   &doc,
 		fixedFuncs: funcs,
 		userFuncs:  NewFunctions(),
@@ -60,6 +68,10 @@ func NewContext(doc Document, variables Variables, funcs Functions, coalescer co
 // (for example "ctx.Coalesce().ToBool(...)").
 func (c Context) Coalesce() coalescing.Coalescer {
 	return c.coalescer
+}
+
+func (c Context) Context() context.Context {
+	return c.ctx
 }
 
 func (c Context) GetDocument() *Document {
@@ -81,6 +93,7 @@ func (c Context) GetFunction(name string) (Function, bool) {
 
 func (c Context) WithVariable(name string, val any) Context {
 	return Context{
+		ctx:        c.ctx,
 		document:   c.document,
 		fixedFuncs: c.fixedFuncs,
 		userFuncs:  c.userFuncs,
@@ -91,6 +104,7 @@ func (c Context) WithVariable(name string, val any) Context {
 
 func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
 	return Context{
+		ctx:        c.ctx,
 		document:   c.document,
 		fixedFuncs: c.fixedFuncs,
 		userFuncs:  c.userFuncs,
@@ -101,6 +115,7 @@ func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
 
 func (c Context) WithRudispaceFunction(funcName string, fun Function) Context {
 	return Context{
+		ctx:        c.ctx,
 		document:   c.document,
 		fixedFuncs: c.fixedFuncs,
 		userFuncs:  c.userFuncs.DeepCopy().Set(funcName, fun),

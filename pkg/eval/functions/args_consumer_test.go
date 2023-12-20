@@ -83,7 +83,7 @@ func TestBoolConsumer(t *testing.T) {
 	}
 
 	coalescer := coalescing.NewHumane()
-	ctx := types.NewContext(types.Document{}, nil, nil, coalescer)
+	ctx := types.NewContext(nil, types.Document{}, nil, nil, coalescer)
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -131,7 +131,7 @@ func TestStringConsumer(t *testing.T) {
 	}
 
 	coalescer := coalescing.NewHumane()
-	ctx := types.NewContext(types.Document{}, nil, nil, coalescer)
+	ctx := types.NewContext(nil, types.Document{}, nil, nil, coalescer)
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -181,7 +181,7 @@ func TestAnyConsumer(t *testing.T) {
 	}
 
 	coalescer := coalescing.NewHumane()
-	ctx := types.NewContext(types.Document{}, nil, nil, coalescer)
+	ctx := types.NewContext(nil, types.Document{}, nil, nil, coalescer)
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -213,7 +213,7 @@ func TestExpressionConsumer(t *testing.T) {
 	}
 
 	coalescer := coalescing.NewHumane()
-	ctx := types.NewContext(types.Document{}, nil, nil, coalescer)
+	ctx := types.NewContext(nil, types.Document{}, nil, nil, coalescer)
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -243,7 +243,7 @@ func TestVariadicConsumer(t *testing.T) {
 	}
 
 	coalescer := coalescing.NewHumane()
-	ctx := types.NewContext(types.Document{}, nil, nil, coalescer)
+	ctx := types.NewContext(nil, types.Document{}, nil, nil, coalescer)
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

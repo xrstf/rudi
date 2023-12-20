@@ -4,6 +4,7 @@
 package script
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,7 +19,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Run(opts *types.Options, args []string) error {
+func Run(ctx context.Context, opts *types.Options, args []string) error {
 	// determine input script to evaluate
 	script := ""
 	scriptName := ""
@@ -64,13 +65,13 @@ func Run(opts *types.Options, args []string) error {
 	}
 
 	// setup the evaluation context
-	ctx, err := util.SetupRudiContext(opts, files)
+	rudiCtx, err := util.SetupRudiContext(ctx, opts, files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
 	// evaluate the script
-	_, evaluated, err := program.RunContext(ctx)
+	_, evaluated, err := program.RunContext(rudiCtx)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

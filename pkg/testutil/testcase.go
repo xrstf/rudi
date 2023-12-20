@@ -4,6 +4,7 @@
 package testutil
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -23,6 +24,7 @@ type Testcase struct {
 	Expression string
 	AST        ast.Expression
 
+	Context   context.Context
 	Document  any
 	Variables types.Variables
 	Functions types.Functions
@@ -78,7 +80,7 @@ func (tc *Testcase) eval(t *testing.T) (types.Context, any, error) {
 		log.Fatalf("Failed to create parser document: %v", err)
 	}
 
-	progContext := types.NewContext(doc, tc.Variables, tc.Functions, tc.Coalescer)
+	progContext := types.NewContext(tc.Context, doc, tc.Variables, tc.Functions, tc.Coalescer)
 
 	if tc.Expression != "" {
 		prog := strings.NewReader(tc.Expression)

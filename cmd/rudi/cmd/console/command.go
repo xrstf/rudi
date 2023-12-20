@@ -4,6 +4,7 @@
 package console
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -50,7 +51,7 @@ var replCommands = map[string]replCommandFunc{
 	"help": helpCommand,
 }
 
-func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
+func Run(ctx context.Context, opts *cmdtypes.Options, args []string, rudiVersion string) error {
 	rl, err := readline.New("⮞ ")
 	if err != nil {
 		return fmt.Errorf("failed to setup readline prompt: %w", err)
@@ -61,7 +62,7 @@ func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	ctx, err := util.SetupRudiContext(opts, files)
+	rudiCtx, err := util.SetupRudiContext(ctx, opts, files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
@@ -80,7 +81,7 @@ func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 			continue
 		}
 
-		newCtx, stop, err := processInput(ctx, opts, line)
+		newCtx, stop, err := processInput(rudiCtx, opts, line)
 		if err != nil {
 			parseErr := &rudi.ParseError{}
 			if errors.As(err, parseErr) {
@@ -94,7 +95,7 @@ func Run(opts *cmdtypes.Options, args []string, rudiVersion string) error {
 			break
 		}
 
-		ctx = newCtx
+		rudiCtx = newCtx
 	}
 
 	fmt.Println()
