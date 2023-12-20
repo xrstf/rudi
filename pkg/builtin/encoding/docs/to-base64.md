@@ -5,12 +5,12 @@
 
 ## Examples
 
-* `(to-base64 "")` -> `""`
-* `(to-base64 "hello")` -> `"aGVsbG8="`
+* `(to-base64 "")` ➜ `""`
+* `(to-base64 "hello")` ➜ `"aGVsbG8="`
 
 ## Forms
 
-### `(to-base64 data)`
+### `(to-base64 data:string)` ➜ `string`
 
 * `data` is an arbitrary expression.
 

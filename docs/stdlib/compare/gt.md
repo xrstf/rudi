@@ -4,12 +4,12 @@
 
 ## Examples
 
-* `(gt? 3 2)` -> `true`
-* `(gt? 2.0 3)` -> `false`
+* `(gt? 3 2)` ➜ `true`
+* `(gt? 2.0 3)` ➜ `false`
 
 ## Forms
 
-### `(gt? left right)`
+### `(gt? left:any right:any)` ➜ `bool`
 
 * `left` is an arbitrary expression, except for identifiers.
 * `right` is likewise an arbitrary expression, except for identifiers.

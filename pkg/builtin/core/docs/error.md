@@ -6,19 +6,19 @@ available.
 
 ## Examples
 
-* `(error "invalid choice")` -> error `"invalid choice"`
-* `(error "too many replicas: %d" .replicas)` -> error `"too man replicas: 3"`
+* `(error "invalid choice")` ➜ error `"invalid choice"`
+* `(error "too many replicas: %d" .replicas)` ➜ error `"too man replicas: 3"`
 
 ## Forms
 
-### `(error message)`
+### `(error message:string)` ➜ `error`
 
 * `message` is an arbitrary expression.
 
 `error` evaluates the the message and coalesces it to a string. When successful,
 a new error with the message is created and returned.
 
-### `(error fmt args+)`
+### `(error fmt:string args:any…)` ➜ `error`
 
 * `fmt` is an arbitrary expression.
 * `args` are one ore more expressions.

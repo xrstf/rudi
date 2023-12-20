@@ -6,13 +6,13 @@ an expression. Only those items for which the given condition expression is
 
 ## Examples
 
-* `(filter [0 "foo" ""] empty?)` -> `[0 ""]`
-* `(filter [0 "foo" ""] [v] (not (empty? $v)))` -> `["foo"]`
-* `(filter ["a" "b" "c" "d"] [idx v] (gt? $idx 1))` -> `["c" "d"]`
+* `(filter [0 "foo" ""] empty?)` ➜ `[0 ""]`
+* `(filter [0 "foo" ""] [v] (not (empty? $v)))` ➜ `["foo"]`
+* `(filter ["a" "b" "c" "d"] [idx v] (gt? $idx 1))` ➜ `["c" "d"]`
 
 ## Forms
 
-### `(filter source func)`
+### `(filter source:expression func:identifier)` ➜ `any`
 
 * `source` is an arbitrary expression.
 * `func` is a function identifier.
@@ -27,10 +27,10 @@ it's discarded.
 `func` must be a function that allows being called with exactly 1 argument. If
 more arguments are needed, use the other form of `filter`.
 
-### `(filter source namingvec expr)`
+### `(filter source:expression params:vector expr:expression)` ➜ `any`
 
 * `source` is an arbitrary expression.
-* `naming` is a vector describing the desired loop variable name(s).
+* `params` is a vector describing the desired loop variable name(s).
 * `expr` is an arbitrary expression.
 
 When evaluating more complex conditions, this form can be used. Instead of
@@ -41,7 +41,7 @@ then be used in arbitrary expressions, for example:
 * `(filter .data [value] (not (empty? $value)))`
 * `(filter .data [idx value] (gt? $idx 1))`
 
-`namingvec` must be a vector containing one or two identifiers. If a single
+`params` must be a vector containing one or two identifiers. If a single
 identifier is given, it's the variable name for the value. If two identifiers
 are given, the first is used for the index/key, the second is used for the value.
 

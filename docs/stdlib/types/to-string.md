@@ -5,16 +5,16 @@
 
 ## Examples
 
-* `(to-string null)` -> `""`
-* `(to-string true)` -> `"true"`
-* `(to-string false)` -> `"false"`
-* `(to-string 0)` -> `"0"`
-* `(to-string 1.1)` -> `"1.1"`
-* `(to-string [])` -> error
+* `(to-string null)` ➜ `""`
+* `(to-string true)` ➜ `"true"`
+* `(to-string false)` ➜ `"false"`
+* `(to-string 0)` ➜ `"0"`
+* `(to-string 1.1)` ➜ `"1.1"`
+* `(to-string [])` ➜ error
 
 ## Forms
 
-### `(to-string value)`
+### `(to-string value:any)` ➜ `string`
 
 * `value` is an arbitrary expression.
 

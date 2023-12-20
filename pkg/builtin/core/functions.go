@@ -181,6 +181,8 @@ func tryWithFallbackFunction(ctx types.Context, test ast.Expression, fallback as
 	return result, nil
 }
 
+// TODO: Allow (set (foo).bar 42)
+
 // (set VAR:Variable VALUE:any)
 // (set EXPR:PathExpression VALUE:any)
 func setFunction(ctx types.Context, target, value ast.Expression) (any, error) {
@@ -206,6 +208,10 @@ func setFunction(ctx types.Context, target, value ast.Expression) (any, error) {
 
 	return newValue, nil
 }
+
+// TODO: Shouldn't (delete (map $obj to-upper).key) also work, i.e. not just
+// symbols? Symbols are only important for the bang handler, which checks it
+// independently.
 
 // (delete VAR:Variable)
 // (delete EXPR:PathExpression)

@@ -16,22 +16,24 @@ invalid, as `$x` only exists in the positive branch of that `if` tuple.
 
 ## Examples
 
-* `(set! $foo 42)` -> `42`
-* `(set! $foo 42) $foo` -> `42`
-* `(set! .global[0].document "new-value")` -> `"new-value"`
+* `(set! $foo 42)` ➜ `42`
+* `(set! $foo 42) $foo` ➜ `42`
+* `(set! .global[0].document "new-value")` ➜ `"new-value"`
 
 Without the bang modifier, `set` is less useful:
 
-* `(set! $foo 42) (set $foo "new-value") $foo` -> `42`
+* `(set! $foo 42) (set $foo "new-value") $foo` ➜ `42`
 
 ## Forms
 
-### `(set target value)`
+### `(set target:symbol value:expression)` ➜ `any`
 
-* `target` is either a symbol, but can also be a vector/object/tuple with
-  path expression, as long as the tuple would evaluate to something where the
-  path expression fits.
+* `target` is a symbol.
 * `value` is any expression.
+
+<!-- , but can also be a vector/object/tuple with
+  path expression, as long as the tuple would evaluate to something where the
+  path expression fits. -->
 
 `set` evaluates the value and then applies it to the `target`.
 

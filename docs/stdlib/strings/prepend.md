@@ -14,28 +14,30 @@ individually, so `(prepend [1] 2 3)` yields `[2 3 1]`, not `[3 2 1]`.
 
 ## Examples
 
-* `(prepend ["foo"] "bar" "x" 3)` -> `["x" 3 "foo" "bar"]`
-* `(prepend "foo" "bar" "baz")` -> `"barbazfoo"`
-* `(prepend "foo" 2)` -> `"2foo"` with humane coalescing, error otherwise
-* `(prepend 2 3 4)` -> `"342"` with humane coalescing, error otherwise
-* `(prepend null 1)` -> `[1]` because `null` can turn into empty vectors
+* `(prepend ["foo"] "bar" "x" 3)` ➜ `["x" 3 "foo" "bar"]`
+* `(prepend "foo" "bar" "baz")` ➜ `"barbazfoo"`
+* `(prepend "foo" 2)` ➜ `"2foo"` with humane coalescing, error otherwise
+* `(prepend 2 3 4)` ➜ `"342"` with humane coalescing, error otherwise
+* `(prepend null 1)` ➜ `[1]` because `null` can turn into empty vectors
 
 ## Forms
 
-### `(prepend base prepends+)`
+### `(prepend base:vector prepends:any…)` ➜ `vector`
 
 * `base` is an arbitrary expression.
 * `prepends` are one or more additional arbitrary expressions.
 
-`prepend` evaluates the base expression first. If the result coalesces to a
-vector, all further arguments will be prepended to the vector. Otherwise, string
-coalescing is attempted. If the argument coalesces to neither, an error is
-returned.
+If the `base` coalesces to a vector, all further arguments will be prepended to
+the vector. Additional items in the vector can be of any type. The result is
+a copy of the base vector with the newly added elements prepended to it.
 
-All further `prepends` expressions are then evaluated and prepended. For vectors,
-the types of the values does not matter, as vectors can hold any kind of data.
-For string prepend mode, each of the further arguments must coalesce to strings,
-otherwise an error is returned.
+### `(prepend base:string prepends:string…)` ➜ `string`
+
+* `base` is an arbitrary expression.
+* `prepends` are one or more additional arbitrary expressions.
+
+If `base` is a string, all further `prepends` must also be strings. Each is added
+to the base string without any separator.
 
 ## Context
 

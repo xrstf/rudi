@@ -5,14 +5,14 @@ always uses [humane coalescing](../../coalescing.md#humane-coalescer).
 
 ## Examples
 
-* `(to-float 0)` -> `0.0`
-* `(to-float "0")` -> `0.0`
-* `(to-float 1)` -> `1.0`
-* `(to-float [])` -> error
+* `(to-float 0)` ➜ `0.0`
+* `(to-float "0")` ➜ `0.0`
+* `(to-float 1)` ➜ `1.0`
+* `(to-float [])` ➜ error
 
 ## Forms
 
-### `(to-float value)`
+### `(to-float value:any)` ➜ `float`
 
 * `value` is an arbitrary expression.
 

@@ -9,13 +9,17 @@ occurs, compared to `default` which tests for empty-ishness.
 
 ## Examples
 
-* `(try (+ 1 2) "fallback")` -> `3` (no error occurred in `+`)
-* `(try (+ 1 "invalid") "fallback")` -> `"fallback"`
-* `(try (+ 1 "invalid") (+ "also invalid"))` -> error
+* `(try (+ 1 2) "fallback")` ➜ `3` (no error occurred in `+`)
+* `(try (+ 1 "invalid") "fallback")` ➜ `"fallback"`
+* `(try (+ 1 "invalid") (+ "also invalid"))` ➜ error
 
 ## Forms
 
-### `(try candidate fallback)`
+### `(try candidate:expression)` ➜ `any`
+
+This is equivalent to `(try candidate null)`.
+
+### `(try candidate:expression fallback:expression)` ➜ `any`
 
 * `candidate` is an arbitrary expression.
 * `fallback` is an arbitrary expression.

@@ -6,15 +6,15 @@ condition was false.
 
 ## Examples
 
-* `(if true 42)` -> `42`
-* `(if false 42)` -> `null`
-* `(if true "yes" "no")` -> `"yes"`
-* `(if false "yes" "no")` -> `"no"`
-* `(if (gt? 4 2) "yes" "no")` -> `"yes"`
+* `(if true 42)` ➜ `42`
+* `(if false 42)` ➜ `null`
+* `(if true "yes" "no")` ➜ `"yes"`
+* `(if false "yes" "no")` ➜ `"no"`
+* `(if (gt? 4 2) "yes" "no")` ➜ `"yes"`
 
 ## Forms
 
-### `(if condition expr)`
+### `(if condition:bool expr:expression)` ➜ `any`
 
 * `condition` is any expression that evaluates to a bool.
 * `expr` is any expression.
@@ -25,7 +25,7 @@ If the condition is `false`, `if` returns `null`.
 
 If the condition or expression return an error, `if` returns that error.
 
-### `(if condition expr-a expr-b)`
+### `(if condition:bool expr-a:expression expr-b:expression)` ➜ `any`
 
 * `condition` is any expression that evaluates to a bool.
 * `expr-a` is any expression.

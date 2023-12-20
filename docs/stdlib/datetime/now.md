@@ -9,11 +9,11 @@ information on the format string syntax.
 
 ## Examples
 
-* `(now "2006-01-02")` -> `"2023-12-02"`
+* `(now "2006-01-02")` ➜ `"2023-12-02"`
 
 ## Forms
 
-### `(now format)`
+### `(now format:string)` ➜ `string`
 
 * `format` is an arbitrary expression.
 

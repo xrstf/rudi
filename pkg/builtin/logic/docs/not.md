@@ -4,12 +4,12 @@
 
 ## Examples
 
-* `(not true)` -> `false`
-* `(not false)` -> `true`
+* `(not true)` ➜ `false`
+* `(not false)` ➜ `true`
 
 ## Forms
 
-### `(not expr)`
+### `(not expr:bool)` ➜ `bool`
 
 * `expr` is an arbitrary expressions.
 

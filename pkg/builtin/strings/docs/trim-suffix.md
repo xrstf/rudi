@@ -7,12 +7,12 @@ removal is done once, so removing the suffix `"o"` from `"foo"` will yield
 
 ## Examples
 
-* `(trim-suffix? "12344" "4")` -> `"1234"`
-* `(trim-suffix? "12344" "x")` -> `"12344"`
+* `(trim-suffix? "12344" "4")` ➜ `"1234"`
+* `(trim-suffix? "12344" "x")` ➜ `"12344"`
 
 ## Forms
 
-### `(trim-suffix? base suffix)`
+### `(trim-suffix? base:string suffix:string)` ➜ `string`
 
 * `base` is an arbitrary expression.
 * `suffix` is an arbitrary expression.

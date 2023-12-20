@@ -8,12 +8,12 @@ regardless if all its arguments are integer numbers.
 
 ## Examples
 
-* `(/ 9 3 2)` -> `1.5` ((9.0 / 3.0) / 2.0)
-* `(/ 1 0)` -> invalid: division by zero
+* `(/ 9 3 2)` ➜ `1.5` ((9.0 / 3.0) / 2.0)
+* `(/ 1 0)` ➜ invalid: division by zero
 
 ## Forms
 
-### `(/ expr+)`
+### `(/ expr:number…)` ➜ `number`
 
 * `expr` is 1 or more expressions
 

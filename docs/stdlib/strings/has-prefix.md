@@ -4,13 +4,13 @@
 
 ## Examples
 
-* `(has-prefix? "hello" "hell")` -> `true`
-* `(has-prefix? "hallo" "halloween")` -> `false`
-* `(has-prefix? "foo" "bar")` -> `false`
+* `(has-prefix? "hello" "hell")` ➜ `true`
+* `(has-prefix? "hallo" "halloween")` ➜ `false`
+* `(has-prefix? "foo" "bar")` ➜ `false`
 
 ## Forms
 
-### `(has-prefix? base prefix)`
+### `(has-prefix? base:string prefix:string)` ➜ `bool`
 
 * `base` is an arbitrary expression.
 * `prefix` is an arbitrary expression.

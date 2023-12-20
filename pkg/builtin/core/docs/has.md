@@ -5,12 +5,12 @@ value it points to).
 
 ## Examples
 
-* `(set! $var 42) (has? $var.foo)` -> `false`
-* `(set! $var {foo "bar"}) (has? $var.foo)` -> `true`
+* `(set! $var 42) (has? $var.foo)` ➜ `false`
+* `(set! $var {foo "bar"}) (has? $var.foo)` ➜ `true`
 
 ## Forms
 
-### `(has? expr)`
+### `(has? expr:expression)` ➜ `bool`
 
 * `expr` is exactly 1 expression. This can be any expression that supports
   path expressions (like variables, objects, vectors, tuples).

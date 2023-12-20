@@ -9,13 +9,13 @@ See also [`to-upper`](to-upper.md).
 
 ## Examples
 
-* `(to-lower "FOO")` -> `"foo"`
+* `(to-lower "FOO")` ➜ `"foo"`
 
 ## Forms
 
-### `(to-lower string)`
+### `(to-lower string:string)` ➜ `string`
 
 * `string` is an arbitrary expression.
 
-`to-lower` evaluates the first argument and coalesces the result into a string.
-When successful, the lowercased version of the string is returned.
+Returns a copy of the value with all bytes being turned to their lowercase
+equivalent.

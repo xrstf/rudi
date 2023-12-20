@@ -5,13 +5,13 @@
 
 ## Examples
 
-* `(from-base64 "")` -> `""`
-* `(from-base64 "invalid")` -> error
-* `(from-base64 "aGVsbG8=")` -> `"hello"`
+* `(from-base64 "")` ➜ `""`
+* `(from-base64 "invalid")` ➜ error
+* `(from-base64 "aGVsbG8=")` ➜ `"hello"`
 
 ## Forms
 
-### `(from-base64 encoded)`
+### `(from-base64 encoded:string)` ➜ `string`
 
 * `encoded` is an arbitrary expression.
 

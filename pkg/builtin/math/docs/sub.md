@@ -5,12 +5,12 @@ numeric values. `sub` is an alias for this function.
 
 ## Examples
 
-* `(- 1 2 3)` -> `-4` ((1 - 2) - 3)
-* `(- 1 1.5)` -> `-0.5`
+* `(- 1 2 3)` ➜ `-4` ((1 - 2) - 3)
+* `(- 1 1.5)` ➜ `-0.5`
 
 ## Forms
 
-### `(- expr+)`
+### `(- expr:number…)` ➜ `number`
 
 * `expr` is 1 or more expressions
 

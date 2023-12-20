@@ -5,15 +5,15 @@
 
 ## Examples
 
-* `(to-bool 0)` -> `false`
-* `(to-bool "0")` -> `false`
-* `(to-bool 1)` -> `true`
-* `(to-bool [])` -> `false`
-* `(to-bool [0])` -> `true`
+* `(to-bool 0)` ➜ `false`
+* `(to-bool "0")` ➜ `false`
+* `(to-bool 1)` ➜ `true`
+* `(to-bool [])` ➜ `false`
+* `(to-bool [0])` ➜ `true`
 
 ## Forms
 
-### `(to-bool value)`
+### `(to-bool value:any)` ➜ `bool`
 
 * `value` is an arbitrary expression.
 

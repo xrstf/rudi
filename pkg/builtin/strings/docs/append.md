@@ -11,28 +11,30 @@ vector nor string.
 
 ## Examples
 
-* `(append ["foo"] "bar" "x" 3)` -> `["foo" "bar" "x" 3]`
-* `(append "foo" "bar" "baz")` -> `"foobarbaz"`
-* `(append "foo" 2)` -> `"foo2"` with humane coalescing, error otherwise
-* `(append 2 3 4)` -> `"234"` with humane coalescing, error otherwise
-* `(append null 1)` -> `[1]` because `null` can turn into empty vectors
+* `(append ["foo"] "bar" "x" 3)` ➜ `["foo" "bar" "x" 3]`
+* `(append "foo" "bar" "baz")` ➜ `"foobarbaz"`
+* `(append "foo" 2)` ➜ `"foo2"` with humane coalescing, error otherwise
+* `(append 2 3 4)` ➜ `"234"` with humane coalescing, error otherwise
+* `(append null 1)` ➜ `[1]` because `null` can turn into empty vectors
 
 ## Forms
 
-### `(append base appends+)`
+### `(append base:vector appends:any…)` ➜ `vector`
 
 * `base` is an arbitrary expression.
 * `appends` are one or more additional arbitrary expressions.
 
-`append` evaluates the base expression first. If the result coalesces to a
-vector, all further arguments will be appended to the vector. Otherwise, string
-coalescing is attempted. If the argument coalesces to neither, an error is
-returned.
+If the `base` coalesces to a vector, all further arguments will be appended to
+the vector. Additional items in the vector can be of any type. The result is
+a copy of the base vector with the newly added elements appended to it.
 
-All further `appends` expressions are then evaluated and appended. For vectors,
-the types of the values does not matter, as vectors can hold any kind of data.
-For string append mode, each of the further arguments must coalesce to strings,
-otherwise an error is returned.
+### `(append base:string appends:string…)` ➜ `string`
+
+* `base` is an arbitrary expression.
+* `appends` are one or more additional arbitrary expressions.
+
+If `base` is a string, all further `appends` must also be strings. Each is added
+to the base string without any separator.
 
 ## Context
 

@@ -10,13 +10,13 @@ coalescing.
 
 ## Examples
 
-* `(eq? "" "")` -> `true`
-* `(eq? 1 2)` -> `false`
-* `(eq? (+ 1 1) 2)` -> `true`
+* `(eq? "" "")` ➜ `true`
+* `(eq? 1 2)` ➜ `false`
+* `(eq? (+ 1 1) 2)` ➜ `true`
 
 ## Forms
 
-### `(eq? left right)`
+### `(eq? left:any right:any)` ➜ `bool`
 
 * `left` is an arbitrary expression, except for identifiers.
 * `right` is likewise an arbitrary expression, except for identifiers.

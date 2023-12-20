@@ -5,14 +5,14 @@
 
 ## Examples
 
-* `(to-int "0")` -> `0`
-* `(to-int 1.0)` -> `1`
-* `(to-int 1.2)` -> error, no lossless conversion possible
-* `(to-int [])` -> error
+* `(to-int "0")` ➜ `0`
+* `(to-int 1.0)` ➜ `1`
+* `(to-int 1.2)` ➜ error, no lossless conversion possible
+* `(to-int [])` ➜ error
 
 ## Forms
 
-### `(to-int value)`
+### `(to-int value:any)` ➜ `int`
 
 * `value` is an arbitrary expression.
 

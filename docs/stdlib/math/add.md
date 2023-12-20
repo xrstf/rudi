@@ -5,12 +5,12 @@
 
 ## Examples
 
-* `(+ 1 2 3)` -> `6`
-* `(+ 1 1.5)` -> `2.5`
+* `(+ 1 2 3)` ➜ `6`
+* `(+ 1 1.5)` ➜ `2.5`
 
 ## Forms
 
-### `(+ expr+)`
+### `(+ expr:number…)` ➜ `number`
 
 * `expr` is 1 or more expressions
 

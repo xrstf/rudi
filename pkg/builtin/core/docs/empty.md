@@ -14,14 +14,14 @@ are considered "empty-ish":
 
 ## Examples
 
-* `(empty? "")` -> `true`
-* `(empty? 42)` -> `false`
+* `(empty? "")` ➜ `true`
+* `(empty? 42)` ➜ `false`
 
 ## Forms
 
-### `(empty? expr)`
+### `(empty? value:any)` ➜ `bool`
 
-* `expr` is exactly 1 expression.
+* `value` is exactly 1 expression.
 
 The expression is evaluated and if it's empty-ish according to the list above,
 `true` is returned, else `false`. The expression must be evaluatable, so

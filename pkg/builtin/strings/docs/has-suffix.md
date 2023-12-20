@@ -4,12 +4,12 @@
 
 ## Examples
 
-* `(has-suffix? "foobar" "bar")` -> `true`
-* `(has-suffix? "foobar" "f")` -> `false`
+* `(has-suffix? "foobar" "bar")` ➜ `true`
+* `(has-suffix? "foobar" "f")` ➜ `false`
 
 ## Forms
 
-### `(has-suffix? base suffix)`
+### `(has-suffix? base:string suffix:string)` ➜ `bool`
 
 * `base` is an arbitrary expression.
 * `suffix` is an arbitrary expression.

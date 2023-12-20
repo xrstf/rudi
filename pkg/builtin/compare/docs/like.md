@@ -10,12 +10,12 @@ coalescing.
 
 ## Examples
 
-* `(like? 1 "1")` -> `true`
-* `(like? 1 "2")` -> `false`
+* `(like? 1 "1")` ➜ `true`
+* `(like? 1 "2")` ➜ `false`
 
 ## Forms
 
-### `(like? left right)`
+### `(like? left:any right:any)` ➜ `bool`
 
 * `left` is an arbitrary expression, except for identifiers.
 * `right` is likewise an arbitrary expression, except for identifiers.

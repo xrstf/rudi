@@ -5,12 +5,12 @@ given input value.
 
 ## Examples
 
-* `(sha1 "")` -> `"da39a3ee5e6b4b0d3255bfef95601890afd80709"`
-* `(sha1 "hello")` -> `"aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"`
+* `(sha1 "")` ➜ `"da39a3ee5e6b4b0d3255bfef95601890afd80709"`
+* `(sha1 "hello")` ➜ `"aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"`
 
 ## Forms
 
-### `(sha1 data)`
+### `(sha1 data:string)` ➜ `string`
 
 * `data` is an arbitrary expression.
 

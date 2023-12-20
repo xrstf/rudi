@@ -11,23 +11,24 @@ as they are, vectors are unpacked (not recursively) and must contain only string
 
 ## Examples
 
-* `(concat "," ["1" "2" "3"])` -> `"1,2,3"`
-* `(concat "" ["1" "2" "3"])` -> `"123"`
-* `(concat "," [])` -> `""`
-* `(concat "," "a" "b")` -> `"a,b"`
-* `(concat "," "a" ["b" "c"] "d" [] "e")` -> `"a,b,c,d,e"`
-* `(concat "," "a" [["b"]])` -> invalid
+* `(concat "," ["1" "2" "3"])` ➜ `"1,2,3"`
+* `(concat "" ["1" "2" "3"])` ➜ `"123"`
+* `(concat "," [])` ➜ `""`
+* `(concat "," "a" "b")` ➜ `"a,b"`
+* `(concat "," "a" ["b" "c"] "d" [] "e")` ➜ `"a,b,c,d,e"`
+* `(concat "," "a" [["b"]])` ➜ invalid
 
 ## Forms
 
-### `(concat glue element+)`
+### `(concat glue:string element:any…)` ➜ `string`
 
 * `glue` is an arbitrary expression that evaluates to a string.
 * `element` is 1 or more arbitrary expressions that each evaluate to a string
   or a vector containing only strings.
 
 `concat` combines all elements using the glue string. Each element can be either
-a string or a vector.
+a string or a vector. Vectors are only flattened to one level and must contain
+only values that coalesce into strings. Empty vectors add nothing to the result.
 
 ## Context
 

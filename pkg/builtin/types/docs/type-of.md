@@ -4,17 +4,17 @@
 
 ## Examples
 
-* `(type-of null)` -> `"null"`
-* `(type-of true)` -> `"bool"`
-* `(type-of 1)` -> `"number"`
-* `(type-of 1.2)` -> `"number"`
-* `(type-of "")` -> `"string"`
-* `(type-of [])` -> `"vector"`
-* `(type-of {})` -> `"object"`
+* `(type-of null)` ➜ `"null"`
+* `(type-of true)` ➜ `"bool"`
+* `(type-of 1)` ➜ `"number"`
+* `(type-of 1.2)` ➜ `"number"`
+* `(type-of "")` ➜ `"string"`
+* `(type-of [])` ➜ `"vector"`
+* `(type-of {})` ➜ `"object"`
 
 ## Forms
 
-### `(type-of value)`
+### `(type-of value:any)` ➜ `string`
 
 * `value` is an arbitrary expression.
 

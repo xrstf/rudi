@@ -5,16 +5,21 @@ inreverse order.
 
 ## Examples
 
-* `(reverse "abc")` -> `"cba"`
-* `(reverse [1 2 3])` -> `[3 2 1]`
+* `(reverse "abc")` ➜ `"cba"`
+* `(reverse [1 2 3])` ➜ `[3 2 1]`
 
 ## Forms
 
-### `(reverse source)`
+### `(reverse source:string)` ➜ `string`
 
 * `source` is an arbitrary expression.
 
-`reverse` evaluates the source expression. If tries to coalesce the value to
-string and if successful, returns a reverse of the string. If unsuccessful, it
-tries to coalesce to a vector and if successful, returns a copy of the vector
-with items in reverse order. Otherwise an error is returned.
+Returns the reverse of the input strings, i.e. a string with the order of all
+bytes flipped.
+
+### `(reverse source:vector)` ➜ `vector`
+
+* `source` is an arbitrary expression.
+
+Returns a copy of the source vector with items in the opposite order of the
+source.

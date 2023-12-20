@@ -9,12 +9,12 @@ and [`like?`](like.md), which always uses humane coalescing.
 
 ## Examples
 
-* `(identical? 1 "1")` -> `false`
-* `(identical? 1 1.0)` -> `true`
+* `(identical? 1 "1")` ➜ `false`
+* `(identical? 1 1.0)` ➜ `true`
 
 ## Forms
 
-### `(identical? left right)`
+### `(identical? left:any right:any)` ➜ `bool`
 
 * `left` is an arbitrary expression, except for identifiers.
 * `right` is likewise an arbitrary expression, except for identifiers.

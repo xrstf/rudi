@@ -5,15 +5,13 @@ includes linebreaks.
 
 ## Examples
 
-* `(trim " hello\nworld ")` -> `"hello\nworld"`
-* `(trim "\n")` -> `""`
+* `(trim " hello\nworld ")` ➜ `"hello\nworld"`
+* `(trim "\n")` ➜ `""`
 
 ## Forms
 
-### `(trim string)`
+### `(trim value:string)` ➜ `string`
 
-* `string` is an arbitrary expression.
+* `value` is an arbitrary expression.
 
-`trim` evaluates the first argument and coalesces the result into a string. When
-successful, leading and trailing whitespace is removed from the string and then
-the resulting string is returned.
+Returns a copy of the string with leading and trailing whitespace removed.

@@ -7,12 +7,12 @@ removal is done once, so removing the prefix `"o"` from `"oof"` will yield
 
 ## Examples
 
-* `(trim-prefix? "11234" "1")` -> `"1234"`
-* `(trim-prefix? "11234" "x")` -> `"11234"`
+* `(trim-prefix? "11234" "1")` ➜ `"1234"`
+* `(trim-prefix? "11234" "x")` ➜ `"11234"`
 
 ## Forms
 
-### `(trim-prefix? base prefix)`
+### `(trim-prefix? base:string prefix:string)` ➜ `string`
 
 * `base` is an arbitrary expression.
 * `prefix` is an arbitrary expression.

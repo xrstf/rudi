@@ -10,26 +10,25 @@ vector nor string.
 
 ## Examples
 
-* `(contains? ["foo"] "bar")` -> `false`
-* `(contains? "foo" "f")` -> `true`
-* `(contains? "9000" 9)` -> `true` with humane coalescing, error otherwise
+* `(contains? ["foo"] "bar")` ➜ `false`
+* `(contains? "foo" "f")` ➜ `true`
+* `(contains? "9000" 9)` ➜ `true` with humane coalescing, error otherwise
 
 ## Forms
 
-### `(contains? haystack needle)`
+### `(contains? haystack:vector needle:any)` ➜ `bool`
 
 * `haystack` is an arbitrary expression.
 * `needle` is an arbitrary expression.
 
-`contains?` evaluates the haystack expression first. If the result coalesces to
-a vector, the function will check if the vector contains the needle. Otherwise
-string coalescing is attempted and if it succeeds, the function will check if
-the needle is a substring of the hackstack. If the haystack is neither string
-nor vector, an error is returned.
-
 For vector checks, the needle is evaluated and compared to each element of the
 haystack vector, using the current coalescer's equality rules. If an element was
 found that is equal to the needle, `true` is returned, otherwise `false`.
+
+### `(contains? haystack:string needle:string)` ➜ `bool`
+
+* `haystack` is an arbitrary expression.
+* `needle` is an arbitrary expression.
 
 For string checks, the needle is evaluated and coalesces to a string. If
 successful, the function returns `true` if the needle string is contained in the

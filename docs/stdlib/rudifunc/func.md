@@ -56,7 +56,7 @@ inject a Go function statically into Rudi instead of defining it at runtime.
 
 ## Forms
 
-### `(func! name params body)`
+### `(func! name:identifier params:vector body:expression)` ➜ `null`
 
 * `name` is an identifier giving the function its name.
 * `params` is a vector containing identifiers that hold the parameter names.

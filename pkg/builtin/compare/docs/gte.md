@@ -5,12 +5,12 @@ the second.
 
 ## Examples
 
-* `(gte? 3 2)` -> `true`
-* `(gte? 2.0 3)` -> `false`
+* `(gte? 3 2)` ➜ `true`
+* `(gte? 2.0 3)` ➜ `false`
 
 ## Forms
 
-### `(gte? left right)`
+### `(gte? left:any right:any)` ➜ `bool`
 
 * `left` is an arbitrary expression, except for identifiers.
 * `right` is likewise an arbitrary expression, except for identifiers.

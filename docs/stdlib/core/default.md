@@ -13,9 +13,9 @@ value, but returns the error instead.
 
 ## Examples
 
-* `(default "" "fallback")` -> `"fallback"`
-* `(default "set" "fallback")` -> `"set"`
-* `(default (+ "invalid") "fallback")` -> error
+* `(default "" "fallback")` ➜ `"fallback"`
+* `(default "set" "fallback")` ➜ `"set"`
+* `(default (+ "invalid") "fallback")` ➜ error
 
 The function is also nice when combined with the bang modifier to apply default
 values to a variable:
@@ -24,7 +24,7 @@ values to a variable:
 
 ## Forms
 
-### `(default candidate fallback)`
+### `(default candidate:any fallback:any)` ➜ `any`
 
 * `candidate` is an arbitrary expression.
 * `fallback` is an arbitrary expression.

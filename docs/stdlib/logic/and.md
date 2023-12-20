@@ -5,12 +5,12 @@
 
 ## Examples
 
-* `(and true true)` -> `true`
-* `(and true false (and true true))` -> `false`
+* `(and true true)` ➜ `true`
+* `(and true false (and true true))` ➜ `false`
 
 ## Forms
 
-### `(and expr+)`
+### `(and expr:bool…)` ➜ `bool`
 
 * `expr` is one or more arbitrary expressions.
 

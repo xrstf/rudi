@@ -10,12 +10,12 @@ variables has an effect on subsequent expressions.
 
 ## Examples
 
-* `(do true 42)` -> `42`
-* `(do (set! $foo 1) (+ $foo 2))` -> `3`
+* `(do true 42)` ➜ `42`
+* `(do (set! $foo 1) (+ $foo 2))` ➜ `3`
 
 ## Forms
 
-### `(do expr+)`
+### `(do expr:expression…)` ➜ `any`
 
 * `expr` is 1 or more expressions
 
