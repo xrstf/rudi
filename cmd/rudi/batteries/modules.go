@@ -22,6 +22,8 @@ import (
 	logicdocs "go.xrstf.de/rudi/pkg/builtin/logic/docs"
 	mathmod "go.xrstf.de/rudi/pkg/builtin/math"
 	mathdocs "go.xrstf.de/rudi/pkg/builtin/math/docs"
+	rudifuncmod "go.xrstf.de/rudi/pkg/builtin/rudifunc"
+	rudifuncdocs "go.xrstf.de/rudi/pkg/builtin/rudifunc/docs"
 	stringsmod "go.xrstf.de/rudi/pkg/builtin/strings"
 	stringsdocs "go.xrstf.de/rudi/pkg/builtin/strings/docs"
 	typesmod "go.xrstf.de/rudi/pkg/builtin/types"
@@ -37,10 +39,10 @@ import (
 )
 
 var (
-	// BuiltInModules look alphabetically sorted, except that "core" is always the first item,
+	// SafeBuiltInModules look alphabetically sorted, except that "core" is always the first item,
 	// because it's the most important module and should be first in the documentation. Order here
 	// does not matter otherwise anyway.
-	BuiltInModules = []docs.Module{
+	SafeBuiltInModules = []docs.Module{
 		{
 			Name:          "core",
 			Functions:     coremod.Functions,
@@ -96,6 +98,16 @@ var (
 			Functions:     typesmod.Functions,
 			Documentation: typesdocs.Functions,
 		},
+	}
+
+	RudifuncModule = docs.Module{
+		Name:          "rudifunc",
+		Functions:     rudifuncmod.Functions,
+		Documentation: rudifuncdocs.Functions,
+	}
+
+	UnsafeBuiltInModules = []docs.Module{
+		RudifuncModule,
 	}
 
 	ExtendedModules = []docs.Module{

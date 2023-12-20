@@ -28,8 +28,9 @@ func main() {
 	// Dump docs for std/ext library modules, both to make processing all docs
 	// easier (just have to implement 1 way to do it: walk the filesystem in docs/)
 	// and to have easily browsable docs in GitHub in one central repository.
-	dumpModules(batteries.BuiltInModules, "stdlib")
-	dumpModules(batteries.ExtendedModules, "extlib")
+	dumpModules(batteries.SafeBuiltInModules, "stdlib", true)
+	dumpModules(batteries.UnsafeBuiltInModules, "stdlib", false)
+	dumpModules(batteries.ExtendedModules, "extlib", true)
 
 	// find all Markdown files, except for READMEs
 	docsFiles := map[string]string{}
@@ -101,19 +102,21 @@ func isFunctionDoc(path string) bool {
 	return strings.HasPrefix(path, "stdlib"+string(filepath.Separator)) || strings.HasPrefix(path, "extlib"+string(filepath.Separator))
 }
 
-func dumpModules(mods []docs.Module, library string) {
+func dumpModules(mods []docs.Module, library string, wipe bool) {
 	libDir := filepath.Join(docsDirectory, library)
 
-	// delete everything but the README.md
-	entries, err := os.ReadDir(libDir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	if wipe {
+		// delete everything but the README.md
+		entries, err := os.ReadDir(libDir)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	for _, entry := range entries {
-		if entry.IsDir() {
-			if err := os.RemoveAll(filepath.Join(libDir, entry.Name())); err != nil {
-				log.Fatal(err)
+		for _, entry := range entries {
+			if entry.IsDir() {
+				if err := os.RemoveAll(filepath.Join(libDir, entry.Name())); err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}

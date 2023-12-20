@@ -42,8 +42,10 @@ func EvalTuple(ctx types.Context, tup ast.Tuple) (types.Context, any, error) {
 
 type BangHandler interface {
 	// All functions work fine with the default bang handler ("set!", "append!", ...), except
-	// for "delete!", which requires special handling to make it work as expected.
-	BangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error)
+	// for "delete!", which requires special handling to make it work as expected. Custom bang
+	// handlers are useful to introducing side effects explicitly (so it becomes very clear if a
+	// function in Rudi has side effects or not).
+	BangHandler(ctx types.Context, args []ast.Expression, value any) (types.Context, any, error)
 }
 
 func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expression) (types.Context, any, error) {
@@ -51,22 +53,6 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 	function, ok := ctx.GetFunction(funcName)
 	if !ok {
 		return ctx, nil, fmt.Errorf("unknown function %s", funcName)
-	}
-
-	// prepare handling a possible bang (like `(append! .foo 12)`)
-	var updateSymbol *ast.Symbol
-	if fun.Bang {
-		if len(args) == 0 {
-			return ctx, nil, fmt.Errorf("%s must have at least 1 symbol argument", fun.String())
-		}
-
-		firstArg := args[0]
-		symbol, ok := firstArg.(ast.Symbol)
-		if !ok {
-			return ctx, nil, fmt.Errorf("%s must use Symbol as first argument, got %T", fun.String(), firstArg)
-		}
-
-		updateSymbol = &symbol
 	}
 
 	// call the function
@@ -77,11 +63,27 @@ func EvalFunctionCall(ctx types.Context, fun ast.Identifier, args []ast.Expressi
 
 	resultCtx := ctx
 
-	// if desired, update the symbol's value
-	if updateSymbol != nil {
-		// "delete!" has a special behaviour for the bang modifier
+	// if desired, update the context and introduce side effects
+	if fun.Bang {
+		// "delete!" has a special behaviour for the bang modifier, so do possibly some other functions.
 		if custom, ok := function.(BangHandler); ok {
-			return custom.BangHandler(ctx, *updateSymbol, result)
+			return custom.BangHandler(ctx, args, result)
+		}
+
+		// prepare handling a possible bang (like `(append! .foo 12)`)
+		var updateSymbol *ast.Symbol
+		if fun.Bang {
+			if len(args) == 0 {
+				return ctx, nil, fmt.Errorf("%s must have at least 1 symbol argument", fun.String())
+			}
+
+			firstArg := args[0]
+			symbol, ok := firstArg.(ast.Symbol)
+			if !ok {
+				return ctx, nil, fmt.Errorf("%s must use Symbol as first argument, got %T", fun.String(), firstArg)
+			}
+
+			updateSymbol = &symbol
 		}
 
 		// We always return the computed value, no matter how deep we inject it into the symbol;

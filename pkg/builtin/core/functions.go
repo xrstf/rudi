@@ -254,7 +254,17 @@ func deleteFunction(ctx types.Context, expr ast.Expression) (any, error) {
 	return updatedValue, nil
 }
 
-func deleteBangHandler(ctx types.Context, sym ast.Symbol, value any) (types.Context, any, error) {
+func deleteBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (types.Context, any, error) {
+	if len(originalArgs) == 0 {
+		return ctx, nil, errors.New("must have at least 1 symbol argument")
+	}
+
+	firstArg := originalArgs[0]
+	sym, ok := firstArg.(ast.Symbol)
+	if !ok {
+		return ctx, nil, fmt.Errorf("must use Symbol as first argument, got %T", firstArg)
+	}
+
 	updatedValue := value
 
 	// if the symbol has a path to traverse, do so

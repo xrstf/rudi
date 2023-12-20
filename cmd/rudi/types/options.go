@@ -12,14 +12,15 @@ import (
 )
 
 type Options struct {
-	ShowHelp    bool
-	Interactive bool
-	ScriptFile  string
-	PrettyPrint bool
-	FormatYaml  bool
-	PrintAst    bool
-	ShowVersion bool
-	Coalescing  string
+	ShowHelp                 bool
+	Interactive              bool
+	ScriptFile               string
+	PrettyPrint              bool
+	FormatYaml               bool
+	PrintAst                 bool
+	ShowVersion              bool
+	Coalescing               string
+	EnableRudispaceFunctions bool
 }
 
 func NewDefaultOptions() Options {
@@ -36,6 +37,7 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVarP(&o.FormatYaml, "yaml", "y", o.FormatYaml, "Output pretty-printed YAML instead of JSON.")
 	fs.BoolVarP(&o.PrintAst, "debug-ast", "", o.PrintAst, "Output syntax tree of the parsed script in non-interactive mode.")
 	fs.StringVarP(&o.Coalescing, "coalesce", "", o.Coalescing, "Type conversion handling, choose one of strict, pedantic or humane.")
+	fs.BoolVar(&o.EnableRudispaceFunctions, "enable-funcs", o.EnableRudispaceFunctions, "Enable the func! function to allow defining new functions in Rudi code.")
 	fs.BoolVarP(&o.ShowVersion, "version", "V", o.ShowVersion, "Show version and exit.")
 }
 

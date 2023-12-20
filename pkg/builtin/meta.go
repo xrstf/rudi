@@ -13,22 +13,28 @@ import (
 	"go.xrstf.de/rudi/pkg/builtin/lists"
 	"go.xrstf.de/rudi/pkg/builtin/logic"
 	"go.xrstf.de/rudi/pkg/builtin/math"
+	"go.xrstf.de/rudi/pkg/builtin/rudifunc"
 	"go.xrstf.de/rudi/pkg/builtin/strings"
 	"go.xrstf.de/rudi/pkg/builtin/types"
 	evaltypes "go.xrstf.de/rudi/pkg/eval/types"
 )
 
 var (
-	Functions = evaltypes.Functions{}.
-		Add(core.Functions).
-		Add(logic.Functions).
-		Add(compare.Functions).
-		Add(math.Functions).
-		Add(strings.Functions).
-		Add(lists.Functions).
-		Add(hashing.Functions).
-		Add(encoding.Functions).
-		Add(datetime.Functions).
-		Add(types.Functions).
-		Add(coalesce.Functions)
+	SafeFunctions = evaltypes.Functions{}.
+			Add(core.Functions).
+			Add(logic.Functions).
+			Add(coalesce.Functions).
+			Add(compare.Functions).
+			Add(math.Functions).
+			Add(strings.Functions).
+			Add(lists.Functions).
+			Add(hashing.Functions).
+			Add(encoding.Functions).
+			Add(datetime.Functions).
+			Add(types.Functions)
+
+	RudifuncFunctions = rudifunc.Functions
+
+	UnsafeFunctions = evaltypes.Functions{}.
+			Add(RudifuncFunctions)
 )

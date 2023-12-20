@@ -103,4 +103,8 @@ Additional functionality is available in the [extended library](../extlib/).
 * [`to-int`](../stdlib/types/to-int.md) – try to convert the given argument losslessly to an int64
 * [`to-string`](../stdlib/types/to-string.md) – try to convert the given argument losslessly to a string
 * [`type-of`](../stdlib/types/type-of.md) – returns the type of a given value (e.g. "string" or "number")
+
+### rudifunc
+
+* [`func`](../stdlib/rudifunc/func.md) – defines a new function
 <!-- END_STDLIB_TOC -->

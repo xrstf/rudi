@@ -44,8 +44,14 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 
 	funcs := rudi.NewFunctions()
 
-	for _, mod := range batteries.BuiltInModules {
+	for _, mod := range batteries.SafeBuiltInModules {
 		funcs.Add(mod.Functions)
+	}
+
+	// Only add rudispace function support when explicitly enabled, as defining functions at
+	// runtime can lead to non-terminating programs and resource exhaustion.
+	if opts.EnableRudispaceFunctions {
+		funcs.Add(batteries.RudifuncModule.Functions)
 	}
 
 	for _, mod := range batteries.ExtendedModules {

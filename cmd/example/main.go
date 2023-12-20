@@ -33,7 +33,7 @@ func main() {
 		// Likewise, setup the functions available (note that this includes
 		// functions like "if" and "and", so running with an empty function set
 		// is generally not advisable).
-		rudi.NewBuiltInFunctions(),
+		rudi.NewSafeBuiltInFunctions(),
 		// Decide what kind of type strictness you would like; pedantic, strict
 		// or humane; choose your own adventure (strict is default if you use nil
 		// here; humane allows conversions like 1 == "1").

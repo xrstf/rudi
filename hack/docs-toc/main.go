@@ -10,6 +10,7 @@ import (
 	"regexp"
 
 	"go.xrstf.de/rudi/cmd/rudi/batteries"
+	"go.xrstf.de/rudi/pkg/docs"
 )
 
 const (
@@ -52,13 +53,18 @@ func updateFile(filename string, linkPrefix string) error {
 	body = inject(body, renderHelpTopicsTOC(), "HELP_TOPICS")
 
 	// inject stdlib TOC
-	body = inject(body, renderLibraryTOC(batteries.BuiltInModules, linkPrefix+"stdlib/"), "STDLIB")
+	builtInModules := []docs.Module{}
+	builtInModules = append(builtInModules, batteries.SafeBuiltInModules...)
+	builtInModules = append(builtInModules, batteries.UnsafeBuiltInModules...)
+	body = inject(body, renderLibraryTOC(builtInModules, linkPrefix+"stdlib/"), "STDLIB")
 
 	// inject extlib TOC
 	body = inject(body, renderLibraryTOC(batteries.ExtendedModules, linkPrefix+"extlib/"), "EXTLIB")
 
 	// inject help lib TOC
-	body = inject(body, renderHelpLibraryTOC(append(batteries.BuiltInModules, batteries.ExtendedModules...)), "HELP_LIB")
+	allModules := builtInModules
+	allModules = append(allModules, batteries.ExtendedModules...)
+	body = inject(body, renderHelpLibraryTOC(allModules), "HELP_LIB")
 
 	// write updated file
 	if err := os.WriteFile(filename, []byte(body), 0644); err != nil {

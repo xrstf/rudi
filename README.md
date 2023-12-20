@@ -42,7 +42,8 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 ## Features
 
 * **Safe** evaluation: Rudi is not Turing-complete and so Rudi programs are always guaranteed to
-  complete in a reasonable time frame.
+  complete in a reasonable time frame. You can add support for functions defined in Rudi code (i.e.
+  at runtime), but this is optional to allow a safe embedded behaviour by default.
 * **Lightweight**: Rudi comes with no runtime dependencies.
 * **Hackable**: Rudi tries to keep the language itself approachable, so that modifications are
   easier and newcomers have an easier time to get started.
@@ -89,6 +90,7 @@ Rudi comes with a standalone CLI tool called `rudi`.
 Usage of rudi:
       --coalesce string   Type conversion handling, choose one of strict, pedantic or humane. (default "strict")
       --debug-ast         Output syntax tree of the parsed script in non-interactive mode.
+      --enable-funcs      Enable the func! function to allow defining new functions in Rudi code.
   -h, --help              Show help and documentation.
   -i, --interactive       Start an interactive REPL to run expressions.
   -p, --pretty            Output pretty-printed JSON.
@@ -160,7 +162,7 @@ func main() {
       // Likewise, setup the functions available (note that this includes
       // functions like "if" and "and", so running with an empty function set
       // is generally not advisable).
-      rudi.NewBuiltInFunctions(),
+      rudi.NewSafeBuiltInFunctions(),
       // Decide what kind of type strictness you would like; pedantic, strict
       // or humane; choose your own adventure (strict is default if you use nil
       // here; humane allows conversions like 1 == "1").

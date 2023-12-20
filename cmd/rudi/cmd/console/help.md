@@ -107,6 +107,9 @@ You can also request help for any of these functions using `help FUNCTION`:
   * `to-string` – try to convert the given argument losslessly to a string
   * `type-of` – returns the type of a given value (e.g. "string" or "number")
 
+* **rudifunc**
+  * `func` – defines a new function
+
 * **semver**
   * `semver` – parses a string as a semantic version
 

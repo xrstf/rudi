@@ -46,9 +46,19 @@ func NewFunctions() Functions {
 	return types.NewFunctions()
 }
 
-// NewBuiltInFunctions returns a copy of all the built-in Rudi functions.
-func NewBuiltInFunctions() Functions {
-	return builtin.Functions.DeepCopy()
+// NewSafeBuiltInFunctions returns a copy of all the safe built-in Rudi functions. These are all the
+// functions that do not break runtime guarantees like programs always terminating in a reasonable
+// time. See also NewUnsafeBuiltInFunctions, which contains functions like func! that allow to define
+// new functions within Rudi code, but could lead to infinite loops or resource exhaustion.
+func NewSafeBuiltInFunctions() Functions {
+	return builtin.SafeFunctions.DeepCopy()
+}
+
+// NewUnsafeBuiltInFunctions returns a copy of all the unsafe built-in Rudi functions. These are
+// functions with extended side effects, please refer to the documentation or code for which
+// functions exactly are considered "unsafe" in Rudi.
+func NewUnsafeBuiltInFunctions() Functions {
+	return builtin.UnsafeFunctions.DeepCopy()
 }
 
 // NewVariables returns an empty set of runtime variables.

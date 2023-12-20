@@ -27,10 +27,11 @@ func (d *Document) Set(wrappedData any) {
 }
 
 type Context struct {
-	document  *Document
-	funcs     Functions
-	variables Variables
-	coalescer coalescing.Coalescer
+	document   *Document
+	fixedFuncs Functions
+	userFuncs  Functions
+	variables  Variables
+	coalescer  coalescing.Coalescer
 }
 
 func NewContext(doc Document, variables Variables, funcs Functions, coalescer coalescing.Coalescer) Context {
@@ -47,10 +48,11 @@ func NewContext(doc Document, variables Variables, funcs Functions, coalescer co
 	}
 
 	return Context{
-		document:  &doc,
-		funcs:     funcs,
-		variables: variables,
-		coalescer: coalescer,
+		document:   &doc,
+		fixedFuncs: funcs,
+		userFuncs:  NewFunctions(),
+		variables:  variables,
+		coalescer:  coalescer,
 	}
 }
 
@@ -69,24 +71,41 @@ func (c Context) GetVariable(name string) (any, bool) {
 }
 
 func (c Context) GetFunction(name string) (Function, bool) {
-	return c.funcs.Get(name)
+	f, ok := c.fixedFuncs.Get(name)
+	if ok {
+		return f, true
+	}
+
+	return c.userFuncs.Get(name)
 }
 
 func (c Context) WithVariable(name string, val any) Context {
 	return Context{
-		document:  c.document,
-		funcs:     c.funcs,
-		variables: c.variables.With(name, val),
-		coalescer: c.coalescer,
+		document:   c.document,
+		fixedFuncs: c.fixedFuncs,
+		userFuncs:  c.userFuncs,
+		variables:  c.variables.With(name, val),
+		coalescer:  c.coalescer,
 	}
 }
 
 func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
 	return Context{
-		document:  c.document,
-		funcs:     c.funcs,
-		variables: c.variables,
-		coalescer: coalescer,
+		document:   c.document,
+		fixedFuncs: c.fixedFuncs,
+		userFuncs:  c.userFuncs,
+		variables:  c.variables,
+		coalescer:  coalescer,
+	}
+}
+
+func (c Context) WithRudispaceFunction(funcName string, fun Function) Context {
+	return Context{
+		document:   c.document,
+		fixedFuncs: c.fixedFuncs,
+		userFuncs:  c.userFuncs.DeepCopy().Set(funcName, fun),
+		variables:  c.variables,
+		coalescer:  c.coalescer,
 	}
 }
 
