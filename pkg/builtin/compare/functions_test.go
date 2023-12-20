@@ -4,6 +4,7 @@
 package compare
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -390,7 +391,7 @@ func TestInvalidComparisonFunctions(t *testing.T) {
 		gteFunction,
 	}
 
-	ctx := types.NewContext(nil, types.Document{}, nil, nil, nil)
+	ctx := types.NewContext(context.Background(), types.Document{}, nil, nil, nil)
 
 	for _, tc := range testcases {
 		for _, f := range funcs {
@@ -462,7 +463,7 @@ func TestComparisonFunctions(t *testing.T) {
 		},
 	}
 
-	ctx := types.NewContext(nil, types.Document{}, nil, nil, nil)
+	ctx := types.NewContext(context.Background(), types.Document{}, nil, nil, nil)
 
 	for _, tc := range testcases {
 		t.Run("", func(t *testing.T) {

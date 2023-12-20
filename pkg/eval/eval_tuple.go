@@ -14,6 +14,12 @@ import (
 )
 
 func EvalTuple(ctx types.Context, tup ast.Tuple) (types.Context, any, error) {
+	// Function calls are the only place where we check if the Go context has been cancelled.
+	// This error should not be caught and swallowed by any other function, like `try` or `default`.
+	if err := ctx.Context().Err(); err != nil {
+		return ctx, nil, err
+	}
+
 	if len(tup.Expressions) == 0 {
 		return ctx, nil, errors.New("invalid tuple: tuple cannot be empty")
 	}

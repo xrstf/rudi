@@ -65,13 +65,13 @@ func Run(ctx context.Context, opts *types.Options, args []string) error {
 	}
 
 	// setup the evaluation context
-	rudiCtx, err := util.SetupRudiContext(ctx, opts, files)
+	rudiCtx, err := util.SetupRudiContext(opts, files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
 	// evaluate the script
-	_, evaluated, err := program.RunContext(rudiCtx)
+	_, evaluated, err := program.RunContext(rudiCtx.WithContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

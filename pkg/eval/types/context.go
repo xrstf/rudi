@@ -91,6 +91,17 @@ func (c Context) GetFunction(name string) (Function, bool) {
 	return c.userFuncs.Get(name)
 }
 
+func (c Context) WithContext(ctx context.Context) Context {
+	return Context{
+		ctx:        ctx,
+		document:   c.document,
+		fixedFuncs: c.fixedFuncs,
+		userFuncs:  c.userFuncs,
+		variables:  c.variables,
+		coalescer:  c.coalescer,
+	}
+}
+
 func (c Context) WithVariable(name string, val any) Context {
 	return Context{
 		ctx:        c.ctx,

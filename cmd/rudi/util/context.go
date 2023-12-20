@@ -4,7 +4,6 @@
 package util
 
 import (
-	"context"
 	"fmt"
 
 	"go.xrstf.de/rudi"
@@ -13,7 +12,7 @@ import (
 	"go.xrstf.de/rudi/pkg/coalescing"
 )
 
-func SetupRudiContext(ctx context.Context, opts *types.Options, files []any) (rudi.Context, error) {
+func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 	var (
 		document rudi.Document
 		err      error
@@ -59,5 +58,7 @@ func SetupRudiContext(ctx context.Context, opts *types.Options, files []any) (ru
 		funcs.Add(mod.Functions)
 	}
 
-	return rudi.NewContext(ctx, document, vars, funcs, coalescer), nil
+	// No context set here, caller is expected to provide their own (the Rudi context is re-used
+	// in the console, but the Go context should not be, hence the separation).
+	return rudi.NewContext(nil, document, vars, funcs, coalescer), nil
 }

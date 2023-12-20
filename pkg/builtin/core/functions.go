@@ -4,6 +4,7 @@
 package core
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -33,6 +34,14 @@ var (
 		"try":     functions.NewBuilder(tryWithFallbackFunction, tryFunction).WithDescription("returns the fallback if the first expression errors out").Build(),
 	}
 )
+
+func keepContextCanceled(err error) error {
+	if errors.Is(err, context.Canceled) {
+		return err
+	}
+
+	return nil
+}
 
 func ifFunction(ctx types.Context, test bool, yes ast.Expression) (any, error) {
 	if test {
@@ -134,7 +143,7 @@ func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
 
 	_, err = eval.TraverseEvaluatedPathExpression(value, *evaluatedPath)
 	if err != nil {
-		return false, nil
+		return false, keepContextCanceled(err)
 	}
 
 	return true, nil
@@ -163,7 +172,7 @@ func defaultFunction(ctx types.Context, value any, fallback ast.Expression) (any
 func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
 	_, result, err := eval.EvalExpression(ctx, test)
 	if err != nil {
-		return nil, nil
+		return nil, keepContextCanceled(err)
 	}
 
 	return result, nil

@@ -62,7 +62,7 @@ func Run(ctx context.Context, opts *cmdtypes.Options, args []string, rudiVersion
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	rudiCtx, err := util.SetupRudiContext(ctx, opts, files)
+	rudiCtx, err := util.SetupRudiContext(opts, files)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
@@ -81,7 +81,7 @@ func Run(ctx context.Context, opts *cmdtypes.Options, args []string, rudiVersion
 			continue
 		}
 
-		newCtx, stop, err := processInput(rudiCtx, opts, line)
+		newCtx, stop, err := processInput(ctx, rudiCtx, opts, line)
 		if err != nil {
 			parseErr := &rudi.ParseError{}
 			if errors.As(err, parseErr) {
@@ -103,29 +103,31 @@ func Run(ctx context.Context, opts *cmdtypes.Options, args []string, rudiVersion
 	return nil
 }
 
-func processInput(ctx types.Context, opts *cmdtypes.Options, input string) (newCtx types.Context, stop bool, err error) {
+func processInput(ctx context.Context, rudiCtx types.Context, opts *cmdtypes.Options, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
-		return ctx, false, command(ctx, opts)
+		return rudiCtx, false, command(rudiCtx, opts)
 	}
 
 	if prefix := "help "; strings.HasPrefix(input, prefix) {
 		topicName := strings.TrimPrefix(input, prefix)
-		return ctx, false, helpTopicCommand(topicName)
+		return rudiCtx, false, helpTopicCommand(topicName)
 	}
 
 	if strings.EqualFold("exit", input) {
-		return ctx, true, nil
+		return rudiCtx, true, nil
 	}
 
 	// parse input
 	program, err := rudi.Parse("(repl)", input)
 	if err != nil {
-		return ctx, false, err
+		return rudiCtx, false, err
 	}
 
-	newCtx, evaluated, err := program.RunContext(ctx)
+	// TODO: Setup a new context that can be cancelled with Ctrl-C to interrupt long running statements.
+
+	newCtx, evaluated, err := program.RunContext(rudiCtx.WithContext(ctx))
 	if err != nil {
-		return ctx, false, err
+		return rudiCtx, false, err
 	}
 
 	f := colorjson.NewFormatter()
@@ -134,7 +136,7 @@ func processInput(ctx types.Context, opts *cmdtypes.Options, input string) (newC
 
 	encoded, err := f.Marshal(evaluated)
 	if err != nil {
-		return ctx, false, fmt.Errorf("failed to encode %v: %w", evaluated, err)
+		return rudiCtx, false, fmt.Errorf("failed to encode %v: %w", evaluated, err)
 	}
 
 	fmt.Println(string(encoded))

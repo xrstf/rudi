@@ -4,6 +4,7 @@
 package functions
 
 import (
+	"context"
 	"testing"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
@@ -490,7 +491,7 @@ func TestArgsMatcher(t *testing.T) {
 	}
 
 	coalescer := coalescing.NewHumane()
-	ctx := types.NewContext(nil, types.Document{}, nil, nil, coalescer)
+	ctx := types.NewContext(context.Background(), types.Document{}, nil, nil, coalescer)
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

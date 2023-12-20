@@ -4,6 +4,7 @@
 package test
 
 import (
+	"context"
 	"testing"
 
 	"go.xrstf.de/rudi/pkg/eval/types"
@@ -350,5 +351,115 @@ func TestEvalTupleBangModifier(t *testing.T) {
 	for _, testcase := range testcases {
 		testcase.Functions = dummyFunctions
 		t.Run(testcase.String(), testcase.Run)
+	}
+}
+
+type cancellerFunc struct {
+	cancelFn context.CancelFunc
+	called   bool
+}
+
+var _ types.Function = &cancellerFunc{}
+
+func (*cancellerFunc) Description() string {
+	return ""
+}
+
+func (c *cancellerFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, error) {
+	if c.cancelFn != nil {
+		c.cancelFn()
+	}
+
+	c.called = true
+
+	return nil, nil
+}
+
+func TestEvalTupleContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	// In this testcase, the context has already been cancelled and so this function is a NOP;
+	// we need _some_ function to run this test and since we have cancellerFunc already…
+	rudiCancelFunc := &cancellerFunc{}
+
+	testcase := testutil.Testcase{
+		AST: ast.Tuple{
+			Expressions: []ast.Expression{
+				ast.Identifier{Name: "cancelctx"},
+			},
+		},
+		Context: ctx,
+		Functions: types.Functions{
+			"cancelctx": rudiCancelFunc,
+		},
+		Invalid: true,
+	}
+
+	testcase.Run(t)
+
+	if rudiCancelFunc.called {
+		t.Fatal("Should not have called cancelctx.")
+	}
+}
+
+func TestEvalTupleSuddenContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// In this case, we rely on programs working as expected, which enables us to run multiple
+	// tuples in succession, of which one will cancel the context, simulating that for example a
+	// timeout kicked in.
+	anyTuple := &cancellerFunc{}
+	cancelsContext := &cancellerFunc{cancelFn: cancel}
+	shouldNotBeCalledAnymore := &cancellerFunc{}
+
+	testcase := testutil.Testcase{
+		AST: ast.Program{
+			Statements: []ast.Statement{
+				{
+					Expression: ast.Tuple{
+						Expressions: []ast.Expression{
+							ast.Identifier{Name: "anyTuple"},
+						},
+					},
+				},
+				{
+					Expression: ast.Tuple{
+						Expressions: []ast.Expression{
+							ast.Identifier{Name: "cancelsContext"},
+						},
+					},
+				},
+				{
+					Expression: ast.Tuple{
+						Expressions: []ast.Expression{
+							ast.Identifier{Name: "shouldNotBeCalledAnymore"},
+						},
+					},
+				},
+			},
+		},
+		Context: ctx,
+		Functions: types.Functions{
+			"anyTuple":                 anyTuple,
+			"cancelsContext":           cancelsContext,
+			"shouldNotBeCalledAnymore": shouldNotBeCalledAnymore,
+		},
+		Invalid: true,
+	}
+
+	testcase.Run(t)
+
+	if !anyTuple.called {
+		t.Fatal("Should have called anyTuple.")
+	}
+
+	if !cancelsContext.called {
+		t.Fatal("Should have called cancelsContext.")
+	}
+
+	if shouldNotBeCalledAnymore.called {
+		t.Fatal("Should not have called shouldNotBeCalledAnymore.")
 	}
 }
