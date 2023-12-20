@@ -5,4 +5,4 @@ UUIDs are represented as lowercase hex strings in Rudi.
 
 ## Examples
 
-* `(uuidv4)` -> `"0de626c1-5955-4303-a52b-420463386f76"`
+* `(uuidv4)` ➜ `"0de626c1-5955-4303-a52b-420463386f76"`

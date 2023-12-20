@@ -10,8 +10,8 @@ a string, depending on the coalescer).
 
 ## Examples
 
-* `(semver "v1.2")` -> semver object
-* `(semver "foo")` -> error
-* `(eq? (to-string (semver "v1.0")) "1.0.0")` -> `true`
-* `(eq? (semver "v1.0") "1.0.0")` -> `true` (with human coalescing)
-* `(gt? (semver "v1.0") (semver "v1.0.1"))` -> `false`
+* `(semver "v1.2")` ➜ semver object
+* `(semver "foo")` ➜ error
+* `(eq? (to-string (semver "v1.0")) "1.0.0")` ➜ `true`
+* `(eq? (semver "v1.0") "1.0.0")` ➜ `true` (with human coalescing)
+* `(gt? (semver "v1.0") (semver "v1.0.1"))` ➜ `false`

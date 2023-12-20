@@ -8,9 +8,9 @@ require (
 	github.com/muesli/termenv v0.15.2
 	github.com/spf13/pflag v1.0.5
 	go.xrstf.de/rudi v0.3.1-0.20231213154017-00deb3910d92
-	go.xrstf.de/rudi-contrib/semver v0.1.2
-	go.xrstf.de/rudi-contrib/uuid v0.1.2
-	go.xrstf.de/rudi-contrib/yaml v0.1.2
+	go.xrstf.de/rudi-contrib/semver v0.1.3
+	go.xrstf.de/rudi-contrib/uuid v0.1.3
+	go.xrstf.de/rudi-contrib/yaml v0.1.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 
