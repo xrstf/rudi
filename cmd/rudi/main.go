@@ -4,7 +4,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/cmd/help"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/script"
 	"go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/cmd/rudi/util"
 
 	"github.com/spf13/pflag"
 )
@@ -112,10 +112,10 @@ func main() {
 		return
 	}
 
-	ctx := context.Background()
+	handler := util.SetupSignalHandler()
 
 	if opts.Interactive || len(args) == 0 {
-		if err := console.Run(ctx, &opts, args, BuildTag); err != nil {
+		if err := console.Run(handler, &opts, args, BuildTag); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -123,7 +123,7 @@ func main() {
 		return
 	}
 
-	if err := script.Run(ctx, &opts, args); err != nil {
+	if err := script.Run(handler, &opts, args); err != nil {
 		parseErr := &rudi.ParseError{}
 		if errors.As(err, parseErr) {
 			fmt.Println(parseErr.Snippet())

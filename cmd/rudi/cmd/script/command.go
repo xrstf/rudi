@@ -11,16 +11,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
 	"go.xrstf.de/rudi/pkg/debug"
 
+	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
 )
 
-func Run(ctx context.Context, opts *types.Options, args []string) error {
+func Run(handler *util.SignalHandler, opts *types.Options, args []string) error {
 	// determine input script to evaluate
 	var (
 		script     string
@@ -73,8 +73,14 @@ func Run(ctx context.Context, opts *types.Options, args []string) error {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
 
+	// allow to interrupt the script
+	subCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	handler.SetCancelFn(cancel)
+
 	// evaluate the script
-	_, evaluated, err := program.RunContext(rudiCtx.WithGoContext(ctx))
+	_, evaluated, err := program.RunContext(rudiCtx.WithGoContext(subCtx))
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}
