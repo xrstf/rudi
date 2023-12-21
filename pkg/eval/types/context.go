@@ -113,6 +113,21 @@ func (c Context) WithVariable(name string, val any) Context {
 	}
 }
 
+func (c Context) WithVariables(vars map[string]any) Context {
+	if len(vars) == 0 {
+		return c
+	}
+
+	return Context{
+		ctx:        c.ctx,
+		document:   c.document,
+		fixedFuncs: c.fixedFuncs,
+		userFuncs:  c.userFuncs,
+		variables:  c.variables.WithMany(vars),
+		coalescer:  c.coalescer,
+	}
+}
+
 func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
 	return Context{
 		ctx:        c.ctx,
@@ -244,6 +259,20 @@ func (v Variables) Set(name string, val any) Variables {
 // With returns a copy of the variables, with the new variable being added to it.
 func (v Variables) With(name string, val any) Variables {
 	return v.DeepCopy().Set(name, val)
+}
+
+// WithMany is like With(), but for adding multiple new variables at once. This
+// should be preferred to With() to prevent unnecessary DeepCopies.
+func (v Variables) WithMany(vars map[string]any) Variables {
+	if len(vars) == 0 {
+		return v
+	}
+
+	out := v.DeepCopy()
+	for k, v := range vars {
+		out.Set(k, v)
+	}
+	return out
 }
 
 func (v Variables) DeepCopy() Variables {

@@ -75,17 +75,17 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 		return nil, fmt.Errorf("expected %d argument(s), got %d", len(f.params), len(args))
 	}
 
-	funcCtx := ctx
+	funcArgs := map[string]any{}
 	for i, paramName := range f.params {
 		_, arg, err := eval.EvalExpression(ctx, args[i])
 		if err != nil {
 			return nil, err
 		}
 
-		funcCtx = funcCtx.WithVariable(paramName, arg)
+		funcArgs[paramName] = arg
 	}
 
-	_, result, err := eval.EvalExpression(funcCtx, f.body)
+	_, result, err := eval.EvalExpression(ctx.WithVariables(funcArgs), f.body)
 
 	return result, err
 }

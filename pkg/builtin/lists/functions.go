@@ -68,11 +68,16 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 	)
 
 	for i, item := range data {
-		// do not use separate contexts for each loop iteration, as the loop might build up a counter
-		loopCtx = loopCtx.WithVariable(loopVarName, item)
-		if loopIndexName != "" {
-			loopCtx = loopCtx.WithVariable(loopIndexName, i)
+		vars := map[string]any{
+			loopVarName: item,
 		}
+
+		if loopIndexName != "" {
+			vars[loopIndexName] = i
+		}
+
+		// do not use separate contexts for each loop iteration, as the loop might build up a counter
+		loopCtx = loopCtx.WithVariables(vars)
 
 		loopCtx, result, err = eval.EvalExpression(loopCtx, expr)
 		if err != nil {
@@ -98,11 +103,16 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 	)
 
 	for key, value := range data {
-		// do not use separate contexts for each loop iteration, as the loop might build up a counter
-		loopCtx = loopCtx.WithVariable(loopVarName, value)
-		if loopIndexName != "" {
-			loopCtx = loopCtx.WithVariable(loopIndexName, key)
+		vars := map[string]any{
+			loopVarName: value,
 		}
+
+		if loopIndexName != "" {
+			vars[loopIndexName] = key
+		}
+
+		// do not use separate contexts for each loop iteration, as the loop might build up a counter
+		loopCtx = loopCtx.WithVariables(vars)
 
 		loopCtx, result, err = eval.EvalExpression(loopCtx, expr)
 		if err != nil {
@@ -140,10 +150,15 @@ func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Ex
 	}
 
 	mapHandler := func(ctx types.Context, index any, value any) (types.Context, any, error) {
-		ctx = ctx.WithVariable(valueVarName, value)
-		if indexVarName != "" {
-			ctx = ctx.WithVariable(indexVarName, index)
+		vars := map[string]any{
+			valueVarName: value,
 		}
+
+		if indexVarName != "" {
+			vars[indexVarName] = index
+		}
+
+		ctx = ctx.WithVariables(vars)
 
 		return eval.EvalExpression(ctx, expr)
 	}
@@ -197,10 +212,15 @@ func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingV
 	}
 
 	mapHandler := func(ctx types.Context, key any, value any) (types.Context, any, error) {
-		ctx = ctx.WithVariable(valueVarName, value)
-		if keyVarName != "" {
-			ctx = ctx.WithVariable(keyVarName, key)
+		vars := map[string]any{
+			valueVarName: value,
 		}
+
+		if keyVarName != "" {
+			vars[keyVarName] = key
+		}
+
+		ctx = ctx.WithVariables(vars)
 
 		return eval.EvalExpression(ctx, expr)
 	}
@@ -254,10 +274,15 @@ func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast
 	}
 
 	mapHandler := func(ctx types.Context, index any, value any) (types.Context, any, error) {
-		ctx = ctx.WithVariable(valueVarName, value)
-		if indexVarName != "" {
-			ctx = ctx.WithVariable(indexVarName, index)
+		vars := map[string]any{
+			valueVarName: value,
 		}
+
+		if indexVarName != "" {
+			vars[indexVarName] = index
+		}
+
+		ctx = ctx.WithVariables(vars)
 
 		return eval.EvalExpression(ctx, expr)
 	}
@@ -317,10 +342,15 @@ func filterObjectExpressionFunction(ctx types.Context, data map[string]any, nami
 	}
 
 	mapHandler := func(ctx types.Context, key any, value any) (types.Context, any, error) {
-		ctx = ctx.WithVariable(valueVarName, value)
-		if keyVarName != "" {
-			ctx = ctx.WithVariable(keyVarName, key)
+		vars := map[string]any{
+			valueVarName: value,
 		}
+
+		if keyVarName != "" {
+			vars[keyVarName] = key
+		}
+
+		ctx = ctx.WithVariables(vars)
 
 		return eval.EvalExpression(ctx, expr)
 	}
