@@ -27,7 +27,13 @@ The first loaded file is known as the "document". Its content is available via
 path expressions like `.foo[0]`. All loaded files are also available via the
 `$files` variable (i.e. `.` is the same as `$files[0]` for reading, but when
 writing data, there is a difference between both notations; refer to the docs
-for `set` for more information).
+for `set` for more information). Additionally the filenames are available in
+the `$filenames` variable.
+
+For data provided via stdin, `rudi` by default assumes YAML (or JSON) encoding.
+If you want to use TOML instead, you must pass `--stdin-format=toml`. When files
+are used, the format is deduced from the file extension: `.toml` and `.tml` are
+parsed as TOML, everything else uses YAML decoding by default.
 
 ## Help
 

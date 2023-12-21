@@ -3,6 +3,7 @@ module go.xrstf.de/rudi/cmd/rudi
 go 1.18
 
 require (
+	github.com/BurntSushi/toml v1.3.2
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/chzyer/readline v1.5.1
 	github.com/muesli/termenv v0.15.2

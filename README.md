@@ -88,15 +88,15 @@ Rudi comes with a standalone CLI tool called `rudi`.
 
 ```
 Usage of rudi:
-      --coalesce string   Type conversion handling, choose one of strict, pedantic or humane. (default "strict")
-      --debug-ast         Output syntax tree of the parsed script in non-interactive mode.
-      --enable-funcs      Enable the func! function to allow defining new functions in Rudi code.
-  -h, --help              Show help and documentation.
-  -i, --interactive       Start an interactive REPL to run expressions.
-  -p, --pretty            Output pretty-printed JSON.
-  -s, --script string     Load Rudi script from file instead of first argument (only in non-interactive mode).
-  -V, --version           Show version and exit.
-  -y, --yaml              Output pretty-printed YAML instead of JSON.
+  -i, --interactive            Start an interactive REPL to run expressions.
+  -s, --script string          Load Rudi script from file instead of first argument (only in non-interactive mode).
+  -f, --stdin-format string    What data format is used for data provided on stdin, one of [json yaml toml]. (default "yaml")
+  -o, --output-format string   What data format to use for outputting data (if not given, unformatted JSON is used), one of [json yaml toml].
+      --enable-funcs           Enable the func! function to allow defining new functions in Rudi code.
+  -c, --coalesce string        Type conversion handling, one of [strict pedantic humane]. (default "strict")
+  -h, --help                   Show help and documentation.
+  -V, --version                Show version and exit.
+      --debug-ast              Output syntax tree of the parsed script in non-interactive mode.
 ```
 
 `rudi` can run in one of two modes:
@@ -120,7 +120,13 @@ Usage of rudi:
 The first loaded file is known as the "document". Its content is available via path expressions like
 `.foo[0]`. All loaded files are also available via the `$files` variable (i.e. `.` is the same as
 `$files[0]` for reading, but when writing data, there is a difference between both notations; refer
-to the docs for `set` for more information).
+to the docs for `set` for more information). Additionally the filenames are available in the
+`$filenames` variable.
+
+For data provided via stdin, `rudi` by default assumes YAML (or JSON) encoding. If you want to use
+TOML instead, you must pass `--stdin-format=toml`. When files are used, the format is deduced from
+the file extension: `.toml` and `.tml` are parsed as TOML, everything else uses YAML decoding by
+default.
 
 ### Embedding
 

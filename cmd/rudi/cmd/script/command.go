@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
@@ -60,14 +61,14 @@ func Run(ctx context.Context, opts *types.Options, args []string) error {
 		return nil
 	}
 
-	// load all remaining args as input files
-	files, err := util.LoadFiles(opts, args)
+	// load all remaining args as input fileContents
+	fileContents, err := util.LoadFiles(opts, args)
 	if err != nil {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
 	// setup the evaluation context
-	rudiCtx, err := util.SetupRudiContext(opts, files)
+	rudiCtx, err := util.SetupRudiContext(opts, args, fileContents)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}
@@ -83,14 +84,18 @@ func Run(ctx context.Context, opts *types.Options, args []string) error {
 		Encode(v any) error
 	}
 
-	if opts.FormatYaml {
+	switch opts.OutputFormat {
+	case types.JsonEncoding:
+		encoder = json.NewEncoder(os.Stdout)
+		encoder.(*json.Encoder).SetIndent("", "  ")
+	case types.YamlEncoding:
 		encoder = yaml.NewEncoder(os.Stdout)
 		encoder.(*yaml.Encoder).SetIndent(2)
-	} else {
+	case types.TomlEncoding:
+		encoder = toml.NewEncoder(os.Stdout)
+		encoder.(*toml.Encoder).Indent = "  "
+	default:
 		encoder = json.NewEncoder(os.Stdout)
-		if opts.PrettyPrint {
-			encoder.(*json.Encoder).SetIndent("", "  ")
-		}
 	}
 
 	if err := encoder.Encode(evaluated); err != nil {

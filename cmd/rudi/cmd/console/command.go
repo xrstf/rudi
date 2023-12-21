@@ -53,12 +53,12 @@ func Run(ctx context.Context, opts *cmdtypes.Options, args []string, rudiVersion
 		return fmt.Errorf("failed to setup readline prompt: %w", err)
 	}
 
-	files, err := util.LoadFiles(opts, args)
+	fileContents, err := util.LoadFiles(opts, args)
 	if err != nil {
 		return fmt.Errorf("failed to read inputs: %w", err)
 	}
 
-	rudiCtx, err := util.SetupRudiContext(opts, files)
+	rudiCtx, err := util.SetupRudiContext(opts, args, fileContents)
 	if err != nil {
 		return fmt.Errorf("failed to setup context: %w", err)
 	}

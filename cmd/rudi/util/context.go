@@ -12,14 +12,14 @@ import (
 	"go.xrstf.de/rudi/pkg/coalescing"
 )
 
-func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
+func SetupRudiContext(opts *types.Options, fileNames []string, fileContents []any) (rudi.Context, error) {
 	var (
 		document rudi.Document
 		err      error
 	)
 
-	if len(files) > 0 {
-		document, err = rudi.NewDocument(files[0])
+	if len(fileContents) > 0 {
+		document, err = rudi.NewDocument(fileContents[0])
 		if err != nil {
 			return rudi.Context{}, fmt.Errorf("cannot use first input as document: %w", err)
 		}
@@ -28,15 +28,16 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 	}
 
 	vars := rudi.NewVariables().
-		Set("files", files)
+		Set("files", fileContents).
+		Set("filenames", fileNames)
 
 	var coalescer coalescing.Coalescer
 	switch opts.Coalescing {
-	case "strict":
+	case types.StrictCoalescer:
 		coalescer = coalescing.NewStrict()
-	case "pedantic":
+	case types.PedanticCoalescer:
 		coalescer = coalescing.NewPedantic()
-	case "humane":
+	case types.HumaneCoalescer:
 		coalescer = coalescing.NewHumane()
 	default:
 		return rudi.Context{}, fmt.Errorf("unknown coalescing mode %q", opts.Coalescing)
