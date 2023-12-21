@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"go.xrstf.de/rudi/cmd/rudi/batteries"
+	rudidocs "go.xrstf.de/rudi/cmd/rudi/docs"
 	"go.xrstf.de/rudi/hack/docs-prerender/ansidoc"
 	"go.xrstf.de/rudi/pkg/docs"
 )
@@ -131,6 +132,11 @@ func dumpModules(mods []docs.Module, library string, wipe bool) {
 		}
 
 		for funcName := range mod.Functions {
+			// ignore aliases (mostly math aliases like "+" or "/")
+			if _, ok := rudidocs.Aliases[funcName]; ok {
+				continue
+			}
+
 			doc, err := mod.Documentation.Documentation(funcName)
 			if err != nil {
 				log.Printf("Warning: failed to get docs for %s/%s: %v", mod.Name, funcName, err)

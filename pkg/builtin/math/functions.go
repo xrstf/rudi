@@ -18,6 +18,9 @@ var (
 	divideRudiFunction   = functions.NewBuilder(numberDivFunction).WithDescription("returns arg1 / arg2 / .. / argN (always a floating point division, regardless of arguments)").Build()
 
 	Functions = types.Functions{
+		// These are the main functions, but within the documentation these are
+		// considered to be aliases because their names cannot be used in Markdown
+		// filenames.
 		"+": addRudiFunction,
 		"-": subRudiFunction,
 		"*": multiplyRudiFunction,

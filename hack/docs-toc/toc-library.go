@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	rudidocs "go.xrstf.de/rudi/cmd/rudi/docs"
 	"go.xrstf.de/rudi/pkg/docs"
 )
 
@@ -20,8 +21,9 @@ func renderLibraryTOC(lib []docs.Module, linkPrefix string) string {
 
 		functions := []string{}
 		for funcName := range module.Functions {
-			// Hack: ignore math function aliases
-			if funcName == "+" || funcName == "-" || funcName == "*" || funcName == "/" {
+			// Hack: ignore aliases, mostly because the math functions have names
+			// that are incompatible with the filesystem (cannot have a "/.md" file).
+			if _, exists := rudidocs.Aliases[funcName]; exists {
 				continue
 			}
 
@@ -53,8 +55,9 @@ func renderHelpLibraryTOC(lib []docs.Module) string {
 
 		functions := []string{}
 		for funcName := range module.Functions {
-			// Hack: ignore math function aliases
-			if funcName == "+" || funcName == "-" || funcName == "*" || funcName == "/" {
+			// Hack: ignore aliases, mostly because the math functions have names
+			// that are incompatible with the filesystem (cannot have a "/.md" file).
+			if _, exists := rudidocs.Aliases[funcName]; exists {
 				continue
 			}
 

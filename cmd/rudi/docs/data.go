@@ -13,6 +13,15 @@ import (
 	"go.xrstf.de/rudi/pkg/docs"
 )
 
+var Aliases = map[string]string{
+	// math module
+
+	"+": "add",
+	"-": "sub",
+	"*": "mult",
+	"/": "div",
+}
+
 //go:embed data/*
 var embeddedFS embed.FS
 
@@ -49,6 +58,11 @@ func RenderFile(filename string, painter PainterFunc) (string, error) {
 }
 
 func ReadFunction(funcName string) (string, error) {
+	realName, ok := Aliases[funcName]
+	if ok {
+		funcName = realName
+	}
+
 	return ReadFile(fmt.Sprintf("functions/%s.md", docs.Normalize(funcName)))
 }
 
