@@ -60,5 +60,6 @@ func SetupRudiContext(opts *types.Options, files []any) (rudi.Context, error) {
 
 	// No context set here, caller is expected to provide their own (the Rudi context is re-used
 	// in the console, but the Go context should not be, hence the separation).
+	//nolint:staticcheck
 	return rudi.NewContext(nil, document, vars, funcs, coalescer), nil
 }

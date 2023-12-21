@@ -79,5 +79,5 @@ const (
 	// ChromaNameException Node = 0xd7d7af
 	// ChromaNameOther     Node = 0xd7d7d7
 	// ChromaLiteral       Node = 0xd7d7ff
-	// ChromaLiteralDate   Node = 0xd7ff00
+	// ChromaLiteralDate   Node = 0xd7ff00.
 )

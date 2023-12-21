@@ -177,12 +177,18 @@ func prerenderFile(source string, dest string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer f.Close()
 
 	gzipwriter := gzip.NewWriter(f)
-	defer gzipwriter.Close()
 
-	io.WriteString(gzipwriter, prerendered)
+	_, err = io.WriteString(gzipwriter, prerendered)
+
+	// do not use defers or as they would not run when log.Fatal is called
+	gzipwriter.Close()
+	f.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func prerender(markdown string) (string, error) {

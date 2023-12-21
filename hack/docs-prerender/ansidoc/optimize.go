@@ -92,10 +92,10 @@ func Optimize(tokens []*ansi.StyledText) []*ansi.StyledText {
 	return output
 }
 
-func colorChange(old, new *ansi.Col) bool {
-	if new == nil && old == nil {
+func colorChange(oldColor, newColor *ansi.Col) bool {
+	if newColor == nil && oldColor == nil {
 		return false
 	}
 
-	return new == nil || old == nil || old.Hex != new.Hex
+	return newColor == nil || oldColor == nil || oldColor.Hex != newColor.Hex
 }

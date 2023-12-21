@@ -19,10 +19,6 @@ import (
 	"github.com/chzyer/readline"
 )
 
-func printPrompt() {
-	fmt.Print("⮞ ")
-}
-
 func helpCommand(ctx types.Context, opts *cmdtypes.Options) error {
 	content, err := docs.RenderFile("cmd-console.md", nil)
 	if err != nil {
@@ -125,7 +121,7 @@ func processInput(ctx context.Context, rudiCtx types.Context, opts *cmdtypes.Opt
 
 	// TODO: Setup a new context that can be cancelled with Ctrl-C to interrupt long running statements.
 
-	newCtx, evaluated, err := program.RunContext(rudiCtx.WithContext(ctx))
+	newCtx, evaluated, err := program.RunContext(rudiCtx.WithGoContext(ctx))
 	if err != nil {
 		return rudiCtx, false, err
 	}

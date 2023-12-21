@@ -70,7 +70,7 @@ func (c Context) Coalesce() coalescing.Coalescer {
 	return c.coalescer
 }
 
-func (c Context) Context() context.Context {
+func (c Context) GoContext() context.Context {
 	return c.ctx
 }
 
@@ -91,7 +91,7 @@ func (c Context) GetFunction(name string) (Function, bool) {
 	return c.userFuncs.Get(name)
 }
 
-func (c Context) WithContext(ctx context.Context) Context {
+func (c Context) WithGoContext(ctx context.Context) Context {
 	return Context{
 		ctx:        ctx,
 		document:   c.document,

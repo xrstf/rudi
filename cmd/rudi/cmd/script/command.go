@@ -21,8 +21,10 @@ import (
 
 func Run(ctx context.Context, opts *types.Options, args []string) error {
 	// determine input script to evaluate
-	script := ""
-	scriptName := ""
+	var (
+		script     string
+		scriptName string
+	)
 
 	if opts.ScriptFile != "" {
 		content, err := os.ReadFile(opts.ScriptFile)
@@ -71,7 +73,7 @@ func Run(ctx context.Context, opts *types.Options, args []string) error {
 	}
 
 	// evaluate the script
-	_, evaluated, err := program.RunContext(rudiCtx.WithContext(ctx))
+	_, evaluated, err := program.RunContext(rudiCtx.WithGoContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

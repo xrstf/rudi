@@ -22,8 +22,8 @@ generate:
 
 .PHONY: docs
 docs:
-	cd hack/docs-toc && go run .
-	cd hack/docs-prerender && go run .
+	cd hack/docs-toc && go mod tidy && go run .
+	cd hack/docs-prerender && go mod tidy && go run .
 
 .PHONY: clean
 clean:
@@ -46,6 +46,9 @@ test:
 .PHONY: lint
 lint:
 	golangci-lint run ./...
+	cd cmd/rudi && golangci-lint run ./... --config ../../.golangci.yml
+	cd hack/docs-toc && golangci-lint run ./... --config ../../.golangci.yml
+	cd hack/docs-prerender && golangci-lint run ./... --config ../../.golangci.yml
 
 .PHONY: spellcheck
 spellcheck:
