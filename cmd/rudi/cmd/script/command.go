@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
 	"go.xrstf.de/rudi/pkg/debug"
@@ -20,7 +21,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Run(handler *util.SignalHandler, opts *types.Options, args []string) error {
+func Run(handler *util.SignalHandler, opts *options.Options, args []string) error {
 	// determine input script to evaluate
 	var (
 		script     string
@@ -101,12 +102,19 @@ func Run(handler *util.SignalHandler, opts *types.Options, args []string) error 
 		encoder = toml.NewEncoder(os.Stdout)
 		encoder.(*toml.Encoder).Indent = "  "
 	default:
-		encoder = json.NewEncoder(os.Stdout)
+		encoder = &rawEncoder{}
 	}
 
 	if err := encoder.Encode(evaluated); err != nil {
 		return fmt.Errorf("failed to encode %v: %w", evaluated, err)
 	}
 
+	return nil
+}
+
+type rawEncoder struct{}
+
+func (e *rawEncoder) Encode(v any) error {
+	fmt.Println(v)
 	return nil
 }

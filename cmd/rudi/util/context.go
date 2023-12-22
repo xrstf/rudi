@@ -8,11 +8,12 @@ import (
 
 	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/batteries"
+	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/pkg/coalescing"
 )
 
-func SetupRudiContext(opts *types.Options, fileNames []string, fileContents []any) (rudi.Context, error) {
+func SetupRudiContext(opts *options.Options, fileNames []string, fileContents []any) (rudi.Context, error) {
 	var (
 		document rudi.Document
 		err      error
@@ -27,17 +28,23 @@ func SetupRudiContext(opts *types.Options, fileNames []string, fileContents []an
 		document, _ = rudi.NewDocument(nil)
 	}
 
-	vars := rudi.NewVariables().
+	vars := rudi.NewVariables()
+	for k, v := range opts.ExtraVariables {
+		vars.Set(k, v)
+	}
+
+	// system-defined variables come last, so they override anything user specified
+	vars.
 		Set("files", fileContents).
 		Set("filenames", fileNames)
 
 	var coalescer coalescing.Coalescer
 	switch opts.Coalescing {
-	case types.StrictCoalescer:
+	case types.StrictCoalescing:
 		coalescer = coalescing.NewStrict()
-	case types.PedanticCoalescer:
+	case types.PedanticCoalescing:
 		coalescer = coalescing.NewPedantic()
-	case types.HumaneCoalescer:
+	case types.HumaneCoalescing:
 		coalescer = coalescing.NewHumane()
 	default:
 		return rudi.Context{}, fmt.Errorf("unknown coalescing mode %q", opts.Coalescing)

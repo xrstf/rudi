@@ -15,7 +15,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/cmd/console"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/help"
 	"go.xrstf.de/rudi/cmd/rudi/cmd/script"
-	"go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/util"
 
 	"github.com/spf13/pflag"
@@ -86,7 +86,7 @@ func printVersion() {
 }
 
 func main() {
-	opts := types.NewDefaultOptions()
+	opts := options.NewDefaultOptions()
 
 	opts.AddFlags(pflag.CommandLine)
 	pflag.Parse()

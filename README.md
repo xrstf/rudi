@@ -90,8 +90,9 @@ Rudi comes with a standalone CLI tool called `rudi`.
 Usage of rudi:
   -i, --interactive            Start an interactive REPL to run expressions.
   -s, --script string          Load Rudi script from file instead of first argument (only in non-interactive mode).
-  -f, --stdin-format string    What data format is used for data provided on stdin, one of [json yaml toml]. (default "yaml")
-  -o, --output-format string   What data format to use for outputting data (if not given, unformatted JSON is used), one of [json yaml toml].
+      --var stringArray        Define additional global variables (can be given multiple times).
+  -f, --stdin-format string    What data format is used for data provided on stdin, one of [raw json yaml toml]. (default "yaml")
+  -o, --output-format string   What data format to use for outputting data, one of [raw json yaml toml]. (default "json")
       --enable-funcs           Enable the func! function to allow defining new functions in Rudi code.
   -c, --coalesce string        Type conversion handling, one of [strict pedantic humane]. (default "strict")
   -h, --help                   Show help and documentation.

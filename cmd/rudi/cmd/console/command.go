@@ -11,7 +11,7 @@ import (
 
 	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/docs"
-	cmdtypes "go.xrstf.de/rudi/cmd/rudi/types"
+	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/util"
 	"go.xrstf.de/rudi/pkg/eval/types"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/chzyer/readline"
 )
 
-func helpCommand(ctx types.Context, opts *cmdtypes.Options) error {
+func helpCommand(ctx types.Context, opts *options.Options) error {
 	content, err := docs.RenderFile("cmd-console.md", nil)
 	if err != nil {
 		return err
@@ -41,13 +41,13 @@ func helpTopicCommand(topic string) error {
 	return nil
 }
 
-type replCommandFunc func(ctx types.Context, opts *cmdtypes.Options) error
+type replCommandFunc func(ctx types.Context, opts *options.Options) error
 
 var replCommands = map[string]replCommandFunc{
 	"help": helpCommand,
 }
 
-func Run(handler *util.SignalHandler, opts *cmdtypes.Options, args []string, rudiVersion string) error {
+func Run(handler *util.SignalHandler, opts *options.Options, args []string, rudiVersion string) error {
 	rl, err := readline.New("⮞ ")
 	if err != nil {
 		return fmt.Errorf("failed to setup readline prompt: %w", err)
@@ -107,7 +107,7 @@ func Run(handler *util.SignalHandler, opts *cmdtypes.Options, args []string, rud
 	return nil
 }
 
-func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *cmdtypes.Options, input string) (newCtx types.Context, stop bool, err error) {
+func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *options.Options, input string) (newCtx types.Context, stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
 		return rudiCtx, false, command(rudiCtx, opts)
 	}
