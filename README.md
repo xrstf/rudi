@@ -44,7 +44,7 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 * **Safe** evaluation: Rudi is not Turing-complete and so Rudi programs are always guaranteed to
   complete in a reasonable time frame. You can add support for functions defined in Rudi code (i.e.
   at runtime), but this is optional to allow a safe embedded behaviour by default.
-* **Lightweight**: Rudi comes with no runtime dependencies.
+* **Lightweight**: Rudi comes with no runtime dependencies besides the Go stdlib.
 * **Hackable**: Rudi tries to keep the language itself approachable, so that modifications are
   easier and newcomers have an easier time to get started.
 * **Variables** can be pre-defined or set at runtime.
