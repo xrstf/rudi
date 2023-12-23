@@ -15,7 +15,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
-	"go.xrstf.de/rudi/pkg/debug"
+	"go.xrstf.de/rudi/pkg/printer"
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
@@ -55,7 +55,8 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string) erro
 
 	// show AST and quit if desired
 	if opts.PrintAst {
-		if err := debug.Dump(program, os.Stdout); err != nil {
+		renderer := printer.AST{}
+		if err := renderer.WriteMultiline(program, os.Stdout); err != nil {
 			return fmt.Errorf("failed to dump AST: %w", err)
 		}
 

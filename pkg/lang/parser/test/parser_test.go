@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/debug"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/printer"
 )
 
 func TestParseProgram(t *testing.T) {
@@ -374,6 +374,8 @@ func TestParseProgram(t *testing.T) {
 		},
 	}
 
+	renderer := printer.AST{}
+
 	for _, testcase := range testcases {
 		t.Run(testcase.input, func(t *testing.T) {
 			prog := strings.NewReader(testcase.input)
@@ -389,7 +391,7 @@ func TestParseProgram(t *testing.T) {
 
 			if testcase.invalid {
 				var output strings.Builder
-				if err := debug.DumpSingleline(got, &output); err != nil {
+				if err := renderer.WriteSingleline(got, &output); err != nil {
 					t.Errorf("Failed to dump unexpected AST for %s: %v", testcase.input, err)
 				}
 
@@ -402,7 +404,7 @@ func TestParseProgram(t *testing.T) {
 			}
 
 			var output strings.Builder
-			if err := debug.DumpSingleline(program, &output); err != nil {
+			if err := renderer.WriteSingleline(program, &output); err != nil {
 				t.Fatalf("Failed to dump AST for %s: %v", testcase.input, err)
 			}
 

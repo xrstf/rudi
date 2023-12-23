@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/rudi/pkg/debug"
 	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/printer"
 )
 
 // Program is a parsed Rudi program, ready to be run (executed). Programs are
@@ -114,9 +114,11 @@ func (p *rudiProgram) String() string {
 // according to a simple, conservative linebreak algorithm.
 // Note that the output looks like code, but is not executable/parseable.
 func (p *rudiProgram) DumpSyntaxTree(out io.Writer, indent bool) error {
+	renderer := printer.AST{}
+
 	if indent {
-		return debug.Dump(*p.prog, out)
+		return renderer.WriteMultiline(*p.prog, out)
 	}
 
-	return debug.DumpSingleline(*p.prog, out)
+	return renderer.WriteSingleline(*p.prog, out)
 }
