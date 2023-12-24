@@ -249,10 +249,11 @@ ObjectAccessor <- '.' val:PathIdentifier {
    return val, nil
 }
 
-VectorAccessor <- '[' expr:ScalarExpression ']' {
+VectorAccessor <- '[' __ expr:ScalarExpression __ ']' {
    return expr, nil
 }
 
+// This Pattern must be kept in-sync with the PathIdentifierPattern variable in the ast package.
 PathIdentifier <- [a-zA-Z_][a-zA-Z0-9_]* {
    return ast.Identifier{Name: string(c.text)}, nil
 }
@@ -264,10 +265,12 @@ Variable <- '$' name:VariableName {
    return ast.Variable(name.(string)), nil
 }
 
+// This Pattern must be kept in-sync with the VariableNamePattern variable in the ast package.
 VariableName <- [a-zA-Z_][a-zA-Z0-9_]* {
    return string(c.text), nil
 }
 
+// This Pattern must be kept in-sync with the IdentifierNamePattern variable in the ast package.
 Identifier <- [a-zA-Z_+/*_%?-][a-zA-Z0-9_+/*_%?!-]* {
    name := string(c.text)
    bang := false

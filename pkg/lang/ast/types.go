@@ -5,7 +5,18 @@ package ast
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+)
+
+// These variables must manually be kept in-sync with the Rudi grammar.
+// Hoping that https://github.com/mna/pigeon/issues/141 will provide us with a better way.
+// Compared to the original grammar, these regex are anchored to make matching easier.
+
+var (
+	VariableNamePattern   = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+	PathIdentifierPattern = VariableNamePattern
+	IdentifierNamePattern = regexp.MustCompile(`^[a-zA-Z_+/*_%?-][a-zA-Z0-9_+/*_%?!-]*$`)
 )
 
 type Expression interface {
@@ -408,7 +419,11 @@ type EvaluatedPathStep struct {
 func (a EvaluatedPathStep) String() string {
 	switch {
 	case a.StringValue != nil:
-		return fmt.Sprintf("[%q]", *a.StringValue)
+		if PathIdentifierPattern.MatchString(*a.StringValue) {
+			return fmt.Sprintf(".%s", *a.StringValue)
+		} else {
+			return fmt.Sprintf("[%q]", *a.StringValue)
+		}
 	case a.IntegerValue != nil:
 		return fmt.Sprintf("[%d]", *a.IntegerValue)
 	default:

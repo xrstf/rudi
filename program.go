@@ -37,8 +37,12 @@ type Program interface {
 	// DumpSyntaxTree writes the AST to the given writer. Useful for debugging.
 	// Set indent to false to prevent multiline output from being generated
 	// according to a simple, conservative linebreak algorithm.
-	// Note that the output looks like code, but is not executable/parseable.
-	DumpSyntaxTree(out io.Writer, indent bool) error
+	// Note that the output looks like code, but is not executable/parseable. Use
+	// DumpRudi() if you need to turn a parsed program back into Rudi code.
+	DumpSyntaxTree(out io.Writer) error
+
+	// DumpRudi writes the AST in the form of parseable Rudi code.
+	DumpRudi(out io.Writer) error
 }
 
 type rudiProgram struct {
@@ -112,13 +116,13 @@ func (p *rudiProgram) String() string {
 // DumpSyntaxTree writes the AST to the given writer. Useful for debugging.
 // Set indent to false to prevent multiline output from being generated
 // according to a simple, conservative linebreak algorithm.
-// Note that the output looks like code, but is not executable/parseable.
-func (p *rudiProgram) DumpSyntaxTree(out io.Writer, indent bool) error {
-	renderer := printer.AST{}
+// Note that the output looks like code, but is not executable/parseable. Use
+// DumpRudi() if you need to turn a parsed program back into Rudi code.
+func (p *rudiProgram) DumpSyntaxTree(out io.Writer) error {
+	return printer.NewAstPrinter(out).Program(p.prog)
+}
 
-	if indent {
-		return renderer.WriteMultiline(*p.prog, out)
-	}
-
-	return renderer.WriteSingleline(*p.prog, out)
+// DumpRudi writes the AST in the form of parseable Rudi code.
+func (p *rudiProgram) DumpRudi(out io.Writer) error {
+	return printer.NewRudiPrinter(out).Program(p.prog)
 }

@@ -116,11 +116,11 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `({foo bar})`,
-			expected: `(tuple (object (identifier foo) (identifier bar)))`,
+			expected: `(tuple (object ((identifier foo) (identifier bar))))`,
 		},
 		{
 			input:    `({ foo bar (bar) 42 })`,
-			expected: `(tuple (object (identifier foo) (identifier bar) (tuple (identifier bar)) (number (int64 42))))`,
+			expected: `(tuple (object ((identifier foo) (identifier bar)) ((tuple (identifier bar)) (number (int64 42)))))`,
 		},
 
 		/////////////////////////////////////////////////////
@@ -308,7 +308,7 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `{foo "bar"}`,
-			expected: `(object (identifier foo) (string "bar"))`,
+			expected: `(object ((identifier foo) (string "bar")))`,
 		},
 
 		/////////////////////////////////////////////////////
@@ -354,7 +354,7 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(add {foo "bar"}.foo[1])`,
-			expected: `(tuple (identifier add) (object (identifier foo) (string "bar")).(path [(identifier foo) (number (int64 1))]))`,
+			expected: `(tuple (identifier add) (object ((identifier foo) (string "bar"))).(path [(identifier foo) (number (int64 1))]))`,
 		},
 		{
 			input:   `(add {foo "bar"}[1])`,
@@ -362,19 +362,17 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(add {foo "bar"}.foo[{bla 1}.bla[0]])`,
-			expected: `(tuple (identifier add) (object (identifier foo) (string "bar")).(path [(identifier foo) (object (identifier bla) (number (int64 1))).(path [(identifier bla) (number (int64 0))])]))`,
+			expected: `(tuple (identifier add) (object ((identifier foo) (string "bar"))).(path [(identifier foo) (object ((identifier bla) (number (int64 1)))).(path [(identifier bla) (number (int64 0))])]))`,
 		},
 		{
 			input:    `(add {{foo "bar"}.foo "bar"})`,
-			expected: `(tuple (identifier add) (object (object (identifier foo) (string "bar")).(path [(identifier foo)]) (string "bar")))`,
+			expected: `(tuple (identifier add) (object ((object ((identifier foo) (string "bar"))).(path [(identifier foo)]) (string "bar"))))`,
 		},
 		{
 			input:    `(add {[0 "foo"][1] "bar"})`,
-			expected: `(tuple (identifier add) (object (vector (number (int64 0)) (string "foo")).(path [(number (int64 1))]) (string "bar")))`,
+			expected: `(tuple (identifier add) (object ((vector (number (int64 0)) (string "foo")).(path [(number (int64 1))]) (string "bar"))))`,
 		},
 	}
-
-	renderer := printer.AST{}
 
 	for _, testcase := range testcases {
 		t.Run(testcase.input, func(t *testing.T) {
@@ -391,7 +389,9 @@ func TestParseProgram(t *testing.T) {
 
 			if testcase.invalid {
 				var output strings.Builder
-				if err := renderer.WriteSingleline(got, &output); err != nil {
+				p := printer.NewAstPrinter(&output)
+
+				if err := p.Print(got); err != nil {
 					t.Errorf("Failed to dump unexpected AST for %s: %v", testcase.input, err)
 				}
 
@@ -404,7 +404,9 @@ func TestParseProgram(t *testing.T) {
 			}
 
 			var output strings.Builder
-			if err := renderer.WriteSingleline(program, &output); err != nil {
+			p := printer.NewAstPrinter(&output)
+
+			if err := p.Program(&program); err != nil {
 				t.Fatalf("Failed to dump AST for %s: %v", testcase.input, err)
 			}
 
