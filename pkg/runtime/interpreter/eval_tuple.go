@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"go.xrstf.de/rudi/pkg/deepcopy"
+	"go.xrstf.de/rudi/pkg/jsonpath"
 	"go.xrstf.de/rudi/pkg/lang/ast"
-	genericpathexpr "go.xrstf.de/rudi/pkg/pathexpr"
 	"go.xrstf.de/rudi/pkg/runtime/pathexpr"
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
@@ -112,7 +112,7 @@ func (*interpreter) CallFunction(ctx types.Context, fun ast.Identifier, args []a
 			}
 
 			// apply the path expression
-			updatedValue, err = genericpathexpr.Set(currentValue, genericpathexpr.FromEvaluatedPath(*pathExpr), updatedValue)
+			updatedValue, err = jsonpath.Set(currentValue, jsonpath.FromEvaluatedPath(*pathExpr), updatedValue)
 			if err != nil {
 				return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 			}

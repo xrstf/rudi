@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
+	"go.xrstf.de/rudi/pkg/jsonpath"
 	"go.xrstf.de/rudi/pkg/lang/ast"
-	"go.xrstf.de/rudi/pkg/pathexpr"
 	"go.xrstf.de/rudi/pkg/runtime/types"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
@@ -34,7 +34,7 @@ type customObjGetter struct {
 	value any
 }
 
-var _ pathexpr.ObjectReader = customObjGetter{}
+var _ jsonpath.ObjectReader = customObjGetter{}
 
 func (g customObjGetter) GetObjectKey(name string) (any, error) {
 	if name == "value" {
@@ -49,7 +49,7 @@ type customVecGetter struct {
 	value any
 }
 
-var _ pathexpr.VectorReader = customVecGetter{}
+var _ jsonpath.VectorReader = customVecGetter{}
 
 func (g customVecGetter) GetVectorItem(index int) (any, error) {
 	if index == g.magic {

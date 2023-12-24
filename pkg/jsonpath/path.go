@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
-package pathexpr
+package jsonpath
 
 import "go.xrstf.de/rudi/pkg/lang/ast"
 

@@ -6,8 +6,8 @@ package pathexpr
 import (
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/jsonpath"
 	"go.xrstf.de/rudi/pkg/lang/ast"
-	genericpathexpr "go.xrstf.de/rudi/pkg/pathexpr"
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
@@ -25,7 +25,7 @@ func Apply(ctx types.Context, value any, path *ast.PathExpression) (any, error) 
 }
 
 func Traverse(value any, path ast.EvaluatedPathExpression) (any, error) {
-	return genericpathexpr.Get(value, genericpathexpr.FromEvaluatedPath(path))
+	return jsonpath.Get(value, jsonpath.FromEvaluatedPath(path))
 }
 
 func Eval(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpression, error) {

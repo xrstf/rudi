@@ -10,8 +10,8 @@ import (
 
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/deepcopy"
+	"go.xrstf.de/rudi/pkg/jsonpath"
 	"go.xrstf.de/rudi/pkg/lang/ast"
-	genericpathexpr "go.xrstf.de/rudi/pkg/pathexpr"
 	"go.xrstf.de/rudi/pkg/runtime/functions"
 	"go.xrstf.de/rudi/pkg/runtime/pathexpr"
 	"go.xrstf.de/rudi/pkg/runtime/types"
@@ -261,7 +261,7 @@ func deleteFunction(ctx types.Context, expr ast.Expression) (any, error) {
 	}
 
 	// delete the desired path in the value
-	updatedValue, err := genericpathexpr.Delete(currentValue, genericpathexpr.FromEvaluatedPath(*pathExpr))
+	updatedValue, err := jsonpath.Delete(currentValue, jsonpath.FromEvaluatedPath(*pathExpr))
 	if err != nil {
 		return nil, fmt.Errorf("cannot delete %s in %T: %w", pathExpr, currentValue, err)
 	}
@@ -303,7 +303,7 @@ func deleteBangHandler(ctx types.Context, originalArgs []ast.Expression, value a
 		}
 
 		// apply the path expression
-		updatedValue, err = genericpathexpr.Delete(currentValue, genericpathexpr.FromEvaluatedPath(*pathExpr))
+		updatedValue, err = jsonpath.Delete(currentValue, jsonpath.FromEvaluatedPath(*pathExpr))
 		if err != nil {
 			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 		}
