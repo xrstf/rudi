@@ -6,7 +6,7 @@ package core
 import (
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 

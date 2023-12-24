@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"io"
 
-	"go.xrstf.de/rudi/pkg/eval"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
 	"go.xrstf.de/rudi/pkg/printer"
+	"go.xrstf.de/rudi/pkg/runtime/interpreter"
 )
 
 // Program is a parsed Rudi program, ready to be run (executed). Programs are
@@ -82,7 +82,10 @@ func (p *rudiProgram) Run(ctx context.Context, data any, variables Variables, fu
 		return nil, nil, fmt.Errorf("cannot process %T: %w", data, err)
 	}
 
-	rudiCtx := NewContext(ctx, doc, variables, funcs, coalescer)
+	rudiCtx, err := NewContext(interpreter.New(), ctx, doc, variables, funcs, coalescer)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create context: %w", err)
+	}
 
 	finalCtx, result, err := p.RunContext(rudiCtx)
 	if err != nil {
@@ -99,7 +102,7 @@ func (p *rudiProgram) Run(ctx context.Context, data any, variables Variables, fu
 // bare final context instead of its document's value. The result is still
 // the result of the final expression in the program.
 func (p *rudiProgram) RunContext(ctx Context) (finalCtx Context, result any, err error) {
-	finalCtx, result, err = eval.Run(ctx, p.prog)
+	finalCtx, result, err = ctx.Runtime().EvalProgram(ctx, p.prog)
 	if err != nil {
 		return ctx, nil, err
 	}

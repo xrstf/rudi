@@ -8,8 +8,9 @@ import (
 
 	"go.xrstf.de/rudi/pkg/builtin"
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/eval/functions"
-	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/runtime/functions"
+	"go.xrstf.de/rudi/pkg/runtime/interpreter"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 // Context is the evaluation context for a Rudi program, consisting of
@@ -39,8 +40,12 @@ type Document = types.Document
 type Coalescer = coalescing.Coalescer
 
 // NewContext wraps the document, variables and functions into a Context.
-func NewContext(ctx context.Context, doc Document, variables Variables, funcs Functions, coalescer Coalescer) Context {
-	return types.NewContext(ctx, doc, variables, funcs, coalescer)
+func NewContext(runtime types.Runtime, ctx context.Context, doc Document, variables Variables, funcs Functions, coalescer Coalescer) (Context, error) {
+	if runtime == nil {
+		runtime = interpreter.New()
+	}
+
+	return types.NewContext(runtime, ctx, doc, variables, funcs, coalescer)
 }
 
 // NewFunctions returns an empty set of runtime functions.

@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/eval/functions"
-	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/runtime/functions"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 var (

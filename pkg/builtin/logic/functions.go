@@ -6,10 +6,9 @@ package logic
 import (
 	"fmt"
 
-	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/functions"
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/runtime/functions"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 var (
@@ -22,7 +21,7 @@ var (
 
 func andFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	for i, arg := range args {
-		_, evaluated, err := eval.EvalExpression(ctx, arg)
+		_, evaluated, err := ctx.Runtime().EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d: %w", i, err)
 		}
@@ -42,7 +41,7 @@ func andFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 
 func orFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	for i, arg := range args {
-		_, evaluated, err := eval.EvalExpression(ctx, arg)
+		_, evaluated, err := ctx.Runtime().EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d: %w", i, err)
 		}

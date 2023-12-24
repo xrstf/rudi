@@ -6,10 +6,9 @@ package lists
 import (
 	"fmt"
 
-	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/functions"
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/runtime/functions"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 var (
@@ -79,7 +78,7 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 		// do not use separate contexts for each loop iteration, as the loop might build up a counter
 		loopCtx = loopCtx.WithVariables(vars)
 
-		loopCtx, result, err = eval.EvalExpression(loopCtx, expr)
+		loopCtx, result, err = ctx.Runtime().EvalExpression(loopCtx, expr)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +113,7 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 		// do not use separate contexts for each loop iteration, as the loop might build up a counter
 		loopCtx = loopCtx.WithVariables(vars)
 
-		loopCtx, result, err = eval.EvalExpression(loopCtx, expr)
+		loopCtx, result, err = ctx.Runtime().EvalExpression(loopCtx, expr)
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +134,7 @@ func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Express
 	}
 
 	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
-		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
 	return mapVector(ctx, data, mapHandler)
@@ -160,7 +159,7 @@ func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Ex
 
 		ctx = ctx.WithVariables(vars)
 
-		return eval.EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx, expr)
 	}
 
 	return mapVector(ctx, data, mapHandler)
@@ -197,7 +196,7 @@ func mapObjectAnonymousFunction(ctx types.Context, data map[string]any, ident as
 	}
 
 	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
-		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
 	return mapObject(ctx, data, mapHandler)
@@ -222,7 +221,7 @@ func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingV
 
 		ctx = ctx.WithVariables(vars)
 
-		return eval.EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx, expr)
 	}
 
 	return mapObject(ctx, data, mapHandler)
@@ -259,7 +258,7 @@ func filterVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expr
 	}
 
 	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
-		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
 	return filterVector(ctx, data, mapHandler)
@@ -284,7 +283,7 @@ func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast
 
 		ctx = ctx.WithVariables(vars)
 
-		return eval.EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx, expr)
 	}
 
 	return filterVector(ctx, data, mapHandler)
@@ -327,7 +326,7 @@ func filterObjectAnonymousFunction(ctx types.Context, data map[string]any, ident
 	}
 
 	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
-		return eval.EvalFunctionCall(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
 	return filterObject(ctx, data, mapHandler)
@@ -352,7 +351,7 @@ func filterObjectExpressionFunction(ctx types.Context, data map[string]any, nami
 
 		ctx = ctx.WithVariables(vars)
 
-		return eval.EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx, expr)
 	}
 
 	return filterObject(ctx, data, mapHandler)

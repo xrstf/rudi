@@ -10,11 +10,11 @@ import (
 
 	"go.xrstf.de/rudi/pkg/coalescing"
 	"go.xrstf.de/rudi/pkg/deepcopy"
-	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/functions"
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
-	"go.xrstf.de/rudi/pkg/pathexpr"
+	genericpathexpr "go.xrstf.de/rudi/pkg/pathexpr"
+	"go.xrstf.de/rudi/pkg/runtime/functions"
+	"go.xrstf.de/rudi/pkg/runtime/pathexpr"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 var (
@@ -45,7 +45,7 @@ func keepContextCanceled(err error) error {
 
 func ifFunction(ctx types.Context, test bool, yes ast.Expression) (any, error) {
 	if test {
-		_, result, err := eval.EvalExpression(ctx, yes)
+		_, result, err := ctx.Runtime().EvalExpression(ctx, yes)
 		return result, err
 	}
 
@@ -54,11 +54,11 @@ func ifFunction(ctx types.Context, test bool, yes ast.Expression) (any, error) {
 
 func ifElseFunction(ctx types.Context, test bool, yes, no ast.Expression) (any, error) {
 	if test {
-		_, result, err := eval.EvalExpression(ctx, yes)
+		_, result, err := ctx.Runtime().EvalExpression(ctx, yes)
 		return result, err
 	}
 
-	_, result, err := eval.EvalExpression(ctx, no)
+	_, result, err := ctx.Runtime().EvalExpression(ctx, no)
 	return result, err
 }
 
@@ -73,7 +73,7 @@ func DoFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	)
 
 	for _, arg := range args {
-		tupleCtx, result, err = eval.EvalExpression(tupleCtx, arg)
+		tupleCtx, result, err = ctx.Runtime().EvalExpression(tupleCtx, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -130,18 +130,18 @@ func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
 	}
 
 	// pre-evaluate the path
-	evaluatedPath, err := eval.EvalPathExpression(ctx, pathExpr)
+	evaluatedPath, err := pathexpr.Eval(ctx, pathExpr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid path expression: %w", err)
 	}
 
 	// evaluate the base value
-	_, value, err := eval.EvalExpression(ctx, expr)
+	_, value, err := ctx.Runtime().EvalExpression(ctx, expr)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = eval.TraverseEvaluatedPathExpression(value, *evaluatedPath)
+	_, err = pathexpr.Traverse(value, *evaluatedPath)
 	if err != nil {
 		return false, keepContextCanceled(err)
 	}
@@ -161,7 +161,7 @@ func defaultFunction(ctx types.Context, value any, fallback ast.Expression) (any
 		return value, nil
 	}
 
-	_, value, err = eval.EvalExpression(ctx, fallback)
+	_, value, err = ctx.Runtime().EvalExpression(ctx, fallback)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
@@ -170,7 +170,7 @@ func defaultFunction(ctx types.Context, value any, fallback ast.Expression) (any
 }
 
 func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
-	_, result, err := eval.EvalExpression(ctx, test)
+	_, result, err := ctx.Runtime().EvalExpression(ctx, test)
 	if err != nil {
 		return nil, keepContextCanceled(err)
 	}
@@ -179,9 +179,9 @@ func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
 }
 
 func tryWithFallbackFunction(ctx types.Context, test ast.Expression, fallback ast.Expression) (any, error) {
-	_, result, err := eval.EvalExpression(ctx, test)
+	_, result, err := ctx.Runtime().EvalExpression(ctx, test)
 	if err != nil {
-		_, result, err = eval.EvalExpression(ctx, fallback)
+		_, result, err = ctx.Runtime().EvalExpression(ctx, fallback)
 		if err != nil {
 			return nil, fmt.Errorf("argument #1: %w", err)
 		}
@@ -206,7 +206,7 @@ func setFunction(ctx types.Context, target, value ast.Expression) (any, error) {
 	}
 
 	// discard any context changes within the newValue expression
-	_, newValue, err := eval.EvalExpression(ctx, value)
+	_, newValue, err := ctx.Runtime().EvalExpression(ctx, value)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
@@ -236,7 +236,7 @@ func deleteFunction(ctx types.Context, expr ast.Expression) (any, error) {
 	}
 
 	// pre-evaluate the path
-	pathExpr, err := eval.EvalPathExpression(ctx, symbol.PathExpression)
+	pathExpr, err := pathexpr.Eval(ctx, symbol.PathExpression)
 	if err != nil {
 		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
 	}
@@ -261,7 +261,7 @@ func deleteFunction(ctx types.Context, expr ast.Expression) (any, error) {
 	}
 
 	// delete the desired path in the value
-	updatedValue, err := pathexpr.Delete(currentValue, pathexpr.FromEvaluatedPath(*pathExpr))
+	updatedValue, err := genericpathexpr.Delete(currentValue, genericpathexpr.FromEvaluatedPath(*pathExpr))
 	if err != nil {
 		return nil, fmt.Errorf("cannot delete %s in %T: %w", pathExpr, currentValue, err)
 	}
@@ -285,7 +285,7 @@ func deleteBangHandler(ctx types.Context, originalArgs []ast.Expression, value a
 	// if the symbol has a path to traverse, do so
 	if sym.PathExpression != nil {
 		// pre-evaluate the path expression
-		pathExpr, err := eval.EvalPathExpression(ctx, sym.PathExpression)
+		pathExpr, err := pathexpr.Eval(ctx, sym.PathExpression)
 		if err != nil {
 			return ctx, nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
 		}
@@ -303,7 +303,7 @@ func deleteBangHandler(ctx types.Context, originalArgs []ast.Expression, value a
 		}
 
 		// apply the path expression
-		updatedValue, err = pathexpr.Delete(currentValue, pathexpr.FromEvaluatedPath(*pathExpr))
+		updatedValue, err = genericpathexpr.Delete(currentValue, genericpathexpr.FromEvaluatedPath(*pathExpr))
 		if err != nil {
 			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 		}

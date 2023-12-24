@@ -3,7 +3,7 @@
 
 package docs
 
-import "go.xrstf.de/rudi/pkg/eval/types"
+import "go.xrstf.de/rudi/pkg/runtime/types"
 
 // A module combines functions with their documentation. This type and concept only exist in
 // the Rudi interpreter (cmd/rudi); the actual codebase separates the function code from their

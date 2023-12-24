@@ -11,10 +11,10 @@ import (
 	"testing"
 
 	"go.xrstf.de/rudi/pkg/coalescing"
-	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/lang/parser"
+	"go.xrstf.de/rudi/pkg/runtime/interpreter"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -29,6 +29,7 @@ type Testcase struct {
 	Variables types.Variables
 	Functions types.Functions
 	Coalescer coalescing.Coalescer
+	Runtime   types.Runtime
 
 	Expected          any
 	ExpectedDocument  any
@@ -80,7 +81,14 @@ func (tc *Testcase) eval(t *testing.T) (types.Context, any, error) {
 		log.Fatalf("Failed to create parser document: %v", err)
 	}
 
-	progContext := types.NewContext(tc.Context, doc, tc.Variables, tc.Functions, tc.Coalescer)
+	if tc.Runtime == nil {
+		tc.Runtime = interpreter.New()
+	}
+
+	progContext, err := types.NewContext(tc.Runtime, tc.Context, doc, tc.Variables, tc.Functions, tc.Coalescer)
+	if err != nil {
+		t.Fatalf("Failed to create context: %v", err)
+	}
 
 	if tc.Expression != "" {
 		prog := strings.NewReader(tc.Expression)
@@ -95,7 +103,7 @@ func (tc *Testcase) eval(t *testing.T) (types.Context, any, error) {
 			t.Fatalf("Parsed result is not a ast.Program, but %T", got)
 		}
 
-		return eval.EvalProgram(progContext, &program)
+		return tc.Runtime.EvalProgram(progContext, &program)
 	}
 
 	// To enable tests for programs and statements, we handle them explicitly
@@ -104,11 +112,11 @@ func (tc *Testcase) eval(t *testing.T) (types.Context, any, error) {
 
 	switch asserted := tc.AST.(type) {
 	case ast.Program:
-		return eval.EvalProgram(progContext, &asserted)
+		return tc.Runtime.EvalProgram(progContext, &asserted)
 	case ast.Statement:
-		return eval.EvalStatement(progContext, asserted)
+		return tc.Runtime.EvalStatement(progContext, asserted)
 	default:
-		return eval.EvalExpression(progContext, tc.AST)
+		return tc.Runtime.EvalExpression(progContext, tc.AST)
 	}
 }
 

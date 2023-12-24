@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/runtime/interpreter"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 	"go.xrstf.de/rudi/pkg/testutil"
 )
 
@@ -391,7 +392,10 @@ func TestInvalidComparisonFunctions(t *testing.T) {
 		gteFunction,
 	}
 
-	ctx := types.NewContext(context.Background(), types.Document{}, nil, nil, nil)
+	ctx, err := types.NewContext(interpreter.New(), context.Background(), types.Document{}, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("Failed to create context: %v", err)
+	}
 
 	for _, tc := range testcases {
 		for _, f := range funcs {
@@ -463,7 +467,10 @@ func TestComparisonFunctions(t *testing.T) {
 		},
 	}
 
-	ctx := types.NewContext(context.Background(), types.Document{}, nil, nil, nil)
+	ctx, err := types.NewContext(interpreter.New(), context.Background(), types.Document{}, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("Failed to create context: %v", err)
+	}
 
 	for _, tc := range testcases {
 		t.Run("", func(t *testing.T) {

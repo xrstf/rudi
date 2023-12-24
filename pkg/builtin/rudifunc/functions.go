@@ -6,10 +6,9 @@ package rudifunc
 import (
 	"fmt"
 
-	"go.xrstf.de/rudi/pkg/eval"
-	"go.xrstf.de/rudi/pkg/eval/functions"
-	"go.xrstf.de/rudi/pkg/eval/types"
 	"go.xrstf.de/rudi/pkg/lang/ast"
+	"go.xrstf.de/rudi/pkg/runtime/functions"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 var (
@@ -77,7 +76,7 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 
 	funcArgs := map[string]any{}
 	for i, paramName := range f.params {
-		_, arg, err := eval.EvalExpression(ctx, args[i])
+		_, arg, err := ctx.Runtime().EvalExpression(ctx, args[i])
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +84,7 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 		funcArgs[paramName] = arg
 	}
 
-	_, result, err := eval.EvalExpression(ctx.WithVariables(funcArgs), f.body)
+	_, result, err := ctx.Runtime().EvalExpression(ctx.WithVariables(funcArgs), f.body)
 
 	return result, err
 }

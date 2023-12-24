@@ -11,6 +11,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/pkg/coalescing"
+	"go.xrstf.de/rudi/pkg/runtime/interpreter"
 )
 
 func SetupRudiContext(opts *options.Options, fileNames []string, fileContents []any) (rudi.Context, error) {
@@ -68,6 +69,5 @@ func SetupRudiContext(opts *options.Options, fileNames []string, fileContents []
 
 	// No context set here, caller is expected to provide their own (the Rudi context is re-used
 	// in the console, but the Go context should not be, hence the separation).
-	//nolint:staticcheck
-	return rudi.NewContext(nil, document, vars, funcs, coalescer), nil
+	return rudi.NewContext(interpreter.New(), nil, document, vars, funcs, coalescer)
 }

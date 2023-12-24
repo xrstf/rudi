@@ -13,7 +13,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/docs"
 	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/util"
-	"go.xrstf.de/rudi/pkg/eval/types"
+	"go.xrstf.de/rudi/pkg/runtime/types"
 
 	colorjson "github.com/TylerBrock/colorjson"
 	"github.com/chzyer/readline"

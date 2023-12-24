@@ -16,7 +16,7 @@ import (
 	"go.xrstf.de/rudi/pkg/builtin/rudifunc"
 	"go.xrstf.de/rudi/pkg/builtin/strings"
 	"go.xrstf.de/rudi/pkg/builtin/types"
-	evaltypes "go.xrstf.de/rudi/pkg/eval/types"
+	evaltypes "go.xrstf.de/rudi/pkg/runtime/types"
 )
 
 var (
