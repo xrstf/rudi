@@ -24,7 +24,7 @@ func TestExpressionNames(t *testing.T) {
 		{
 			// technically invalid
 			expr:     Program{},
-			expected: "Program(?)",
+			expected: "Program",
 		},
 		{
 			expr: Program{
@@ -32,7 +32,7 @@ func TestExpressionNames(t *testing.T) {
 					Expression: Null{},
 				}},
 			},
-			expected: "Program(Statements)",
+			expected: "Program",
 		},
 		{
 			expr:     Statement{},

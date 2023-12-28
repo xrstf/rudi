@@ -2,7 +2,11 @@
 
 `set` is used to define variables and to update values of variables or the global
 document. Similar to [`delete`](delete.md) it is most often used with the
-bang modifier (`(set! …)`), as modifications "do not stick" otherwise.
+bang modifier (`(set! …)`), as modifications "do not stick" otherwise. However
+`set` can also be used to modify a datastructure "in transit", like in
+`(set! .user.settings (set $defaultSettings.isAdmin false))`, where the inner
+function will change a subfield (`isAdmin`) but still return the entire
+default settings object.
 
 `set` allows both overwriting the entire target value (`(set! $var …)` or
 `(set! . …)`) as well as setting just a sub element (for example
@@ -12,48 +16,40 @@ Variables defined by `set` are scoped and only valid for all following sibling
 expressions, never the parent. For for example `(if true (set! $x 42)) $x` is
 invalid, as `$x` only exists in the positive branch of that `if` tuple.
 
-`set` returns the value that was set.
+`set` returns the entire target data structure, as if no path expression was
+given. For example in `(set (read-config).isAdmin false)`, the entire
+configuration would be returned, not just `false`. This is slightly different
+semantics from most other functions, which would return only the resulting
+value (e.g. `(append $foo.list 2)` would not return the entire `$foo` variable,
+but only the `list` vector). In that sense, `set` works like `delete`, which
+returns the _remaining_ data, not whatever was removed.
 
 ## Examples
 
 * `(set! $foo 42)` ➜ `42`
 * `(set! $foo 42) $foo` ➜ `42`
 * `(set! .global[0].document "new-value")` ➜ `"new-value"`
-
-Without the bang modifier, `set` is less useful:
-
-* `(set! $foo 42) (set $foo "new-value") $foo` ➜ `42`
+* `(set! $config {a "yes" b "yes"}) (set $config.a "no")` ➜ `{a "yes" b "no"}`
 
 ## Forms
 
-### `(set target:symbol value:expression)` ➜ `any`
+### `(set target:pathed value:any)` ➜ `any`
 
-* `target` is a symbol.
+* `target` is any expression that can have a path expression.
 * `value` is any expression.
 
-<!-- , but can also be a vector/object/tuple with
-  path expression, as long as the tuple would evaluate to something where the
-  path expression fits. -->
+`set` evaluates the `value` and then the path expression of `target`. If both
+were successfully evaluated, the value is inserted into the target value at
+the given path and then the entire target is returned.
 
-`set` evaluates the value and then applies it to the `target`.
-
-If `target` is a variable with no path expression, its value is simply overwritten.
-Likewise, a `.` will make `set` overwrite the entire global document.
-
-If a path expression is present, `set` will only set value deeply nested in the
-target value (e.g. `(set $foo.bar 42)` will update the value at the key "bar"
-in `$foo`, which is hopefully an object). Even in this case, the _return value_
-of `set` is still the _set_ value (42 in the previous example), not the combined
-value.
+Note that for variables, the path expression can be empty (e.g.
+`(set $foo 42)`). For all other valid targets, a path expression must be set
+(e.g. `(set (read-config).field 42)`) because there is no source that could be
+overwritten (like with a variable or the global document).
 
 Also note that without the bang modifier, all of variable and document changes
-are only valid inside the `set` tuple itself and will disappear / not leak
-outside.
+are only returned, the underlying value is not modified in-place.
 
-If the `value` or the `target` return an error while evaluating, the error is
-returned.
-
-## Context
-
-`set` evaluates all expressions as their own scopes, so variables from the
-`value` expression do not influence the `target` expression's evaluation.
+`set!` can only be used with variables and bare path expressions (i.e. the
+global document), because there is no logical way to modify the result of a
+function call in-place.

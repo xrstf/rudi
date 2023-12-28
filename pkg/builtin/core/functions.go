@@ -24,13 +24,13 @@ var (
 
 	Functions = types.Functions{
 		"default": functions.NewBuilder(defaultFunction).WithDescription("returns the default value if the first argument is empty").Build(),
-		"delete":  functions.NewBuilder(deleteFunction).WithBangHandler(deleteBangHandler).WithDescription("removes a key from an object or an item from a vector").Build(),
+		"delete":  functions.NewBuilder(deleteFunction).WithBangHandler(overwriteEverythingBangHandler).WithDescription("removes a key from an object or an item from a vector").Build(),
 		"do":      functions.NewBuilder(DoFunction).WithDescription("eval a sequence of statements where only one expression is valid").Build(),
 		"empty?":  functions.NewBuilder(isEmptyFunction).WithCoalescer(humaneCoalescer).WithDescription("returns true when the given value is empty-ish (0, false, null, \"\", ...)").Build(),
 		"error":   functions.NewBuilder(errorFunction, fmtErrorFunction).WithDescription("returns an error").Build(),
 		"has?":    functions.NewBuilder(hasFunction).WithDescription("returns true if the given symbol's path expression points to an existing value").Build(),
 		"if":      functions.NewBuilder(ifElseFunction, ifFunction).WithDescription("evaluate one of two expressions based on a condition").Build(),
-		"set":     functions.NewBuilder(setFunction).WithDescription("set a value in a variable/document, only really useful with ! modifier (set!)").Build(),
+		"set":     functions.NewBuilder(setFunction).WithBangHandler(overwriteEverythingBangHandler).WithDescription("set a value in a variable/document, only really useful with ! modifier (set!)").Build(),
 		"try":     functions.NewBuilder(tryWithFallbackFunction, tryFunction).WithDescription("returns the fallback if the first expression errors out").Build(),
 	}
 )
@@ -83,47 +83,14 @@ func DoFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 }
 
 func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
-	var (
-		expr     ast.Expression
-		pathExpr *ast.PathExpression
-	)
+	pathed, ok := arg.(ast.Pathed)
+	if !ok {
+		return nil, fmt.Errorf("expected datatype that can hold a path expression, got %T", arg)
+	}
 
 	// separate base value expression from the path expression
-
-	if symbol, ok := arg.(ast.Symbol); ok {
-		pathExpr = symbol.PathExpression
-
-		if symbol.Variable != nil {
-			symbol.PathExpression = nil
-		} else {
-			// for bare path expressions
-			symbol.PathExpression = &ast.PathExpression{}
-		}
-
-		expr = symbol
-	}
-
-	if vectorNode, ok := arg.(ast.VectorNode); ok {
-		pathExpr = vectorNode.PathExpression
-		vectorNode.PathExpression = nil
-		expr = vectorNode
-	}
-
-	if objectNode, ok := arg.(ast.ObjectNode); ok {
-		pathExpr = objectNode.PathExpression
-		objectNode.PathExpression = nil
-		expr = objectNode
-	}
-
-	if tuple, ok := arg.(ast.Tuple); ok {
-		pathExpr = tuple.PathExpression
-		tuple.PathExpression = nil
-		expr = tuple
-	}
-
-	if expr == nil {
-		return nil, fmt.Errorf("expected Symbol, Vector, Object or Tuple, got %T", arg)
-	}
+	pathExpr := pathed.GetPathExpression()
+	expr := pathed.Pathless()
 
 	if pathExpr == nil {
 		return nil, errors.New("argument has no path expression")
@@ -190,130 +157,137 @@ func tryWithFallbackFunction(ctx types.Context, test ast.Expression, fallback as
 	return result, nil
 }
 
-// TODO: Allow (set (foo).bar 42)
-
 // (set VAR:Variable VALUE:any)
 // (set EXPR:PathExpression VALUE:any)
-func setFunction(ctx types.Context, target, value ast.Expression) (any, error) {
-	symbol, ok := target.(ast.Symbol)
+func setFunction(ctx types.Context, target ast.Expression, value any) (any, error) {
+	pathed, ok := target.(ast.Pathed)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", target)
+		return nil, fmt.Errorf("expected datatype that can hold a path expression, got %T", target)
 	}
 
-	// catch symbols that are technically invalid
-	if symbol.Variable == nil && symbol.PathExpression == nil {
-		return nil, fmt.Errorf("argument #0: must be path expression or variable, got %s", symbol.ExpressionName())
+	// separate base value expression from the path expression
+	pathExpr := pathed.GetPathExpression()
+	expr := pathed.Pathless()
+
+	// Make sure (set) calls make sense: For non-symbols, a path must be set, because
+	// "(set (foo) 42)" or "(set [1 2 3] 42)" do not make sense. For symbols on the other
+	// hand, we only pre-evaluate the target if a path exists, because we still need to
+	// allow variables not existing, so that "(set! $var 42)" can succeed.
+	switch target.(type) {
+	case ast.Symbol:
+		// Set relies entirely on the bang modifier handling to actually set values
+		// in variables or the global document; without the bang modifier, (set)
+		// is basically a no-op and we do not even have to evaluate the symbol here.
+		if pathExpr == nil {
+			return value, nil
+		}
+
+	case ast.Tuple, ast.VectorNode, ast.ObjectNode:
+		if pathExpr == nil {
+			return nil, errors.New("no path expression provided on target value")
+		}
+
+	default:
+		return nil, fmt.Errorf("unexpected target value of type %T", target)
 	}
 
-	// discard any context changes within the newValue expression
-	_, newValue, err := ctx.Runtime().EvalExpression(ctx, value)
+	// pre-evaluate the path (assuming it's cheaper to calculate than the main expression)
+	evaluatedPath, err := pathexpr.Eval(ctx, pathExpr)
 	if err != nil {
-		return nil, fmt.Errorf("argument #1: %w", err)
+		return nil, fmt.Errorf("invalid path expression: %w", err)
 	}
 
-	// Set relies entirely on the bang modifier handling to actually set values
-	// in variables or the global document; without the bang modifier, (set)
-	// is basically a no-op.
+	// evaluate the target
+	_, targetValue, err := ctx.Runtime().EvalExpression(ctx, expr)
+	if err != nil {
+		return nil, err
+	}
 
-	return newValue, nil
+	// we need to operate on a _copy_ of the value, as updating happens in the bang handler later
+	// on; this is only necessary for symbols though, as functions (tuples) are expected to return
+	// non-pointer data and vector/objects nodes are literals.
+	if _, ok := target.(ast.Symbol); ok {
+		targetValue, err = deepcopy.Clone(targetValue)
+		if err != nil {
+			return nil, fmt.Errorf("invalid current value: %w", err)
+		}
+	}
+
+	return jsonpath.Set(targetValue, jsonpath.FromEvaluatedPath(*evaluatedPath), value)
 }
 
-// TODO: Shouldn't (delete (map $obj to-upper).key) also work, i.e. not just
-// symbols? Symbols are only important for the bang handler, which checks it
-// independently.
-
-// (delete VAR:Variable)
-// (delete EXPR:PathExpression)
-func deleteFunction(ctx types.Context, expr ast.Expression) (any, error) {
-	symbol, ok := expr.(ast.Symbol)
+// (delete TARGET:Pathed)
+func deleteFunction(ctx types.Context, target ast.Expression) (any, error) {
+	pathed, ok := target.(ast.Pathed)
 	if !ok {
-		return nil, fmt.Errorf("argument #0 is not a symbol, but %T", expr)
+		return nil, fmt.Errorf("argument is not a type with path expression, but %T", target)
 	}
 
-	// catch symbols that are technically invalid
-	if symbol.PathExpression == nil {
-		return nil, fmt.Errorf("argument #0: must be path expression, got %s", symbol.ExpressionName())
+	// separate base value expression from the path expression
+	pe := pathed.GetPathExpression()
+	if pe == nil {
+		return nil, errors.New("empty path expression")
 	}
 
 	// pre-evaluate the path
-	pathExpr, err := pathexpr.Eval(ctx, symbol.PathExpression)
+	pathExpr, err := pathexpr.Eval(ctx, pe)
 	if err != nil {
-		return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
+		return nil, fmt.Errorf("invalid path expression: %w", err)
 	}
 
-	// get the current value
-	var currentValue any
-
-	if symbol.Variable != nil {
-		varName := string(*symbol.Variable)
-
-		// a non-existing variable is fine, this is how you define new variables in the first place
-		currentValue, _ = ctx.GetVariable(varName)
-	} else {
-		currentValue = ctx.GetDocument().Data()
+	// evaluate the target
+	_, targetValue, err := ctx.Runtime().EvalExpression(ctx, pathed.Pathless())
+	if err != nil {
+		return nil, err
 	}
 
-	// we need to operate on a _copy_ of the value and then, if need be, rely on the BangHandler
-	// to make the actual deletion happen and stick.
-	currentValue, err = deepcopy.Clone(currentValue)
-	if err != nil {
-		return nil, fmt.Errorf("invalid current value: %w", err)
+	// we need to operate on a _copy_ of the value, as updating happens in the bang handler later
+	// on; this is only necessary for symbols though, as functions (tuples) are expected to return
+	// non-pointer data and vector/objects nodes are literals.
+	if _, ok := target.(ast.Symbol); ok {
+		targetValue, err = deepcopy.Clone(targetValue)
+		if err != nil {
+			return nil, fmt.Errorf("invalid current value: %w", err)
+		}
 	}
 
 	// delete the desired path in the value
-	updatedValue, err := jsonpath.Delete(currentValue, jsonpath.FromEvaluatedPath(*pathExpr))
-	if err != nil {
-		return nil, fmt.Errorf("cannot delete %s in %T: %w", pathExpr, currentValue, err)
-	}
-
-	return updatedValue, nil
+	return jsonpath.Delete(targetValue, jsonpath.FromEvaluatedPath(*pathExpr))
 }
 
-func deleteBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (types.Context, any, error) {
+// overwriteEverythingBangHandler is the custom BangHandler for the set and delete functions.
+// Normally, function calls like "(append $obj.list 1)" would not return the entire object, but only
+// the function result (in this case, a vector with one more element added to it). This is because
+// for most functions, the path expression is evaluated before the argument is created and the
+// append function is called (i.e. append doesn't even see that its first argument originates from
+// $obj.list).
+// If set behaved the same way, "(set $obj.value 42)" would return 42, not the entire object. That
+// is not really helpful though. If you wanted to take an object and just update one value in it,
+// you'd be forced to use a temporary variable ("(set! $o ....) (set! $o.value 42) $o").
+// Because of this, set returns the whole updated data structure, so in the example above, the
+// entire $obj. It can do this because the first argument is not pre-evaluated by the Rudi runtime,
+// but passed as a raw expression (like for delete).
+// All of this applies equally to the delete function, hence both share the same bang handler.
+// Since this behaviour makes set different from other regular functions, it needs a custom
+// BangHandler.
+func overwriteEverythingBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (types.Context, any, error) {
 	if len(originalArgs) == 0 {
 		return ctx, nil, errors.New("must have at least 1 symbol argument")
 	}
 
 	firstArg := originalArgs[0]
-	sym, ok := firstArg.(ast.Symbol)
+	symbol, ok := firstArg.(ast.Symbol)
 	if !ok {
 		return ctx, nil, fmt.Errorf("must use Symbol as first argument, got %T", firstArg)
 	}
 
-	updatedValue := value
-
-	// if the symbol has a path to traverse, do so
-	if sym.PathExpression != nil {
-		// pre-evaluate the path expression
-		pathExpr, err := pathexpr.Eval(ctx, sym.PathExpression)
-		if err != nil {
-			return ctx, nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
-		}
-
-		// get the current value of the symbol
-		var currentValue any
-
-		if sym.Variable != nil {
-			varName := string(*sym.Variable)
-
-			// a non-existing variable is fine, this is how you define new variables in the first place
-			currentValue, _ = ctx.GetVariable(varName)
-		} else {
-			currentValue = ctx.GetDocument().Data()
-		}
-
-		// apply the path expression
-		updatedValue, err = jsonpath.Delete(currentValue, jsonpath.FromEvaluatedPath(*pathExpr))
-		if err != nil {
-			return ctx, nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
-		}
-	}
-
-	if sym.Variable != nil {
-		varName := string(*sym.Variable)
-		ctx = ctx.WithVariable(varName, updatedValue)
+	// Since set always returns the entire data structure, all we must do here is to
+	// update the target, ignoring the path expression on the symbol.
+	if symbol.Variable != nil {
+		varName := string(*symbol.Variable)
+		ctx = ctx.WithVariable(varName, value)
 	} else {
-		ctx.GetDocument().Set(updatedValue)
+		ctx.GetDocument().Set(value)
 	}
 
 	return ctx, value, nil

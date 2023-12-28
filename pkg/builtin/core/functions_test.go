@@ -168,7 +168,16 @@ func TestSetFunction(t *testing.T) {
 		{
 			Expression: `(set! $obj.aList[1] "new value")`,
 			Variables:  testVariables(),
-			Expected:   "new value",
+			Expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", "new value", "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
+				},
+			},
 		},
 		{
 			Expression: `(set! $obj.aList[1] "new value") $obj`,
@@ -212,7 +221,7 @@ func TestSetFunction(t *testing.T) {
 		// do not accidentally set a key without creating a new context
 		{
 			Expression: `(set! $a {foo "bar"}) (if true (set! $a.foo "updated"))`,
-			Expected:   "updated",
+			Expected:   map[string]any{"foo": "updated"},
 		},
 		{
 			Expression: `(set! $a {foo "bar"}) (if true (set! $a.foo "updated")) $a.foo`,
@@ -235,8 +244,17 @@ func TestSetFunction(t *testing.T) {
 		// update a key within an object variable
 		{
 			Expression: `(set! $obj.aString "new value")`,
-			Expected:   "new value",
-			Variables:  testVariables(),
+			Expected: map[string]any{
+				"aString": "new value",
+				"aList":   []any{"first", 2, "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
+				},
+			},
+			Variables: testVariables(),
 		},
 		{
 			Expression: `(set! $obj.aString "new value") $obj.aString`,
@@ -246,8 +264,18 @@ func TestSetFunction(t *testing.T) {
 		// add a new sub key
 		{
 			Expression: `(set! $obj.newKey "new value")`,
-			Expected:   "new value",
-			Variables:  testVariables(),
+			Expected: map[string]any{
+				"aString": "foo",
+				"aList":   []any{"first", 2, "third"},
+				"aBool":   true,
+				"anObject": map[string]any{
+					"key1": true,
+					"key2": nil,
+					"key3": []any{9, map[string]any{"foo": "bar"}, 7},
+				},
+				"newKey": "new value",
+			},
+			Variables: testVariables(),
 		},
 		{
 			Expression: `(set! $obj.newKey "new value") $obj.newKey`,
@@ -315,6 +343,15 @@ func TestSetFunction(t *testing.T) {
 				},
 			},
 		},
+		// modify data in transit
+		{
+			Expression: `(set (set $foo [1 2 3])[1] 4)`,
+			Expected:   []any{int64(1), int64(4), int64(3)},
+		},
+		{
+			Expression: `(set (set $foo {foo "bar"}).foo 4)`,
+			Expected:   map[string]any{"foo": int64(4)},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -351,14 +388,12 @@ func TestDeleteFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			// TODO: This should be valid.
 			Expression: `(delete [1 2 3][1])`,
-			Invalid:    true,
+			Expected:   []any{int64(1), int64(3)},
 		},
 		{
-			// TODO: This should be valid.
-			Expression: `(delete {foo "bar"}.foo)`,
-			Invalid:    true,
+			Expression: `(delete {foo "bar" hei "verden"}.foo)`,
+			Expected:   map[string]any{"hei": "verden"},
 		},
 		// allow removing everything
 		{

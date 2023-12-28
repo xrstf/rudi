@@ -24,6 +24,18 @@ type Expression interface {
 	ExpressionName() string
 }
 
+type Pathed interface {
+	Expression
+
+	// GetPathExpression returns the optional path expression. Just because a type can hold
+	// a path expression does not mean one is always set.
+	GetPathExpression() *PathExpression
+
+	// Pathless returns a shallow copy with the path expression omitted, e.g.
+	// turning a "(foo).bar" into "(foo)".
+	Pathless() Pathed
+}
+
 // A program is either a series of statements or a single, non-tuple expression.
 type Program struct {
 	Statements []Statement
@@ -41,16 +53,7 @@ func (p Program) String() string {
 }
 
 func (p Program) ExpressionName() string {
-	var name string
-
-	switch {
-	case len(p.Statements) > 0:
-		name = "Statements"
-	default:
-		name = "?"
-	}
-
-	return "Program(" + name + ")"
+	return "Program"
 }
 
 type Statement struct {
@@ -77,6 +80,7 @@ type Symbol struct {
 }
 
 var _ Expression = Symbol{}
+var _ Pathed = Symbol{}
 
 func (s Symbol) IsDot() bool {
 	return s.Variable == nil && s.PathExpression != nil && s.PathExpression.IsIdentity()
@@ -122,12 +126,30 @@ func (s Symbol) ExpressionName() string {
 	return "Symbol(" + name + ")"
 }
 
+func (s Symbol) GetPathExpression() *PathExpression {
+	return s.PathExpression
+}
+
+func (s Symbol) Pathless() Pathed {
+	if s.Variable != nil {
+		return Symbol{
+			Variable: s.Variable,
+		}
+	}
+
+	// for bare path expressions
+	return Symbol{
+		PathExpression: &PathExpression{},
+	}
+}
+
 type Tuple struct {
 	Expressions    []Expression
 	PathExpression *PathExpression
 }
 
 var _ Expression = Tuple{}
+var _ Pathed = Tuple{}
 
 func (t Tuple) String() string {
 	path := ""
@@ -147,6 +169,16 @@ func (Tuple) ExpressionName() string {
 	return "Tuple"
 }
 
+func (t Tuple) GetPathExpression() *PathExpression {
+	return t.PathExpression
+}
+
+func (t Tuple) Pathless() Pathed {
+	return Tuple{
+		Expressions: t.Expressions,
+	}
+}
+
 // VectorNode represents the parsed code for constructing an vector.
 // When an VectorNode is evaluated, it turns into an Vector.
 type VectorNode struct {
@@ -155,6 +187,7 @@ type VectorNode struct {
 }
 
 var _ Expression = VectorNode{}
+var _ Pathed = VectorNode{}
 
 func (v VectorNode) String() string {
 	path := ""
@@ -174,6 +207,16 @@ func (VectorNode) ExpressionName() string {
 	return "Vector"
 }
 
+func (v VectorNode) GetPathExpression() *PathExpression {
+	return v.PathExpression
+}
+
+func (v VectorNode) Pathless() Pathed {
+	return VectorNode{
+		Expressions: v.Expressions,
+	}
+}
+
 // ObjectNode represents the parsed code for constructing an object.
 // When an ObjectNode is evaluated, it turns into an Object.
 type ObjectNode struct {
@@ -182,6 +225,7 @@ type ObjectNode struct {
 }
 
 var _ Expression = ObjectNode{}
+var _ Pathed = ObjectNode{}
 
 func (o ObjectNode) String() string {
 	pairs := make([]string, len(o.Data))
@@ -193,6 +237,16 @@ func (o ObjectNode) String() string {
 
 func (ObjectNode) ExpressionName() string {
 	return "Object"
+}
+
+func (o ObjectNode) GetPathExpression() *PathExpression {
+	return o.PathExpression
+}
+
+func (o ObjectNode) Pathless() Pathed {
+	return ObjectNode{
+		Data: o.Data,
+	}
 }
 
 type KeyValuePair struct {
