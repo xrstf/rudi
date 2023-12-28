@@ -53,6 +53,7 @@ like those available in JSON (numbers, bools, objects, vectors etc.). A statemen
 * **Optional Type Safety**: Choose between pedantic, strict or humane typing for your programs.
   Strict allows nearly no type conversions, humane allows for things like `1` (int) turning into
   `"1"` (string) when needed.
+* **Flexible**: The Rudi CLI interpreter (`rudi`) supports reading/writing JSON, YAML and TOML.
 
 ## Installation
 
