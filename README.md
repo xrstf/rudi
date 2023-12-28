@@ -17,11 +17,17 @@
 </p>
 
 Rudi is a Lisp-like, embeddable programming language that focuses on transforming data structures
-like those available in JSON (numbers, bools, objects, vectors etc.). A statement in Rudi looks like
+like those available in JSON (numbers, bools, objects, vectors etc.). Rudi programs consist of a
+series of statements that are evaluated in order:
 
 ```lisp
-(set! .foo[0] (+ (len .users) 42))
+(if (gt? .replicas 5) (error "too many replicas (%d)" .replicas))
+(set! .spec.isAdmin (has-suffix? .spec.Email "@initech.com"))
+(map! .spec.usages to-lower)
 ```
+
+Rudi is great for making tasks like manipulating data, implementing policies, setting default values
+or normalizing data configurable.
 
 ## Contents
 
