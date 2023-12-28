@@ -55,7 +55,6 @@ func (p *rudiPrinter) Vector(vec []any) error {
 }
 
 func (p *rudiPrinter) VectorNode(vec *ast.VectorNode) error {
-	// TODO: Use copy()?
 	data := make([]any, len(vec.Expressions))
 	for i := range vec.Expressions {
 		data[i] = vec.Expressions[i]

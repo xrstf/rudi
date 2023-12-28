@@ -41,8 +41,12 @@ func (p *astPrinter) String(str string) error {
 }
 
 func (p *astPrinter) Identifier(ident *ast.Identifier) error {
-	// TODO: Include Bang modifier
-	return p.write(fmt.Sprintf("(identifier %s)", *ident))
+	var bang string
+	if ident.Bang {
+		bang = " (bang)"
+	}
+
+	return p.write(fmt.Sprintf("(identifier %s%s)", ident.Name, bang))
 }
 
 func (p *astPrinter) Vector(vec []any) error {
@@ -50,7 +54,6 @@ func (p *astPrinter) Vector(vec []any) error {
 }
 
 func (p *astPrinter) VectorNode(vec *ast.VectorNode) error {
-	// TODO: Use copy()?
 	data := make([]any, len(vec.Expressions))
 	for i := range vec.Expressions {
 		data[i] = vec.Expressions[i]

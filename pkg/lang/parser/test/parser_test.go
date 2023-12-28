@@ -48,7 +48,7 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(func+ -foo bar!)`,
-			expected: `(tuple (identifier func+) (identifier -foo) (identifier bar!))`,
+			expected: `(tuple (identifier func+) (identifier -foo) (identifier bar (bang)))`,
 		},
 		{
 			input:    `(1)`,
