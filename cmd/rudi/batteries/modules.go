@@ -32,6 +32,8 @@ import (
 
 	semvermod "go.xrstf.de/rudi-contrib/semver"
 	semverdocs "go.xrstf.de/rudi-contrib/semver/docs"
+	setmod "go.xrstf.de/rudi-contrib/set"
+	setdocs "go.xrstf.de/rudi-contrib/set/docs"
 	uuidmod "go.xrstf.de/rudi-contrib/uuid"
 	uuiddocs "go.xrstf.de/rudi-contrib/uuid/docs"
 	yamlmod "go.xrstf.de/rudi-contrib/yaml"
@@ -116,6 +118,12 @@ var (
 			Functions:     semvermod.Functions,
 			Documentation: semverdocs.Functions,
 			GoModule:      "go.xrstf.de/rudi-contrib/semver",
+		},
+		{
+			Name:          "set",
+			Functions:     setmod.Functions,
+			Documentation: setdocs.Functions,
+			GoModule:      "go.xrstf.de/rudi-contrib/set",
 		},
 		{
 			Name:          "uuid",

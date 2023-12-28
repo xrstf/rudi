@@ -17,6 +17,13 @@ interpreter is its own Go module and does not contribute to the Rudi language re
 
 * [`semver`](../extlib/semver/semver.md) – parses a string as a semantic version
 
+### set
+
+* [`new-key-set`](../extlib/set/new-key-set.md) – create a set filled with the keys of an object
+* [`new-set`](../extlib/set/new-set.md) – create a set filled with the given values
+* [`set-delete`](../extlib/set/set-delete.md) – returns a copy of the set with the given values removed from it
+* [`set-insert`](../extlib/set/set-insert.md) – returns a copy of the set with the newly added values inserted to it
+
 ### uuid
 
 * [`uuidv4`](../extlib/uuid/uuidv4.md) – returns a new, randomly generated v4 UUID

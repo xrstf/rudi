@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	github.com/charmbracelet/glamour v0.6.1-0.20231207115508-e526301e1404
 	github.com/leaanthony/go-ansi-parser v1.6.1
-	go.xrstf.de/rudi v0.4.0
+	go.xrstf.de/rudi v0.5.1
 	go.xrstf.de/rudi/cmd/rudi v0.0.0-00010101000000-000000000000
 )
 
@@ -29,12 +29,14 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/yuin/goldmark v1.6.0 // indirect
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
-	go.xrstf.de/rudi-contrib/semver v0.1.4 // indirect
+	go.xrstf.de/rudi-contrib/semver v0.1.5 // indirect
+	go.xrstf.de/rudi-contrib/set v0.0.2 // indirect
 	go.xrstf.de/rudi-contrib/uuid v0.1.4 // indirect
 	go.xrstf.de/rudi-contrib/yaml v0.1.4 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	k8s.io/apimachinery v0.29.0 // indirect
 )
 
 replace (

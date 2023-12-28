@@ -113,6 +113,12 @@ You can also request help for any of these functions using `help FUNCTION`:
 * **semver**
   * `semver` – parses a string as a semantic version
 
+* **set**
+  * `new-key-set` – create a set filled with the keys of an object
+  * `new-set` – create a set filled with the given values
+  * `set-delete` – returns a copy of the set with the given values removed from it
+  * `set-insert` – returns a copy of the set with the newly added values inserted to it
+
 * **uuid**
   * `uuidv4` – returns a new, randomly generated v4 UUID
 

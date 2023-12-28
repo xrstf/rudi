@@ -13,6 +13,7 @@ github.com/chzyer/test v1.0.0/go.mod h1:2JlltgoNkt4TW/z9V/IzDdFaMTM2JPIi26O1pF38
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/uuid v1.5.0 h1:1p67kYwdtXjb0gL0BPiP1Av9wiZPo5A8z2cWkTZ+eyU=
 github.com/google/uuid v1.5.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f h1:7LYC+Yfkj3CTRcShK0KOL/w6iTiKyqqBA9a41Wnggw8=
@@ -34,8 +35,10 @@ github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/xrstf/colorjson v0.0.0-20231123184920-5ea6fecf578f h1:gVBqsyWwyxxzSGjfeOZVHGWMQNN7pgMwJzKdJc8sHzs=
 github.com/xrstf/colorjson v0.0.0-20231123184920-5ea6fecf578f/go.mod h1:AY6XdslHQYqT5ivYt21gXNpCjsck8iEoytnNfz3COxY=
-go.xrstf.de/rudi-contrib/semver v0.1.4 h1:hFPa5tIQQUyCREH6uKI8mLA0oovcBbiKZGr8gnRH6B8=
-go.xrstf.de/rudi-contrib/semver v0.1.4/go.mod h1:Y9MuVT6AA/mszXPydUn97LqZQ8XzdsuHDgxZJTtMGG8=
+go.xrstf.de/rudi-contrib/semver v0.1.5 h1:qnp5dfoHk7X7EBuBHGplUfbtfpHcOD9f9zXo+GegErI=
+go.xrstf.de/rudi-contrib/semver v0.1.5/go.mod h1:4YieUyLSWXEF0nF3hUW3nydeJr6Hm2QDHdiLizIW97c=
+go.xrstf.de/rudi-contrib/set v0.0.2 h1:bsx9YBrCwGBRDOP3n2Tx01z1ugu2eGQoMd4gLrcx9IU=
+go.xrstf.de/rudi-contrib/set v0.0.2/go.mod h1:sSVG87d5+N3F+q+a83uMsYKityChmbC23fUEUfAEQWU=
 go.xrstf.de/rudi-contrib/uuid v0.1.4 h1:zYDebdBnAi6lX5ktBrwIK2tuCpJXfGKDqmx6SVcSw0Q=
 go.xrstf.de/rudi-contrib/uuid v0.1.4/go.mod h1:3SDmKKKOJUSkwZpbL0zyzNvM+yf20rUwPAn8/5rHBWI=
 go.xrstf.de/rudi-contrib/yaml v0.1.4 h1:R8RMSodKUwI/b1f16TWbp2RVFoPAFWRDchBD+aNmBFo=
@@ -49,3 +52,5 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+k8s.io/apimachinery v0.29.0 h1:+ACVktwyicPz0oc6MTMLwa2Pw3ouLAfAon1wPLtG48o=
+k8s.io/apimachinery v0.29.0/go.mod h1:eVBxQ/cwiJxH58eK/jd/vAk4mrxmVlnpBH5J2GbMeis=
