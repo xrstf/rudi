@@ -12,7 +12,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.xrstf.de/rudi v0.5.1
 	go.xrstf.de/rudi-contrib/semver v0.1.5
-	go.xrstf.de/rudi-contrib/set v0.0.2
+	go.xrstf.de/rudi-contrib/set v0.1.1
 	go.xrstf.de/rudi-contrib/uuid v0.1.4
 	go.xrstf.de/rudi-contrib/yaml v0.1.4
 	gopkg.in/yaml.v3 v3.0.1

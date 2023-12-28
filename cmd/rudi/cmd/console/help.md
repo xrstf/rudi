@@ -117,7 +117,17 @@ You can also request help for any of these functions using `help FUNCTION`:
   * `new-key-set` – create a set filled with the keys of an object
   * `new-set` – create a set filled with the given values
   * `set-delete` – returns a copy of the set with the given values removed from it
+  * `set-diff` – returns the difference between two sets
+  * `set-eq?` – returns true if two sets hold the same values
+  * `set-has-any?` – returns true if the set contains _any_ of the given values
+  * `set-has?` – returns true if the set contains _all_ of the given values
   * `set-insert` – returns a copy of the set with the newly added values inserted to it
+  * `set-intersection` – returns the insersection of two sets
+  * `set-list` – returns a sorted vector containing the values of the set
+  * `set-size` – returns the number of values in the set
+  * `set-superset-of?` – returns true if the other set is a superset of the base set
+  * `set-symdiff` – returns the symmetric difference between two sets
+  * `set-union` – returns the union of two or more sets
 
 * **uuid**
   * `uuidv4` – returns a new, randomly generated v4 UUID

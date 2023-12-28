@@ -30,7 +30,7 @@ require (
 	github.com/yuin/goldmark v1.6.0 // indirect
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
 	go.xrstf.de/rudi-contrib/semver v0.1.5 // indirect
-	go.xrstf.de/rudi-contrib/set v0.0.2 // indirect
+	go.xrstf.de/rudi-contrib/set v0.1.1 // indirect
 	go.xrstf.de/rudi-contrib/uuid v0.1.4 // indirect
 	go.xrstf.de/rudi-contrib/yaml v0.1.4 // indirect
 	golang.org/x/net v0.17.0 // indirect

@@ -37,8 +37,8 @@ github.com/xrstf/colorjson v0.0.0-20231123184920-5ea6fecf578f h1:gVBqsyWwyxxzSGj
 github.com/xrstf/colorjson v0.0.0-20231123184920-5ea6fecf578f/go.mod h1:AY6XdslHQYqT5ivYt21gXNpCjsck8iEoytnNfz3COxY=
 go.xrstf.de/rudi-contrib/semver v0.1.5 h1:qnp5dfoHk7X7EBuBHGplUfbtfpHcOD9f9zXo+GegErI=
 go.xrstf.de/rudi-contrib/semver v0.1.5/go.mod h1:4YieUyLSWXEF0nF3hUW3nydeJr6Hm2QDHdiLizIW97c=
-go.xrstf.de/rudi-contrib/set v0.0.2 h1:bsx9YBrCwGBRDOP3n2Tx01z1ugu2eGQoMd4gLrcx9IU=
-go.xrstf.de/rudi-contrib/set v0.0.2/go.mod h1:sSVG87d5+N3F+q+a83uMsYKityChmbC23fUEUfAEQWU=
+go.xrstf.de/rudi-contrib/set v0.1.1 h1:7MBJrZrrAc3a6MjoBzp4/l2BRn94+lrjTDwWKcCHXBY=
+go.xrstf.de/rudi-contrib/set v0.1.1/go.mod h1:sSVG87d5+N3F+q+a83uMsYKityChmbC23fUEUfAEQWU=
 go.xrstf.de/rudi-contrib/uuid v0.1.4 h1:zYDebdBnAi6lX5ktBrwIK2tuCpJXfGKDqmx6SVcSw0Q=
 go.xrstf.de/rudi-contrib/uuid v0.1.4/go.mod h1:3SDmKKKOJUSkwZpbL0zyzNvM+yf20rUwPAn8/5rHBWI=
 go.xrstf.de/rudi-contrib/yaml v0.1.4 h1:R8RMSodKUwI/b1f16TWbp2RVFoPAFWRDchBD+aNmBFo=

@@ -19,7 +19,7 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	go.xrstf.de/rudi-contrib/semver v0.1.5 // indirect
-	go.xrstf.de/rudi-contrib/set v0.0.2 // indirect
+	go.xrstf.de/rudi-contrib/set v0.1.1 // indirect
 	go.xrstf.de/rudi-contrib/uuid v0.1.4 // indirect
 	go.xrstf.de/rudi-contrib/yaml v0.1.4 // indirect
 	golang.org/x/sys v0.14.0 // indirect

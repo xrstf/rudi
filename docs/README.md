@@ -125,7 +125,17 @@ Rudi function set. They are however all available by default in the `rudi` inter
 * [`new-key-set`](extlib/set/new-key-set.md) – create a set filled with the keys of an object
 * [`new-set`](extlib/set/new-set.md) – create a set filled with the given values
 * [`set-delete`](extlib/set/set-delete.md) – returns a copy of the set with the given values removed from it
+* [`set-diff`](extlib/set/set-diff.md) – returns the difference between two sets
+* [`set-eq?`](extlib/set/set-eq.md) – returns true if two sets hold the same values
+* [`set-has-any?`](extlib/set/set-has-any.md) – returns true if the set contains _any_ of the given values
+* [`set-has?`](extlib/set/set-has.md) – returns true if the set contains _all_ of the given values
 * [`set-insert`](extlib/set/set-insert.md) – returns a copy of the set with the newly added values inserted to it
+* [`set-intersection`](extlib/set/set-intersection.md) – returns the insersection of two sets
+* [`set-list`](extlib/set/set-list.md) – returns a sorted vector containing the values of the set
+* [`set-size`](extlib/set/set-size.md) – returns the number of values in the set
+* [`set-superset-of?`](extlib/set/set-superset-of.md) – returns true if the other set is a superset of the base set
+* [`set-symdiff`](extlib/set/set-symdiff.md) – returns the symmetric difference between two sets
+* [`set-union`](extlib/set/set-union.md) – returns the union of two or more sets
 
 ### uuid
 
