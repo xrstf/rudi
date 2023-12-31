@@ -52,6 +52,8 @@ func getFileFormat(filename string) types.Encoding {
 	switch strings.ToLower(filepath.Ext(filename)) {
 	case ".json":
 		return types.JsonEncoding
+	case ".json5":
+		return types.Json5Encoding
 	case ".tml", ".toml":
 		return types.TomlEncoding
 	default:

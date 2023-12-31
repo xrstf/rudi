@@ -11,6 +11,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/types"
 
 	"github.com/BurntSushi/toml"
+	"github.com/titanous/json5"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,6 +31,12 @@ func Decode(input io.Reader, enc types.Encoding) (any, error) {
 		decoder := json.NewDecoder(input)
 		if err := decoder.Decode(&data); err != nil {
 			return nil, fmt.Errorf("failed to parse file as JSON: %w", err)
+		}
+
+	case types.Json5Encoding:
+		decoder := json5.NewDecoder(input)
+		if err := decoder.Decode(&data); err != nil {
+			return nil, fmt.Errorf("failed to parse file as JSON5: %w", err)
 		}
 
 	case types.YamlEncoding:

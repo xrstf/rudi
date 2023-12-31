@@ -23,18 +23,30 @@ func (e Encoding) IsValid() bool {
 }
 
 const (
-	RawEncoding  Encoding = "raw"
-	JsonEncoding Encoding = "json"
-	YamlEncoding Encoding = "yaml"
-	TomlEncoding Encoding = "toml"
+	RawEncoding   Encoding = "raw"
+	JsonEncoding  Encoding = "json"
+	Json5Encoding Encoding = "json5"
+	YamlEncoding  Encoding = "yaml"
+	TomlEncoding  Encoding = "toml"
 )
 
-var AllEncodings = []Encoding{
-	RawEncoding,
-	JsonEncoding,
-	YamlEncoding,
-	TomlEncoding,
-}
+var (
+	AllEncodings = []Encoding{
+		RawEncoding,
+		JsonEncoding,
+		Json5Encoding,
+		YamlEncoding,
+		TomlEncoding,
+	}
+
+	InputEncodings  = AllEncodings
+	OutputEncodings = []Encoding{
+		RawEncoding,
+		JsonEncoding,
+		YamlEncoding,
+		TomlEncoding,
+	}
+)
 
 type Coalescing string
 

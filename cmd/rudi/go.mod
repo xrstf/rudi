@@ -10,6 +10,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/muesli/termenv v0.15.2
 	github.com/spf13/pflag v1.0.5
+	github.com/titanous/json5 v1.0.0
 	go.xrstf.de/rudi v0.5.1
 	go.xrstf.de/rudi-contrib/semver v0.1.5
 	go.xrstf.de/rudi-contrib/set v0.1.1

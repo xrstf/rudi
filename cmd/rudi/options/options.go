@@ -43,8 +43,8 @@ func NewDefaultOptions() Options {
 func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.SortFlags = false
 
-	stdinFormatFlag := newEnumFlag(&o.StdinFormat, types.AllEncodings...)
-	outputFormatFlag := newEnumFlag(&o.OutputFormat, types.AllEncodings...)
+	stdinFormatFlag := newEnumFlag(&o.StdinFormat, types.InputEncodings...)
+	outputFormatFlag := newEnumFlag(&o.OutputFormat, types.OutputEncodings...)
 	coalescingFlag := newEnumFlag(&o.Coalescing, types.AllCoalescings...)
 
 	fs.BoolVarP(&o.Interactive, "interactive", "i", o.Interactive, "Start an interactive REPL to run expressions.")

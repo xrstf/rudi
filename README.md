@@ -59,7 +59,8 @@ or normalizing data configurable.
 * **Optional Type Safety**: Choose between pedantic, strict or humane typing for your programs.
   Strict allows nearly no type conversions, humane allows for things like `1` (int) turning into
   `"1"` (string) when needed.
-* **Flexible**: The Rudi CLI interpreter (`rudi`) supports reading/writing JSON, YAML and TOML.
+* **Flexible**: The Rudi CLI interpreter (`rudi`) supports reading/writing JSON,
+  [JSON5](https://json5.org/), [YAML](https://yaml.org/) and [TOML](https://toml.io/en/).
 
 ## Installation
 
@@ -125,16 +126,22 @@ Usage of rudi:
 
 #### File Handling
 
+Rudi can load JSON, JSON5, YAML and TOML files and will determine the file format based on the
+file extension (`.json` for JSON, `.json5` for JSON5, `.yml` and `.yaml` for YAML and `.tml` /
+`.toml` for TOML). For data provided via stdin, `rudi` by default assumes YAML (or JSON) encoding.
+If you want to use TOML/JSON5 instead, you must use the `--stdin-format` flag.
+
 The first loaded file is known as the "document". Its content is available via path expressions like
 `.foo[0]`. All loaded files are also available via the `$files` variable (i.e. `.` is the same as
 `$files[0]` for reading, but when writing data, there is a difference between both notations; refer
 to the docs for `set` for more information). Additionally the filenames are available in the
 `$filenames` variable.
 
-For data provided via stdin, `rudi` by default assumes YAML (or JSON) encoding. If you want to use
-TOML instead, you must pass `--stdin-format=toml`. When files are used, the format is deduced from
-the file extension: `.toml` and `.tml` are parsed as TOML, everything else uses YAML decoding by
-default.
+Additional raw files can be loaded using the `--var` flag: To load files, the format for this flag
+is `ENCODING:file:FILENAME`, for example `--var "myvar=yaml:file:config.kubeconfig"`. This allows
+you to load files regardless of their extension and also allows to load raw files (that will be
+kept as strings) using `"myvar=raw:file:logo.png"`. Raw file encoding is not supported for files
+given as arguments, those files must have a recognized file extension.
 
 ### Embedding
 
