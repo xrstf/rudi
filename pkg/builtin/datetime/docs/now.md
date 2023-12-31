@@ -9,7 +9,7 @@ information on the format string syntax.
 
 ## Examples
 
-* `(now "2006-01-02")` ➜ `"2023-12-02"`
+* `(now "2006-01-02")` ➜ `"2024-01-01"`
 
 ## Forms
 

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Christoph Mewes
+# SPDX-FileCopyrightText: 2024 Christoph Mewes
 # SPDX-License-Identifier: MIT
 
 GIT_VERSION = $(shell git describe --tags --always)

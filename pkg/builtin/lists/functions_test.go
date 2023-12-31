@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 Christoph Mewes
+// SPDX-FileCopyrightText: 2024 Christoph Mewes
 // SPDX-License-Identifier: MIT
 
 // Package lists_tests is a standalone package for the tests to prevent the regular
