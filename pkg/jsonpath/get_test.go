@@ -10,8 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-type unknownType struct{}
-
 type customObjGetter struct {
 	value any
 }
@@ -42,6 +40,13 @@ func (g customVecGetter) GetVectorItem(index int) (any, error) {
 }
 
 func TestGet(t *testing.T) {
+	var nilDummyFunc func() int
+
+	stringPtr := ptrTo("foo")
+	customEmptyInterfacesValues := []CustomEmptyInterface{
+		map[string]*OtherStruct{"foo": {StringField: "bar"}},
+	}
+
 	testcases := []struct {
 		value    any
 		path     Path
@@ -81,12 +86,12 @@ func TestGet(t *testing.T) {
 			invalid: true,
 		},
 		{
-			value:   unknownType{},
+			value:   emptyStruct{},
 			path:    Path{"foo"},
 			invalid: true,
 		},
 
-		// simply object access without recursion
+		// simply map access without recursion
 
 		{
 			value:    map[string]any{"foo": "bar"},
@@ -170,7 +175,7 @@ func TestGet(t *testing.T) {
 			invalid: true,
 		},
 
-		// descend into custom types
+		// custom object getter
 
 		{
 			value:    customObjGetter{value: map[string]any{"foo": "bar"}},
@@ -188,6 +193,8 @@ func TestGet(t *testing.T) {
 			invalid: true,
 		},
 
+		// custom vector getter
+
 		{
 			value:    customVecGetter{magic: 7, value: map[string]any{"foo": "bar"}},
 			path:     Path{7, "foo"},
@@ -203,10 +210,176 @@ func TestGet(t *testing.T) {
 			path:    Path{"objectstep"},
 			invalid: true,
 		},
+
+		// struct scalar fields
+
+		{
+			value:   ExampleStruct{},
+			path:    Path{"DoesNotExist"},
+			invalid: true,
+		},
+		{
+			value:   ExampleStruct{},
+			path:    Path{"privateField"},
+			invalid: true,
+		},
+		{
+			value:    ExampleStruct{StringField: ""},
+			path:     Path{"StringField"},
+			expected: "",
+		},
+		{
+			value:   ExampleStruct{StringField: ""},
+			path:    Path{"StringField", "dummy"},
+			invalid: true,
+		},
+		{
+			value:    ExampleStruct{StringField: "foo"},
+			path:     Path{"StringField"},
+			expected: "foo",
+		},
+		{
+			value:    ExampleStruct{StringPointerField: nil},
+			path:     Path{"StringPointerField"},
+			expected: func() *string { return nil }(),
+		},
+		{
+			value:    ExampleStruct{StringPointerField: stringPtr},
+			path:     Path{"StringPointerField"},
+			expected: stringPtr,
+		},
+		{
+			value:    ExampleStruct{FuncField: nil},
+			path:     Path{"FuncField"},
+			expected: nilDummyFunc,
+		},
+		// is its own testcase because cmp cannot compare functions
+		// {
+		// 	value:    ExampleStruct{FuncField: dummyFieldFunc},
+		// 	path:     Path{"FuncField"},
+		// 	expected: dummyFieldFunc,
+		// },
+		{
+			value:   ExampleStruct{FuncField: dummyFieldFunc},
+			path:    Path{"FuncField", "test"},
+			invalid: true,
+		},
+		{
+			value:   ExampleStruct{FuncField: dummyFieldFunc},
+			path:    Path{"FuncField", 0},
+			invalid: true,
+		},
+
+		// root value is pointer
+
+		{
+			value:    &ExampleStruct{StringField: "foo"},
+			path:     Path{"StringField"},
+			expected: "foo",
+		},
+		{
+			value:   func() *ExampleStruct { return nil }(),
+			path:    Path{"StringField"},
+			invalid: true,
+		},
+
+		// struct map fields
+
+		{
+			value:    ExampleStruct{},
+			path:     Path{"StringMapField"},
+			expected: func() map[string]string { return nil }(),
+		},
+		{
+			value:    ExampleStruct{StringMapField: map[string]string{}},
+			path:     Path{"StringMapField"},
+			expected: map[string]string{},
+		},
+		{
+			value:   ExampleStruct{StringMapField: map[string]string{}},
+			path:    Path{"StringMapField", 0},
+			invalid: true,
+		},
+		{
+			value:   ExampleStruct{StringMapField: map[string]string{}},
+			path:    Path{"StringMapField", "test"},
+			invalid: true,
+		},
+		{
+			value:    ExampleStruct{StringMapField: map[string]string{"test": "value"}},
+			path:     Path{"StringMapField", "test"},
+			expected: "value",
+		},
+		{
+			value:    ExampleStruct{EmptyInterfaceMapField: map[string]any{"test": "value"}},
+			path:     Path{"EmptyInterfaceMapField", "test"},
+			expected: "value",
+		},
+		{
+			value:    ExampleStruct{StructMapField: map[string]OtherStruct{"foo": {}}},
+			path:     Path{"StructMapField", "foo", "StringPointerField"},
+			expected: func() *string { return nil }(),
+		},
+		{
+			value:    ExampleStruct{StructMapField: map[string]OtherStruct{"foo": {StringPointerField: stringPtr}}},
+			path:     Path{"StructMapField", "foo", "StringPointerField"},
+			expected: stringPtr,
+		},
+		{
+			value:    ExampleStruct{StructPointerMapField: map[string]*OtherStruct{"foo": {StringField: "bar"}}},
+			path:     Path{"StructPointerMapField", "foo", "StringField"},
+			expected: "bar",
+		},
+
+		// embedded structs
+
+		{
+			value:    StructWithEmbed{StringField: "foo"},
+			path:     Path{"StringField"},
+			expected: "foo",
+		},
+		{
+			value:    StructWithEmbed{BaseStruct: BaseStruct{StringField: "foo"}},
+			path:     Path{"StringField"},
+			expected: "",
+		},
+		{
+			value:    StructWithEmbed{BaseStruct: BaseStruct{StringField: "foo"}},
+			path:     Path{"BaseStruct", "StringField"},
+			expected: "foo",
+		},
+		{
+			value:    StructWithEmbed{StringField: "foo", BaseStruct: BaseStruct{StringField: "bar"}},
+			path:     Path{"StringField"},
+			expected: "foo",
+		},
+		{
+			value:    StructWithEmbed{StringField: "foo", BaseStruct: BaseStruct{StringField: "bar"}},
+			path:     Path{"BaseStruct", "StringField"},
+			expected: "bar",
+		},
+		{
+			value:    StructWithEmbed{BaseStruct: BaseStruct{BaseStringField: "bar"}},
+			path:     Path{"BaseStringField"},
+			expected: "bar",
+		},
+
+		// interface fields
+
+		{
+			value:    ExampleStruct{CustomEmptyInterfaceField: map[string]*OtherStruct{"foo": {StringField: "bar"}}},
+			path:     Path{"CustomEmptyInterfaceField", "foo", "StringField"},
+			expected: "bar",
+		},
+		{
+			value:    ExampleStruct{CustomEmptyInterfaceSlicePointerField: &customEmptyInterfacesValues},
+			path:     Path{"CustomEmptyInterfaceSlicePointerField", 0, "foo", "StringField"},
+			expected: "bar",
+		},
 	}
 
 	for _, tc := range testcases {
-		t.Run("", func(t *testing.T) {
+		t.Run(fmt.Sprintf("%v @ %v", tc.value, tc.path), func(t *testing.T) {
 			result, err := Get(tc.value, tc.path)
 			if err != nil {
 				if !tc.invalid {
@@ -222,6 +395,53 @@ func TestGet(t *testing.T) {
 
 			if !cmp.Equal(tc.expected, result) {
 				t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+			}
+		})
+	}
+}
+
+func TestGetFunction(t *testing.T) {
+	bla := func() int {
+		return dummyFieldFuncReturnValue
+	}
+
+	testcases := []struct {
+		value any
+		path  Path
+	}{
+		{
+			value: ExampleStruct{FuncField: dummyFieldFunc},
+			path:  Path{"FuncField"},
+		},
+		{
+			value: ExampleStruct{FuncPointerField: &bla},
+			path:  Path{"FuncPointerField"},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run("", func(t *testing.T) {
+			result, err := Get(tc.value, tc.path)
+			if err != nil {
+				t.Fatalf("Failed to run: %v", err)
+			}
+
+			if result == nil {
+				t.Fatal("Expected func, got nil.")
+			}
+
+			f, ok := result.(func() int)
+			if !ok {
+				fp, ok := result.(*func() int)
+				if !ok {
+					t.Fatalf("Expected dummy func, got %v (%T).", result, result)
+				}
+
+				f = *fp
+			}
+
+			if val := f(); val != dummyFieldFuncReturnValue {
+				t.Fatalf("Got unexpected function, expected return value %d, got %d.", dummyFieldFuncReturnValue, val)
 			}
 		})
 	}

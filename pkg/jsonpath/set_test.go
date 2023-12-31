@@ -115,13 +115,13 @@ func TestSet(t *testing.T) {
 		},
 		{
 			name:    "cannot set anything in types that do not implement the Writer interfaces",
-			dest:    unknownType{},
+			dest:    emptyStruct{},
 			path:    Path{"foo"},
 			invalid: true,
 		},
 		{
 			name:    "cannot set anything in types that do not implement the Writer interfaces",
-			dest:    unknownType{},
+			dest:    emptyStruct{},
 			path:    Path{0},
 			invalid: true,
 		},
