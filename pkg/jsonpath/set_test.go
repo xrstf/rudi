@@ -57,15 +57,17 @@ func (w *customVecWriter) SetVectorItem(index int, value any) (any, error) {
 	return nil, fmt.Errorf("index %d out of bounds", index)
 }
 
-func TestSet(t *testing.T) {
-	testcases := []struct {
-		name     string
-		dest     any
-		path     Path
-		newValue any
-		expected any
-		invalid  bool
-	}{
+type setTestcase struct {
+	name     string
+	dest     any
+	path     Path
+	newValue any
+	expected any
+	invalid  bool
+}
+
+func TestSetBasics(t *testing.T) {
+	testcases := []setTestcase{
 		{
 			name:    "invalid root value",
 			dest:    func() {},
@@ -195,9 +197,32 @@ func TestSet(t *testing.T) {
 			newValue: "new-value",
 			expected: map[string]any{"foo": "bar", "deeper": []any{1, 2, "new-value"}},
 		},
+	}
 
-		// custom types
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Set(tc.dest, tc.path, tc.newValue)
+			if err != nil {
+				if !tc.invalid {
+					t.Fatalf("Failed to run: %v", err)
+				}
 
+				return
+			}
+
+			if tc.invalid {
+				t.Fatalf("Should not have been able to set value, but got: %v (%T)", result, result)
+			}
+
+			if !cmp.Equal(tc.expected, result) {
+				t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+			}
+		})
+	}
+}
+
+func TestSetCustomTypes(t *testing.T) {
+	testcases := []setTestcase{
 		{
 			name: "can set in custom object writer",
 			dest: &customObjWriter{
@@ -273,6 +298,126 @@ func TestSet(t *testing.T) {
 			path:     Path{"foo"},
 			newValue: "new-value",
 			invalid:  true,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Set(tc.dest, tc.path, tc.newValue)
+			if err != nil {
+				if !tc.invalid {
+					t.Fatalf("Failed to run: %v", err)
+				}
+
+				return
+			}
+
+			if tc.invalid {
+				t.Fatalf("Should not have been able to set value, but got: %v (%T)", result, result)
+			}
+
+			if !cmp.Equal(tc.expected, result) {
+				t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+			}
+		})
+	}
+}
+
+func TestSetCustomStructs(t *testing.T) {
+	stringPtr := ptrTo("value")
+
+	testcases := []setTestcase{
+		{
+			name: "can set basic string field",
+			dest: ExampleStruct{
+				StringField: "foo",
+			},
+			path:     Path{"StringField"},
+			newValue: "new-value",
+			expected: ExampleStruct{
+				StringField: "new-value",
+			},
+		},
+		{
+			name: "can set string pointer field",
+			dest: ExampleStruct{
+				StringPointerField: ptrTo("foo"),
+			},
+			path:     Path{"StringField"},
+			newValue: stringPtr,
+			expected: ExampleStruct{
+				StringPointerField: stringPtr,
+			},
+		},
+		{
+			name: "can set field in string:string map",
+			dest: ExampleStruct{
+				StringMapField: nil,
+			},
+			path:     Path{"StringMapField", "foo"},
+			newValue: "bar",
+			expected: ExampleStruct{
+				StringMapField: map[string]string{
+					"foo": "bar",
+				},
+			},
+		},
+		{
+			name: "can overwrite field in string:string map",
+			dest: ExampleStruct{
+				StringField: "keep-me",
+				StringMapField: map[string]string{
+					"foo": "old-value",
+					"bar": "keep-me-too",
+				},
+			},
+			path:     Path{"StringMapField", "foo"},
+			newValue: "bar",
+			expected: ExampleStruct{
+				StringField: "keep-me",
+				StringMapField: map[string]string{
+					"foo": "bar",
+					"bar": "keep-me-too",
+				},
+			},
+		},
+		{
+			name: "can set field in string:any map",
+			dest: ExampleStruct{
+				EmptyInterfaceMapField: nil,
+			},
+			path:     Path{"EmptyInterfaceMapField", "foo"},
+			newValue: 42,
+			expected: ExampleStruct{
+				EmptyInterfaceMapField: map[string]any{
+					"foo": 42,
+				},
+			},
+		},
+		{
+			name: "can set any field",
+			dest: ExampleStruct{
+				EmptyInterfaceField: "foo",
+			},
+			path:     Path{"EmptyInterfaceField"},
+			newValue: 42,
+			expected: ExampleStruct{
+				EmptyInterfaceField: 42,
+			},
+		},
+		{
+			name: "can set in sub struct",
+			dest: ExampleStruct{
+				StringField: "keep-me",
+			},
+			path:     Path{"StructField", "StringField"},
+			newValue: "new-value",
+			expected: ExampleStruct{
+				StringField: "keep-me",
+				StructField: OtherStruct{
+					StringField: "new-value",
+				},
+			},
 		},
 	}
 
