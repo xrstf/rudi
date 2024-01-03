@@ -32,7 +32,7 @@ type Program interface {
 	// RunContext is like Run(), but uses a pre-setup Context and returns the
 	// bare final context instead of its document's value. The result is still
 	// the result of the final expression in the program.
-	RunContext(ctx Context) (finalCtx Context, result any, err error)
+	RunContext(ctx Context) (result any, err error)
 
 	// DumpSyntaxTree writes the AST to the given writer. Useful for debugging.
 	// Set indent to false to prevent multiline output from being generated
@@ -87,13 +87,13 @@ func (p *rudiProgram) Run(ctx context.Context, data any, variables Variables, fu
 		return nil, nil, fmt.Errorf("failed to create context: %w", err)
 	}
 
-	finalCtx, result, err := p.RunContext(rudiCtx)
+	result, err = p.RunContext(rudiCtx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("script failed: %w", err)
 	}
 
 	// get current state of the document
-	docData := finalCtx.GetDocument().Data()
+	docData := rudiCtx.GetDocument().Data()
 
 	return docData, result, nil
 }
@@ -101,13 +101,8 @@ func (p *rudiProgram) Run(ctx context.Context, data any, variables Variables, fu
 // RunContext is like Run(), but uses a pre-setup Context and returns the
 // bare final context instead of its document's value. The result is still
 // the result of the final expression in the program.
-func (p *rudiProgram) RunContext(ctx Context) (finalCtx Context, result any, err error) {
-	finalCtx, result, err = ctx.Runtime().EvalProgram(ctx, p.prog)
-	if err != nil {
-		return ctx, nil, err
-	}
-
-	return finalCtx, result, nil
+func (p *rudiProgram) RunContext(ctx Context) (result any, err error) {
+	return ctx.Runtime().EvalProgram(ctx, p.prog)
 }
 
 // String returns the Rudi-representation of the parsed script, with comments

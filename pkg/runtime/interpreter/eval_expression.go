@@ -10,7 +10,7 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (i *interpreter) EvalExpression(ctx types.Context, expr ast.Expression) (types.Context, any, error) {
+func (i *interpreter) EvalExpression(ctx types.Context, expr ast.Expression) (any, error) {
 	switch asserted := expr.(type) {
 	case ast.Null:
 		return i.EvalNull(ctx, asserted)
@@ -34,5 +34,5 @@ func (i *interpreter) EvalExpression(ctx types.Context, expr ast.Expression) (ty
 		return i.EvalShim(ctx, asserted)
 	}
 
-	return ctx, nil, fmt.Errorf("unknown expression %s (%T)", expr.String(), expr)
+	return nil, fmt.Errorf("unknown expression %s (%T)", expr.String(), expr)
 }

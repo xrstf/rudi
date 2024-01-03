@@ -75,9 +75,7 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 		// Do not use separate contexts for each loop iteration, as the loop might build up a counter,
 		// but only use the loop variables in a shallow scope, where only these two temporary variables
 		// are laid over the regular scoped/global variables.
-		scope := ctx.NewShallowScope(vars)
-
-		_, result, err = ctx.Runtime().EvalExpression(scope, expr)
+		result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +106,7 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 			vars[loopIndexName] = key
 		}
 
-		_, result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +116,7 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 }
 
 // itemHandlerFunc works for iterating over vectors as well as over objects.
-type itemHandlerFunc func(ctx types.Context, _ any, value any) (types.Context, any, error)
+type itemHandlerFunc func(ctx types.Context, _ any, value any) (any, error)
 
 // (map VECTOR identifier)
 func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expression) (any, error) {
@@ -128,7 +126,7 @@ func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Express
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
 	}
 
-	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, _ any, value any) (any, error) {
 		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
@@ -143,7 +141,7 @@ func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Ex
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	mapHandler := func(ctx types.Context, index any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, index any, value any) (any, error) {
 		vars := map[string]any{
 			valueVarName: value,
 		}
@@ -160,16 +158,9 @@ func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Ex
 
 func mapVector(ctx types.Context, data []any, f itemHandlerFunc) (any, error) {
 	output := make([]any, len(data))
-	loopCtx := ctx
 
 	for i, item := range data {
-		var (
-			result any
-			err    error
-		)
-
-		// do not use separate contexts for each loop iteration, as the loop might build up a counter
-		loopCtx, result, err = f(loopCtx, i, item)
+		result, err := f(ctx, i, item)
 		if err != nil {
 			return nil, err
 		}
@@ -188,7 +179,7 @@ func mapObjectAnonymousFunction(ctx types.Context, data map[string]any, ident as
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
 	}
 
-	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, _ any, value any) (any, error) {
 		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
@@ -203,7 +194,7 @@ func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingV
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	mapHandler := func(ctx types.Context, key any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, key any, value any) (any, error) {
 		vars := map[string]any{
 			valueVarName: value,
 		}
@@ -220,16 +211,9 @@ func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingV
 
 func mapObject(ctx types.Context, data map[string]any, f itemHandlerFunc) (any, error) {
 	output := map[string]any{}
-	loopCtx := ctx
 
 	for key, value := range data {
-		var (
-			result any
-			err    error
-		)
-
-		// do not use separate contexts for each loop iteration, as the loop might build up a counter
-		loopCtx, result, err = f(loopCtx, key, value)
+		result, err := f(ctx, key, value)
 		if err != nil {
 			return nil, err
 		}
@@ -248,7 +232,7 @@ func filterVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expr
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
 	}
 
-	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, _ any, value any) (any, error) {
 		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
@@ -263,7 +247,7 @@ func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	mapHandler := func(ctx types.Context, index any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, index any, value any) (any, error) {
 		vars := map[string]any{
 			valueVarName: value,
 		}
@@ -280,15 +264,9 @@ func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast
 
 func filterVector(ctx types.Context, data []any, f itemHandlerFunc) (any, error) {
 	output := []any{}
-	loopCtx := ctx
 
 	for i, item := range data {
-		var (
-			result any
-			err    error
-		)
-
-		loopCtx, result, err = f(loopCtx, i, item)
+		result, err := f(ctx, i, item)
 		if err != nil {
 			return nil, err
 		}
@@ -314,7 +292,7 @@ func filterObjectAnonymousFunction(ctx types.Context, data map[string]any, ident
 		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
 	}
 
-	mapHandler := func(ctx types.Context, _ any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, _ any, value any) (any, error) {
 		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
 	}
 
@@ -329,7 +307,7 @@ func filterObjectExpressionFunction(ctx types.Context, data map[string]any, nami
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	mapHandler := func(ctx types.Context, key any, value any) (types.Context, any, error) {
+	mapHandler := func(ctx types.Context, key any, value any) (any, error) {
 		vars := map[string]any{
 			valueVarName: value,
 		}
@@ -346,15 +324,9 @@ func filterObjectExpressionFunction(ctx types.Context, data map[string]any, nami
 
 func filterObject(ctx types.Context, data map[string]any, f itemHandlerFunc) (any, error) {
 	output := map[string]any{}
-	loopCtx := ctx
 
 	for key, value := range data {
-		var (
-			result any
-			err    error
-		)
-
-		loopCtx, result, err = f(loopCtx, key, value)
+		result, err := f(ctx, key, value)
 		if err != nil {
 			return nil, err
 		}

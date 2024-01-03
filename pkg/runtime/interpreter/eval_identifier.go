@@ -10,6 +10,6 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (*interpreter) EvalIdentifier(ctx types.Context, ident ast.Identifier) (types.Context, any, error) {
-	return ctx, nil, fmt.Errorf("unexpected identifier: %v", ident)
+func (*interpreter) EvalIdentifier(ctx types.Context, ident ast.Identifier) (any, error) {
+	return nil, fmt.Errorf("unexpected identifier: %v", ident)
 }

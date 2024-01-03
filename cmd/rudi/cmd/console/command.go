@@ -85,7 +85,7 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string, rudi
 			continue
 		}
 
-		newCtx, stop, err := processInput(handler, rudiCtx, opts, line)
+		stop, err := processInput(handler, rudiCtx, opts, line)
 		if err != nil {
 			parseErr := &rudi.ParseError{}
 			if errors.As(err, parseErr) {
@@ -98,8 +98,6 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string, rudi
 		if stop {
 			break
 		}
-
-		rudiCtx = newCtx
 	}
 
 	fmt.Println()
@@ -107,24 +105,24 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string, rudi
 	return nil
 }
 
-func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *options.Options, input string) (newCtx types.Context, stop bool, err error) {
+func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *options.Options, input string) (stop bool, err error) {
 	if command, exists := replCommands[input]; exists {
-		return rudiCtx, false, command(rudiCtx, opts)
+		return false, command(rudiCtx, opts)
 	}
 
 	if prefix := "help "; strings.HasPrefix(input, prefix) {
 		topicName := strings.TrimPrefix(input, prefix)
-		return rudiCtx, false, helpTopicCommand(topicName)
+		return false, helpTopicCommand(topicName)
 	}
 
 	if strings.EqualFold("exit", input) {
-		return rudiCtx, true, nil
+		return true, nil
 	}
 
 	// parse input
 	program, err := rudi.Parse("(repl)", input)
 	if err != nil {
-		return rudiCtx, false, err
+		return false, err
 	}
 
 	// allow to interrupt the statement
@@ -133,9 +131,9 @@ func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *opti
 
 	handler.SetCancelFn(cancel)
 
-	newCtx, evaluated, err := program.RunContext(rudiCtx.WithGoContext(ctx))
+	evaluated, err := program.RunContext(rudiCtx.WithGoContext(ctx))
 	if err != nil {
-		return rudiCtx, false, err
+		return false, err
 	}
 
 	f := colorjson.NewFormatter()
@@ -144,10 +142,10 @@ func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *opti
 
 	encoded, err := f.Marshal(evaluated)
 	if err != nil {
-		return rudiCtx, false, fmt.Errorf("failed to encode %v: %w", evaluated, err)
+		return false, fmt.Errorf("failed to encode %v: %w", evaluated, err)
 	}
 
 	fmt.Println(string(encoded))
 
-	return newCtx, false, nil
+	return false, nil
 }

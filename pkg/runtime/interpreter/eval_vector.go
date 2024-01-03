@@ -11,8 +11,7 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (i *interpreter) EvalVectorNode(ctx types.Context, vec ast.VectorNode) (types.Context, any, error) {
-	innerCtx := ctx
+func (i *interpreter) EvalVectorNode(ctx types.Context, vec ast.VectorNode) (any, error) {
 	result := make([]any, len(vec.Expressions))
 
 	var (
@@ -21,12 +20,9 @@ func (i *interpreter) EvalVectorNode(ctx types.Context, vec ast.VectorNode) (typ
 	)
 
 	for ii, expr := range vec.Expressions {
-		// Keep overwriting the current context, so that e.g. variables
-		// defined in one vector element can be used in all following
-		// elements (no idea why you would define vars in vectors tho).
-		innerCtx, data, err = i.EvalExpression(innerCtx, expr)
+		data, err = i.EvalExpression(ctx, expr)
 		if err != nil {
-			return ctx, nil, fmt.Errorf("failed to eval expression %s: %w", expr.String(), err)
+			return nil, fmt.Errorf("failed to eval expression %s: %w", expr.String(), err)
 		}
 
 		result[ii] = data
@@ -34,8 +30,8 @@ func (i *interpreter) EvalVectorNode(ctx types.Context, vec ast.VectorNode) (typ
 
 	deeper, err := pathexpr.Apply(ctx, result, vec.PathExpression)
 	if err != nil {
-		return ctx, nil, err
+		return nil, err
 	}
 
-	return ctx, deeper, nil
+	return deeper, nil
 }

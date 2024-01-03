@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (*interpreter) EvalString(ctx types.Context, str ast.String) (types.Context, any, error) {
-	return ctx, string(str), nil
+func (*interpreter) EvalString(ctx types.Context, str ast.String) (any, error) {
+	return string(str), nil
 }

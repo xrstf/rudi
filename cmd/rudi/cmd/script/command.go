@@ -80,7 +80,7 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string) erro
 	handler.SetCancelFn(cancel)
 
 	// evaluate the script
-	_, evaluated, err := program.RunContext(rudiCtx.WithGoContext(subCtx))
+	evaluated, err := program.RunContext(rudiCtx.WithGoContext(subCtx))
 	if err != nil {
 		return fmt.Errorf("failed to evaluate script: %w", err)
 	}

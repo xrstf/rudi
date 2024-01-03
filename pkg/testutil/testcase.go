@@ -103,21 +103,29 @@ func (tc *Testcase) eval(t *testing.T) (types.Context, any, error) {
 			t.Fatalf("Parsed result is not a ast.Program, but %T", got)
 		}
 
-		return tc.Runtime.EvalProgram(progContext, &program)
+		result, err := tc.Runtime.EvalProgram(progContext, &program)
+
+		return progContext, result, err
 	}
 
 	// To enable tests for programs and statements, we handle them explicitly
 	// instead of extending EvalExpression() to handle them, as that would not
 	// fit the language structure.
 
+	var (
+		result any
+	)
+
 	switch asserted := tc.AST.(type) {
 	case ast.Program:
-		return tc.Runtime.EvalProgram(progContext, &asserted)
+		result, err = tc.Runtime.EvalProgram(progContext, &asserted)
 	case ast.Statement:
-		return tc.Runtime.EvalStatement(progContext, asserted)
+		result, err = tc.Runtime.EvalStatement(progContext, asserted)
 	default:
-		return tc.Runtime.EvalExpression(progContext, tc.AST)
+		result, err = tc.Runtime.EvalExpression(progContext, tc.AST)
 	}
+
+	return progContext, result, err
 }
 
 func renderDiff(expected any, actual any) string {

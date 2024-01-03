@@ -21,7 +21,7 @@ type BangHandler interface {
 	// for "delete!", which requires special handling to make it work as expected. Custom bang
 	// handlers are useful to introducing side effects explicitly (so it becomes very clear if a
 	// function in Rudi has side effects or not).
-	BangHandler(ctx Context, args []ast.Expression, value any) (Context, any, error)
+	BangHandler(ctx Context, args []ast.Expression, value any) (any, error)
 }
 
 type TupleFunction func(ctx Context, args []ast.Expression) (any, error)

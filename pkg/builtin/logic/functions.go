@@ -21,7 +21,7 @@ var (
 
 func andFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	for i, arg := range args {
-		_, evaluated, err := ctx.Runtime().EvalExpression(ctx, arg)
+		evaluated, err := ctx.Runtime().EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d: %w", i, err)
 		}
@@ -41,7 +41,7 @@ func andFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 
 func orFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	for i, arg := range args {
-		_, evaluated, err := ctx.Runtime().EvalExpression(ctx, arg)
+		evaluated, err := ctx.Runtime().EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, fmt.Errorf("argument #%d: %w", i, err)
 		}

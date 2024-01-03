@@ -146,7 +146,7 @@ func (c Context) SetVariables(vars Variables) {
 	}
 }
 
-func (c Context) SetRudispaceFunction(funcName string, fun Function) {
+func (c *Context) SetRudispaceFunction(funcName string, fun Function) {
 	c.userFuncs = c.userFuncs.Set(funcName, fun)
 }
 

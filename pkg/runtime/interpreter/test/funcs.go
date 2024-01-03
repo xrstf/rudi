@@ -17,9 +17,7 @@ var (
 				return nil, fmt.Errorf("expected 1 argument, got %d", len(args))
 			}
 
-			_, value, err := ctx.Runtime().EvalExpression(ctx, args[0])
-
-			return value, err
+			return ctx.Runtime().EvalExpression(ctx, args[0])
 		}, "evaluates the given expression and returns its value"),
 
 		// Funny enough, due to the way functions work in Rudi, "set" does not
@@ -30,9 +28,7 @@ var (
 				return nil, fmt.Errorf("expected 2 arguments, got %d", len(args))
 			}
 
-			_, value, err := ctx.Runtime().EvalExpression(ctx, args[1])
-
-			return value, err
+			return ctx.Runtime().EvalExpression(ctx, args[1])
 		}, "sets a variable or accesses the global document, most often used with the bang modifier"),
 	}
 )

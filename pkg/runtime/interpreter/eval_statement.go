@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (i *interpreter) EvalStatement(ctx types.Context, stmt ast.Statement) (types.Context, any, error) {
+func (i *interpreter) EvalStatement(ctx types.Context, stmt ast.Statement) (any, error) {
 	return i.EvalExpression(ctx, stmt.Expression)
 }

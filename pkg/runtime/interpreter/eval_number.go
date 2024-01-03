@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (*interpreter) EvalNumber(ctx types.Context, n ast.Number) (types.Context, any, error) {
-	return ctx, n.Value, nil
+func (*interpreter) EvalNumber(ctx types.Context, n ast.Number) (any, error) {
+	return n.Value, nil
 }

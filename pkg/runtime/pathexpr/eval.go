@@ -40,7 +40,6 @@ func Eval(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpres
 		return result, nil
 	}
 
-	innerCtx := ctx
 	runtime := ctx.Runtime()
 
 	for _, step := range path.Steps {
@@ -55,7 +54,7 @@ func Eval(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpres
 		case ast.Identifier:
 			evaluated = asserted.Name
 		default:
-			innerCtx, evaluated, err = runtime.EvalExpression(innerCtx, step)
+			evaluated, err = runtime.EvalExpression(ctx, step)
 			if err != nil {
 				return nil, fmt.Errorf("invalid accessor: %w", err)
 			}

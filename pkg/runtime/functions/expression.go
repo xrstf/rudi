@@ -28,7 +28,7 @@ func convertArgs(args []ast.Expression) []cachedExpression {
 
 func (e *cachedExpression) Eval(ctx types.Context) (any, error) {
 	if !e.evaluated {
-		_, result, err := ctx.Runtime().EvalExpression(ctx, e.expr)
+		result, err := ctx.Runtime().EvalExpression(ctx, e.expr)
 		if err != nil {
 			return nil, err
 		}

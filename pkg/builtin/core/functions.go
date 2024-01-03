@@ -44,22 +44,15 @@ func keepContextCanceled(err error) error {
 }
 
 func ifFunction(ctx types.Context, test bool, yes ast.Expression) (any, error) {
-	if test {
-		_, result, err := ctx.Runtime().EvalExpression(ctx, yes)
-		return result, err
-	}
-
-	return nil, nil
+	return ifElseFunction(ctx, test, yes, ast.Null{})
 }
 
 func ifElseFunction(ctx types.Context, test bool, yes, no ast.Expression) (any, error) {
 	if test {
-		_, result, err := ctx.Runtime().EvalExpression(ctx, yes)
-		return result, err
+		return ctx.Runtime().EvalExpression(ctx, yes)
 	}
 
-	_, result, err := ctx.Runtime().EvalExpression(ctx, no)
-	return result, err
+	return ctx.Runtime().EvalExpression(ctx, no)
 }
 
 // NB: Variadic functions always require at least 1 argument in Rudi to match.
@@ -72,7 +65,7 @@ func DoFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	)
 
 	for _, arg := range args {
-		ctx, result, err = ctx.Runtime().EvalExpression(ctx, arg)
+		result, err = ctx.Runtime().EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +95,7 @@ func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
 	}
 
 	// evaluate the base value
-	_, value, err := ctx.Runtime().EvalExpression(ctx, expr)
+	value, err := ctx.Runtime().EvalExpression(ctx, expr)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +120,7 @@ func defaultFunction(ctx types.Context, value any, fallback ast.Expression) (any
 		return value, nil
 	}
 
-	_, value, err = ctx.Runtime().EvalExpression(ctx, fallback)
+	value, err = ctx.Runtime().EvalExpression(ctx, fallback)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: %w", err)
 	}
@@ -136,7 +129,7 @@ func defaultFunction(ctx types.Context, value any, fallback ast.Expression) (any
 }
 
 func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
-	_, result, err := ctx.Runtime().EvalExpression(ctx, test)
+	result, err := ctx.Runtime().EvalExpression(ctx, test)
 	if err != nil {
 		return nil, keepContextCanceled(err)
 	}
@@ -145,9 +138,9 @@ func tryFunction(ctx types.Context, test ast.Expression) (any, error) {
 }
 
 func tryWithFallbackFunction(ctx types.Context, test ast.Expression, fallback ast.Expression) (any, error) {
-	_, result, err := ctx.Runtime().EvalExpression(ctx, test)
+	result, err := ctx.Runtime().EvalExpression(ctx, test)
 	if err != nil {
-		_, result, err = ctx.Runtime().EvalExpression(ctx, fallback)
+		result, err = ctx.Runtime().EvalExpression(ctx, fallback)
 		if err != nil {
 			return nil, fmt.Errorf("argument #1: %w", err)
 		}
@@ -197,7 +190,7 @@ func setFunction(ctx types.Context, target ast.Expression, value any) (any, erro
 	}
 
 	// evaluate the target
-	_, targetValue, err := ctx.Runtime().EvalExpression(ctx, expr)
+	targetValue, err := ctx.Runtime().EvalExpression(ctx, expr)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +228,7 @@ func deleteFunction(ctx types.Context, target ast.Expression) (any, error) {
 	}
 
 	// evaluate the target
-	_, targetValue, err := ctx.Runtime().EvalExpression(ctx, pathed.Pathless())
+	targetValue, err := ctx.Runtime().EvalExpression(ctx, pathed.Pathless())
 	if err != nil {
 		return nil, err
 	}
@@ -269,15 +262,15 @@ func deleteFunction(ctx types.Context, target ast.Expression) (any, error) {
 // All of this applies equally to the delete function, hence both share the same bang handler.
 // Since this behaviour makes set different from other regular functions, it needs a custom
 // BangHandler.
-func overwriteEverythingBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (types.Context, any, error) {
+func overwriteEverythingBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (any, error) {
 	if len(originalArgs) == 0 {
-		return ctx, nil, errors.New("must have at least 1 symbol argument")
+		return nil, errors.New("must have at least 1 symbol argument")
 	}
 
 	firstArg := originalArgs[0]
 	symbol, ok := firstArg.(ast.Symbol)
 	if !ok {
-		return ctx, nil, fmt.Errorf("must use Symbol as first argument, got %T", firstArg)
+		return nil, fmt.Errorf("must use Symbol as first argument, got %T", firstArg)
 	}
 
 	// Since set always returns the entire data structure, all we must do here is to
@@ -289,7 +282,7 @@ func overwriteEverythingBangHandler(ctx types.Context, originalArgs []ast.Expres
 		ctx.GetDocument().Set(value)
 	}
 
-	return ctx, value, nil
+	return value, nil
 }
 
 func isEmptyFunction(val bool) (any, error) {

@@ -48,7 +48,7 @@ func funcFunction(ctx types.Context, name ast.Expression, namingVector ast.Expre
 }
 
 // funcBangHandler is where the side effect of adding a new function to the Rudi runtime actually happens.
-func funcBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (types.Context, any, error) {
+func funcBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (any, error) {
 	intermediate, ok := value.(rudispaceFunc)
 	if !ok {
 		panic("This should never happen: func! bang handler called with non-intermediate function.")
@@ -56,7 +56,7 @@ func funcBangHandler(ctx types.Context, originalArgs []ast.Expression, value any
 
 	ctx.SetRudispaceFunction(intermediate.name, intermediate)
 
-	return ctx, nil, nil
+	return nil, nil
 }
 
 type rudispaceFunc struct {
@@ -78,7 +78,7 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 
 	funcArgs := map[string]any{}
 	for i, paramName := range f.params {
-		_, arg, err := ctx.Runtime().EvalExpression(ctx, args[i])
+		arg, err := ctx.Runtime().EvalExpression(ctx, args[i])
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 	)
 
 	for _, expr := range f.body {
-		funcCtx, result, err = runtime.EvalExpression(funcCtx, expr)
+		result, err = runtime.EvalExpression(funcCtx, expr)
 		if err != nil {
 			return nil, err
 		}

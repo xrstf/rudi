@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (*interpreter) EvalShim(ctx types.Context, s ast.Shim) (types.Context, any, error) {
-	return ctx, s.Value, nil
+func (*interpreter) EvalShim(ctx types.Context, s ast.Shim) (any, error) {
+	return s.Value, nil
 }

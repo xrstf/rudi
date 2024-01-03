@@ -8,6 +8,6 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (*interpreter) EvalBool(ctx types.Context, b ast.Bool) (types.Context, any, error) {
-	return ctx, bool(b), nil
+func (*interpreter) EvalBool(ctx types.Context, b ast.Bool) (any, error) {
+	return bool(b), nil
 }

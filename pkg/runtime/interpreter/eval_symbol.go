@@ -12,17 +12,17 @@ import (
 	"go.xrstf.de/rudi/pkg/runtime/types"
 )
 
-func (*interpreter) EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context, any, error) {
+func (*interpreter) EvalSymbol(ctx types.Context, sym ast.Symbol) (any, error) {
 	rootValue := ctx.GetDocument().Data()
 
 	// sanity check
 	if sym.Variable == nil && sym.PathExpression == nil {
-		return ctx, nil, errors.New("invalid symbol")
+		return nil, errors.New("invalid symbol")
 	}
 
 	// . always returns the root document
 	if sym.IsDot() {
-		return ctx, rootValue, nil
+		return rootValue, nil
 	}
 
 	// if this symbol is a variable, replace the root value with the variable's value
@@ -33,14 +33,14 @@ func (*interpreter) EvalSymbol(ctx types.Context, sym ast.Symbol) (types.Context
 
 		rootValue, ok = ctx.GetVariable(varName)
 		if !ok {
-			return ctx, nil, fmt.Errorf("unknown variable %s", varName)
+			return nil, fmt.Errorf("unknown variable %s", varName)
 		}
 	}
 
 	deeper, err := pathexpr.Apply(ctx, rootValue, sym.PathExpression)
 	if err != nil {
-		return ctx, nil, fmt.Errorf("cannot evaluate %s: %w", sym.String(), err)
+		return nil, fmt.Errorf("cannot evaluate %s: %w", sym.String(), err)
 	}
 
-	return ctx, deeper, nil
+	return deeper, nil
 }

@@ -12,13 +12,13 @@ import (
 )
 
 // Run implements types.Runtime.
-func (i *interpreter) EvalProgram(ctx types.Context, p *ast.Program) (types.Context, any, error) {
+func (i *interpreter) EvalProgram(ctx types.Context, p *ast.Program) (any, error) {
 	if p == nil {
-		return ctx, nil, errors.New("program is nil")
+		return nil, errors.New("program is nil")
 	}
 
 	if len(p.Statements) == 0 {
-		return ctx, nil, nil
+		return nil, nil
 	}
 
 	scope := ctx.NewScope()
@@ -29,11 +29,11 @@ func (i *interpreter) EvalProgram(ctx types.Context, p *ast.Program) (types.Cont
 	)
 
 	for _, stmt := range p.Statements {
-		_, result, err = i.EvalStatement(scope, stmt)
+		result, err = i.EvalStatement(scope, stmt)
 		if err != nil {
-			return ctx, nil, fmt.Errorf("failed to eval statement %s: %w", stmt.String(), err)
+			return nil, fmt.Errorf("failed to eval statement %s: %w", stmt.String(), err)
 		}
 	}
 
-	return ctx, result, nil
+	return result, nil
 }
