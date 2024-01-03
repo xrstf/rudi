@@ -61,10 +61,7 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
 
-	var (
-		result  any
-		loopCtx = ctx
-	)
+	var result any
 
 	for i, item := range data {
 		vars := map[string]any{
@@ -75,10 +72,12 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 			vars[loopIndexName] = i
 		}
 
-		// do not use separate contexts for each loop iteration, as the loop might build up a counter
-		loopCtx = loopCtx.WithVariables(vars)
+		// Do not use separate contexts for each loop iteration, as the loop might build up a counter,
+		// but only use the loop variables in a shallow scope, where only these two temporary variables
+		// are laid over the regular scoped/global variables.
+		scope := ctx.NewShallowScope(vars)
 
-		loopCtx, result, err = ctx.Runtime().EvalExpression(loopCtx, expr)
+		_, result, err = ctx.Runtime().EvalExpression(scope, expr)
 		if err != nil {
 			return nil, err
 		}
@@ -97,8 +96,7 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 	}
 
 	var (
-		result  any
-		loopCtx = ctx
+		result any
 	)
 
 	for key, value := range data {
@@ -110,10 +108,7 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 			vars[loopIndexName] = key
 		}
 
-		// do not use separate contexts for each loop iteration, as the loop might build up a counter
-		loopCtx = loopCtx.WithVariables(vars)
-
-		loopCtx, result, err = ctx.Runtime().EvalExpression(loopCtx, expr)
+		_, result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 		if err != nil {
 			return nil, err
 		}
@@ -157,9 +152,7 @@ func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Ex
 			vars[indexVarName] = index
 		}
 
-		ctx = ctx.WithVariables(vars)
-
-		return ctx.Runtime().EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 	}
 
 	return mapVector(ctx, data, mapHandler)
@@ -219,9 +212,7 @@ func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingV
 			vars[keyVarName] = key
 		}
 
-		ctx = ctx.WithVariables(vars)
-
-		return ctx.Runtime().EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 	}
 
 	return mapObject(ctx, data, mapHandler)
@@ -281,9 +272,7 @@ func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast
 			vars[indexVarName] = index
 		}
 
-		ctx = ctx.WithVariables(vars)
-
-		return ctx.Runtime().EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 	}
 
 	return filterVector(ctx, data, mapHandler)
@@ -349,9 +338,7 @@ func filterObjectExpressionFunction(ctx types.Context, data map[string]any, nami
 			vars[keyVarName] = key
 		}
 
-		ctx = ctx.WithVariables(vars)
-
-		return ctx.Runtime().EvalExpression(ctx, expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
 	}
 
 	return filterObject(ctx, data, mapHandler)

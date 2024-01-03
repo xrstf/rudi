@@ -150,7 +150,7 @@ func TestSetFunction(t *testing.T) {
 			Expression: `(set! $var 1) $var`,
 			Expected:   int64(1),
 		},
-		// can overwrite variables on the top level
+		// can overwrite global variables
 		{
 			Expression: `(set! $myvar 12) $myvar`,
 			Variables:  testVariables(),
@@ -209,14 +209,14 @@ func TestSetFunction(t *testing.T) {
 			Variables:  testVariables(),
 			Expected:   []any{"first", 2, "third"},
 		},
-		// ...but not leak into upper scopes
+		// variables are program/rudifunc-scoped, so changes in sub expressions should modify the variable
 		{
 			Expression: `(set! $a 1) (if true (set! $a 2)) $a`,
-			Expected:   int64(1),
+			Expected:   int64(2),
 		},
 		{
 			Expression: `(set! $a 1) (if true (set! $b 2)) $b`,
-			Invalid:    true,
+			Expected:   int64(2),
 		},
 		// do not accidentally set a key without creating a new context
 		{
@@ -225,7 +225,7 @@ func TestSetFunction(t *testing.T) {
 		},
 		{
 			Expression: `(set! $a {foo "bar"}) (if true (set! $a.foo "updated")) $a.foo`,
-			Expected:   "bar",
+			Expected:   "updated",
 		},
 		// handle bad paths
 		{
@@ -258,8 +258,8 @@ func TestSetFunction(t *testing.T) {
 		},
 		{
 			Expression: `(set! $obj.aString "new value") $obj.aString`,
-			Expected:   "new value",
 			Variables:  testVariables(),
+			Expected:   "new value",
 		},
 		// add a new sub key
 		{
@@ -589,25 +589,27 @@ func TestDoFunction(t *testing.T) {
 			Expression: `(do 3)`,
 			Expected:   int64(3),
 		},
-
-		// test that the runtime context is inherited from one step to another
+		// do should not open a sub-scope, allowing all expressions to freely live in the same
+		// context
 		{
 			Expression: `(do (set! $var "foo") $var)`,
 			Expected:   "foo",
 		},
 		{
-			Expression: `(do (set! $var "foo") $var (set! $var "new") $var)`,
+			Expression: `(do (set! $var "foo")) $var`,
+			Expected:   "foo",
+		},
+		{
+			Expression: `(set! $var "foo") (do (set! $var "bar")) $var`,
+			Expected:   "bar",
+		},
+		{
+			Expression: `(do (set! $var "foo") (set! $var "new") $var)`,
 			Expected:   "new",
 		},
-
-		// test that the runtime context doesn't leak
 		{
-			Expression: `(set! $var "outer") (do (set! $var "inner")) $var`,
-			Expected:   "outer",
-		},
-		{
-			Expression: `(do (set! $var "inner")) $var`,
-			Invalid:    true,
+			Expression: `(do (set! $var "foo") (set! $var "new") "dummy") $var`,
+			Expected:   "new",
 		},
 	}
 

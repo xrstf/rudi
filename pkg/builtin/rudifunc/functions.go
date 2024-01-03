@@ -54,7 +54,9 @@ func funcBangHandler(ctx types.Context, originalArgs []ast.Expression, value any
 		panic("This should never happen: func! bang handler called with non-intermediate function.")
 	}
 
-	return ctx.WithRudispaceFunction(intermediate.name, intermediate), nil, nil
+	ctx.SetRudispaceFunction(intermediate.name, intermediate)
+
+	return ctx, nil, nil
 }
 
 type rudispaceFunc struct {
@@ -85,7 +87,9 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 	}
 
 	// user-defined functions form a sub-program and all statements share the same context
-	funcCtx := ctx.WithVariables(funcArgs)
+	funcCtx := ctx.NewScope()
+	funcCtx.SetVariables(funcArgs)
+
 	runtime := ctx.Runtime()
 
 	var (

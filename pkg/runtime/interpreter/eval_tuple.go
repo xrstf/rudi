@@ -120,7 +120,7 @@ func (*interpreter) CallFunction(ctx types.Context, fun ast.Identifier, args []a
 
 		if updateSymbol.Variable != nil {
 			varName := string(*updateSymbol.Variable)
-			resultCtx = resultCtx.WithVariable(varName, updatedValue)
+			resultCtx.SetVariable(varName, updatedValue)
 		} else {
 			ctx.GetDocument().Set(updatedValue)
 		}

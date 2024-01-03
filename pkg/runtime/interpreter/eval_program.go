@@ -21,7 +21,7 @@ func (i *interpreter) EvalProgram(ctx types.Context, p *ast.Program) (types.Cont
 		return ctx, nil, nil
 	}
 
-	innerCtx := ctx
+	scope := ctx.NewScope()
 
 	var (
 		result any
@@ -29,11 +29,11 @@ func (i *interpreter) EvalProgram(ctx types.Context, p *ast.Program) (types.Cont
 	)
 
 	for _, stmt := range p.Statements {
-		innerCtx, result, err = i.EvalStatement(innerCtx, stmt)
+		_, result, err = i.EvalStatement(scope, stmt)
 		if err != nil {
 			return ctx, nil, fmt.Errorf("failed to eval statement %s: %w", stmt.String(), err)
 		}
 	}
 
-	return innerCtx, result, nil
+	return ctx, result, nil
 }

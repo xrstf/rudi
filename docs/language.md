@@ -262,40 +262,49 @@ you can do with variables, like:
 
 #### Scopes
 
-In general, side effects (i.e. functions with bang modifier) affect all following sibling and child
-expressions, but not the parent. This is like doing
+Rudi is roughly function-scoped, like JavaScript: Once a variable is defined using `set!`, it is
+available for the rest of the current program (or user-defined function).
+
+##### Variables
+
+A statement like `(set! $foo 42) (if (condition) (set! $foo 7))` would be equal to
 
 ```go
 foo := 42
 
 if condition {
-  foo := 7
+  foo = 7
 }
 
 println(foo) // prints 42
 ```
 
-in Go. Variables are meant to be helpers and are so scoped to the scope where they are defined:
+in Go. However function-scoping means that a variable is actually defined one it was set and is then
+valid for all subsequent expressions, so
 
 ```lisp
 (set! $var 42)
-$var             # 42
-
-# This set! function would set the value for the entire positive branch of the "if" tuple,
-# but it will not leak outside of the "if".
-
-(if true
-  (set! $var "new-value"))    # "new-value"
-$var                          # 42
-
-# ... but the new variable is valid in its scope.
-
-(if true
-  (do
-    (set! $var "new-value")
-    (append $var "-suffix"))) # "new-value-suffix"
-$var                          # 42
+(if (gt? $var 4) (set! $tooLarge true))
+$tooLarge
 ```
+
+will yield `true`, since the `$tooLarge` variable is available even after `if` has finished.
+
+##### User-Defined Functions
+
+Functions defined using `func!` form a sub-program. This means any scoped variable defined on the
+outside is not visible inside the function, the following is therefore invalid:
+
+```lisp
+(set! $foo)
+(func! do-stuff [] (+ $foo 1))
+(do-stuff)
+```
+
+User-defined functions run in their own scope, where only the arguments and global variables are
+available (though new, function-scoped variables can of course be defined).
+
+##### Global Document
 
 The exception from this rule is the global document. As the name implies, it is meant to be global
 and to allow for effective, readable Rudi code, there is only one document and it can be modified

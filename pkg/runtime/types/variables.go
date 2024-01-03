@@ -21,6 +21,17 @@ func (v Variables) Set(name string, val any) Variables {
 	return v
 }
 
+// SetMany calls Set() for each of the other Variables, copying their values
+// into the current variables.
+// The function returns the same variables to allow fluent access.
+func (v Variables) SetMany(other Variables) Variables {
+	for key, value := range other {
+		v.Set(key, value)
+	}
+
+	return v
+}
+
 // With returns a copy of the variables, with the new variable being added to it.
 func (v Variables) With(name string, val any) Variables {
 	return v.DeepCopy().Set(name, val)

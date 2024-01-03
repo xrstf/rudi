@@ -12,13 +12,15 @@ import (
 )
 
 type Context struct {
-	ctx        context.Context
-	document   *Document
-	fixedFuncs Functions
-	userFuncs  Functions
-	variables  Variables
-	coalescer  coalescing.Coalescer
-	runtime    Runtime
+	ctx             context.Context
+	document        *Document
+	fixedFuncs      Functions
+	userFuncs       Functions
+	globalVariables Variables
+	scopeVariables  Variables
+	tempVariables   Variables
+	coalescer       coalescing.Coalescer
+	runtime         Runtime
 }
 
 func NewContext(runtime Runtime, ctx context.Context, doc Document, variables Variables, funcs Functions, coalescer coalescing.Coalescer) (Context, error) {
@@ -43,14 +45,30 @@ func NewContext(runtime Runtime, ctx context.Context, doc Document, variables Va
 	}
 
 	return Context{
-		ctx:        ctx,
-		document:   &doc,
-		fixedFuncs: funcs,
-		userFuncs:  NewFunctions(),
-		variables:  variables,
-		coalescer:  coalescer,
-		runtime:    runtime,
+		ctx:             ctx,
+		document:        &doc,
+		fixedFuncs:      funcs,
+		userFuncs:       NewFunctions(),
+		globalVariables: variables,
+		scopeVariables:  NewVariables(),
+		coalescer:       coalescer,
+		runtime:         runtime,
 	}, nil
+}
+
+func (c Context) NewScope() Context {
+	clone := c.shallowCopy()
+	clone.scopeVariables = NewVariables()
+	clone.tempVariables = nil
+
+	return clone
+}
+
+func (c Context) NewShallowScope(extraVars Variables) Context {
+	clone := c.shallowCopy()
+	clone.tempVariables = extraVars
+
+	return clone
 }
 
 // Coalesce is named this way to make the frequent calls read fluently
@@ -72,7 +90,17 @@ func (c Context) GetDocument() *Document {
 }
 
 func (c Context) GetVariable(name string) (any, bool) {
-	return c.variables.Get(name)
+	value, ok := c.tempVariables.Get(name)
+	if ok {
+		return value, true
+	}
+
+	value, ok = c.scopeVariables.Get(name)
+	if ok {
+		return value, true
+	}
+
+	return c.globalVariables.Get(name)
 }
 
 func (c Context) GetFunction(name string) (Function, bool) {
@@ -91,24 +119,6 @@ func (c Context) WithGoContext(ctx context.Context) Context {
 	return clone
 }
 
-func (c Context) WithVariable(name string, val any) Context {
-	clone := c.shallowCopy()
-	clone.variables = c.variables.With(name, val)
-
-	return clone
-}
-
-func (c Context) WithVariables(vars map[string]any) Context {
-	if len(vars) == 0 {
-		return c
-	}
-
-	clone := c.shallowCopy()
-	clone.variables = c.variables.WithMany(vars)
-
-	return clone
-}
-
 func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
 	clone := c.shallowCopy()
 	clone.coalescer = coalescer
@@ -116,22 +126,41 @@ func (c Context) WithCoalescer(coalescer coalescing.Coalescer) Context {
 	return clone
 }
 
-func (c Context) WithRudispaceFunction(funcName string, fun Function) Context {
-	clone := c.shallowCopy()
-	clone.userFuncs = c.userFuncs.DeepCopy().Set(funcName, fun)
+func (c Context) SetVariable(name string, val any) {
+	var vars Variables
 
-	return clone
+	if _, ok := c.tempVariables.Get(name); ok {
+		vars = c.tempVariables
+	} else if _, ok := c.globalVariables.Get(name); ok {
+		vars = c.globalVariables
+	} else {
+		vars = c.scopeVariables
+	}
+
+	vars.Set(name, val)
+}
+
+func (c Context) SetVariables(vars Variables) {
+	for key, value := range vars {
+		c.SetVariable(key, value)
+	}
+}
+
+func (c Context) SetRudispaceFunction(funcName string, fun Function) {
+	c.userFuncs = c.userFuncs.Set(funcName, fun)
 }
 
 func (c Context) shallowCopy() Context {
 	return Context{
-		ctx:        c.ctx,
-		document:   c.document,
-		fixedFuncs: c.fixedFuncs,
-		userFuncs:  c.userFuncs,
-		variables:  c.variables,
-		coalescer:  c.coalescer,
-		runtime:    c.runtime,
+		ctx:             c.ctx,
+		document:        c.document,
+		fixedFuncs:      c.fixedFuncs,
+		userFuncs:       c.userFuncs,
+		globalVariables: c.globalVariables,
+		scopeVariables:  c.scopeVariables,
+		tempVariables:   c.tempVariables,
+		coalescer:       c.coalescer,
+		runtime:         c.runtime,
 	}
 }
 

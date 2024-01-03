@@ -80,7 +80,7 @@ func TestEvalProgram(t *testing.T) {
 			),
 			Expected: 1,
 		},
-		// context changes from inner statements should not leak
+		// all variables share one scope, even in sub expressions
 		// (set! $foo (set! $bar 1)) $bar
 		{
 			AST: makeProgram(
@@ -95,7 +95,7 @@ func TestEvalProgram(t *testing.T) {
 				),
 				makeVar("bar", nil),
 			),
-			Invalid: true,
+			Expected: 1,
 		},
 	}
 

@@ -67,13 +67,12 @@ func ifElseFunction(ctx types.Context, test bool, yes, no ast.Expression) (any, 
 // exported.
 func DoFunction(ctx types.Context, args ...ast.Expression) (any, error) {
 	var (
-		tupleCtx = ctx
-		result   any
-		err      error
+		result any
+		err    error
 	)
 
 	for _, arg := range args {
-		tupleCtx, result, err = ctx.Runtime().EvalExpression(tupleCtx, arg)
+		ctx, result, err = ctx.Runtime().EvalExpression(ctx, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -285,7 +284,7 @@ func overwriteEverythingBangHandler(ctx types.Context, originalArgs []ast.Expres
 	// update the target, ignoring the path expression on the symbol.
 	if symbol.Variable != nil {
 		varName := string(*symbol.Variable)
-		ctx = ctx.WithVariable(varName, value)
+		ctx.SetVariable(varName, value)
 	} else {
 		ctx.GetDocument().Set(value)
 	}
