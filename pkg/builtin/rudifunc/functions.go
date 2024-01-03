@@ -19,7 +19,7 @@ var (
 
 // funcFunction should never be called without the bang modifier, as without it, the created function
 // just instantly vanishes into thin air.
-func funcFunction(ctx types.Context, name ast.Expression, namingVector ast.Expression, body ast.Expression) (any, error) {
+func funcFunction(ctx types.Context, name ast.Expression, namingVector ast.Expression, body ...ast.Expression) (any, error) {
 	nameIdent, ok := name.(ast.Identifier)
 	if !ok {
 		return nil, fmt.Errorf("first argument must be an identifier that specifies the function name, but got %T instead", name)
@@ -60,7 +60,7 @@ func funcBangHandler(ctx types.Context, originalArgs []ast.Expression, value any
 type rudispaceFunc struct {
 	name   string
 	params []string
-	body   ast.Expression
+	body   []ast.Expression
 }
 
 var _ types.Function = rudispaceFunc{}
@@ -84,7 +84,21 @@ func (f rudispaceFunc) Evaluate(ctx types.Context, args []ast.Expression) (any, 
 		funcArgs[paramName] = arg
 	}
 
-	_, result, err := ctx.Runtime().EvalExpression(ctx.WithVariables(funcArgs), f.body)
+	// user-defined functions form a sub-program and all statements share the same context
+	funcCtx := ctx.WithVariables(funcArgs)
+	runtime := ctx.Runtime()
+
+	var (
+		result any
+		err    error
+	)
+
+	for _, expr := range f.body {
+		funcCtx, result, err = runtime.EvalExpression(funcCtx, expr)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return result, err
 }

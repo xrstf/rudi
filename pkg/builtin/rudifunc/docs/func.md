@@ -23,7 +23,7 @@ embedding Rudi into other Go applications.
 `func!` creates a new function, which can be used in all subseqeuent statements
 in the same Rudi program. Function creation is bound to its parent scope, so
 defining a function within an `if` statement for example will make the function
-available onside inside that statement, not globally.
+available only inside that statement, not globally.
 
 Dynamically defined functions cannot overwrite statically defined functions, i.e.
 you cannot define a custom `concat` function using `func!` if `concat` already
@@ -33,6 +33,10 @@ Dynamically defined functions can be overwritten (redefined) though.
 Since defining a new function is a side effect, `func` must always be used with
 the bang modifier (`func!`). The behaviour of Rudi programs that use `func`
 without the bang modifier is undefined.
+
+Functions can contain an arbitrary number of expressions, which will be evaluated
+in sequence and share a single context. This means user-defined functions form
+a "sub-program" the same way the [`do`](core-do.md) function does.
 
 ## Examples
 
@@ -56,12 +60,11 @@ inject a Go function statically into Rudi instead of defining it at runtime.
 
 ## Forms
 
-### `(func! name:identifier params:vector body:expression)` ➜ `null`
+### `(func! name:identifier params:vector body:expression…)` ➜ `null`
 
 * `name` is an identifier giving the function its name.
 * `params` is a vector containing identifiers that hold the parameter names.
-* `body` is a single expression (use `do` for multiple statements) that forms
-  the function body.
+* `body` is one or more expressions that form the function body.
 
 This form will create a new function called `name` with as many parameters as
 `params` has identifiers. `params` can be empty, but must otherwise contain only
