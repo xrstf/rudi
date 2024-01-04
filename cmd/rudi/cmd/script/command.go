@@ -5,19 +5,15 @@ package script
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	"go.xrstf.de/rudi"
+	"go.xrstf.de/rudi/cmd/rudi/encoding"
 	"go.xrstf.de/rudi/cmd/rudi/options"
-	"go.xrstf.de/rudi/cmd/rudi/types"
 	"go.xrstf.de/rudi/cmd/rudi/util"
-
-	"github.com/BurntSushi/toml"
-	"gopkg.in/yaml.v3"
 )
 
 func Run(handler *util.SignalHandler, opts *options.Options, args []string) error {
@@ -86,34 +82,9 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string) erro
 	}
 
 	// print the output
-	var encoder interface {
-		Encode(v any) error
+	if err := encoding.Encode(evaluated, opts.OutputFormat, os.Stdout); err != nil {
+		return fmt.Errorf("failed to encode data: %w", err)
 	}
 
-	switch opts.OutputFormat {
-	case types.JsonEncoding:
-		encoder = json.NewEncoder(os.Stdout)
-		encoder.(*json.Encoder).SetIndent("", "  ")
-	case types.YamlEncoding:
-		encoder = yaml.NewEncoder(os.Stdout)
-		encoder.(*yaml.Encoder).SetIndent(2)
-	case types.TomlEncoding:
-		encoder = toml.NewEncoder(os.Stdout)
-		encoder.(*toml.Encoder).Indent = "  "
-	default:
-		encoder = &rawEncoder{}
-	}
-
-	if err := encoder.Encode(evaluated); err != nil {
-		return fmt.Errorf("failed to encode %v: %w", evaluated, err)
-	}
-
-	return nil
-}
-
-type rawEncoder struct{}
-
-func (e *rawEncoder) Encode(v any) error {
-	fmt.Println(v)
 	return nil
 }

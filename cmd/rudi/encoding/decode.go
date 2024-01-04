@@ -5,6 +5,7 @@ package encoding
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -41,8 +42,25 @@ func Decode(input io.Reader, enc types.Encoding) (any, error) {
 
 	case types.YamlEncoding:
 		decoder := yaml.NewDecoder(input)
-		if err := decoder.Decode(&data); err != nil {
-			return nil, fmt.Errorf("failed to parse file as YAML: %w", err)
+
+		documents := []any{}
+		for {
+			var doc any
+			if err := decoder.Decode(&doc); err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+
+				return nil, fmt.Errorf("failed to parse file as YAML: %w", err)
+			}
+
+			documents = append(documents, doc)
+		}
+
+		if len(documents) == 1 {
+			data = documents[0]
+		} else {
+			data = documents
 		}
 
 	case types.TomlEncoding:

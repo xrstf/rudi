@@ -12,7 +12,6 @@ import (
 
 type enumValue interface {
 	fmt.Stringer
-	IsValid() bool
 }
 
 type enumFlag struct {
@@ -40,7 +39,17 @@ var _ pflag.Value = &enumFlag{}
 
 func (f *enumFlag) Set(s string) error {
 	newValue := f.stringToEnumValue(s)
-	if !newValue.IsValid() {
+
+	// do not rely on a possible IsValid() on the enum type, as the flag might just be
+	// accepting a subset of all valid values
+	valid := false
+	for _, accepted := range f.values {
+		if newValue == accepted {
+			valid = true
+			break
+		}
+	}
+	if !valid {
 		return fmt.Errorf("invalid value %q, must be one of %v", s, f.values)
 	}
 

@@ -23,11 +23,12 @@ func (e Encoding) IsValid() bool {
 }
 
 const (
-	RawEncoding   Encoding = "raw"
-	JsonEncoding  Encoding = "json"
-	Json5Encoding Encoding = "json5"
-	YamlEncoding  Encoding = "yaml"
-	TomlEncoding  Encoding = "toml"
+	RawEncoding           Encoding = "raw"
+	JsonEncoding          Encoding = "json"
+	Json5Encoding         Encoding = "json5"
+	YamlEncoding          Encoding = "yaml"
+	YamlDocumentsEncoding Encoding = "yamldocs"
+	TomlEncoding          Encoding = "toml"
 )
 
 var (
@@ -36,14 +37,26 @@ var (
 		JsonEncoding,
 		Json5Encoding,
 		YamlEncoding,
+		YamlDocumentsEncoding,
 		TomlEncoding,
 	}
 
-	InputEncodings  = AllEncodings
+	// InputEncodings contains all valid encodings for reading data.
+	// Note that YAML is always read in multi-document mode, hence
+	// YamlDocumentsEncoding is not part of this list.
+	InputEncodings = []Encoding{
+		RawEncoding,
+		JsonEncoding,
+		Json5Encoding,
+		YamlEncoding,
+		TomlEncoding,
+	}
+
 	OutputEncodings = []Encoding{
 		RawEncoding,
 		JsonEncoding,
 		YamlEncoding,
+		YamlDocumentsEncoding,
 		TomlEncoding,
 	}
 )
