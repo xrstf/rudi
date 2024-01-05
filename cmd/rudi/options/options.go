@@ -21,6 +21,7 @@ type Options struct {
 	ShowHelp                 bool
 	Interactive              bool
 	ScriptFile               string
+	LibraryFiles             []string
 	StdinFormat              types.Encoding
 	OutputFormat             types.Encoding
 	PrintAst                 bool
@@ -49,6 +50,7 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 
 	fs.BoolVarP(&o.Interactive, "interactive", "i", o.Interactive, "Start an interactive REPL to run expressions.")
 	fs.StringVarP(&o.ScriptFile, "script", "s", o.ScriptFile, "Load Rudi script from file instead of first argument (only in non-interactive mode).")
+	fs.StringArrayVarP(&o.LibraryFiles, "library", "l", o.LibraryFiles, "Load additional Rudi file(s) to be be evaluated before the script (can be given multiple times).")
 	fs.StringArrayVar(&o.extraVariableFlags, "var", o.extraVariableFlags, "Define additional global variables (can be given multiple times).")
 	stdinFormatFlag.Add(fs, "stdin-format", "f", "What data format is used for data provided on stdin")
 	outputFormatFlag.Add(fs, "output-format", "o", "What data format to use for outputting data")
@@ -60,16 +62,16 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 }
 
 func (o *Options) Validate() error {
-	if o.Interactive && o.ScriptFile != "" {
-		return errors.New("cannot combine --interactive with --script")
-	}
-
 	if o.Interactive && o.PrintAst {
 		return errors.New("cannot combine --interactive with --debug-ast")
 	}
 
 	if err := o.parseExtraVariables(); err != nil {
 		return fmt.Errorf("invalid --var flags: %w", err)
+	}
+
+	if err := o.validateLibraryFiles(); err != nil {
+		return fmt.Errorf("invalid --library flags: %w", err)
 	}
 
 	return nil
@@ -147,4 +149,18 @@ func (o *Options) parseExtraVariable(flagValue string) (string, any, error) {
 	}
 
 	return varName, varData, nil
+}
+
+func (o *Options) validateLibraryFiles() error {
+	for _, file := range o.LibraryFiles {
+		info, err := os.Stat(file)
+		if err != nil {
+			return fmt.Errorf("invalid library %q: %w", file, err)
+		}
+		if info.IsDir() {
+			return fmt.Errorf("invalid library %q: is directory", file)
+		}
+	}
+
+	return nil
 }

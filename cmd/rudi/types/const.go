@@ -41,14 +41,12 @@ var (
 		TomlEncoding,
 	}
 
-	// InputEncodings contains all valid encodings for reading data.
-	// Note that YAML is always read in multi-document mode, hence
-	// YamlDocumentsEncoding is not part of this list.
 	InputEncodings = []Encoding{
 		RawEncoding,
 		JsonEncoding,
 		Json5Encoding,
 		YamlEncoding,
+		YamlDocumentsEncoding,
 		TomlEncoding,
 	}
 

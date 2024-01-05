@@ -16,6 +16,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func decodeYaml(input io.Reader) ([]any, error) {
+	decoder := yaml.NewDecoder(input)
+
+	documents := []any{}
+	for {
+		var doc any
+		if err := decoder.Decode(&doc); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+
+			return nil, fmt.Errorf("failed to parse file as YAML: %w", err)
+		}
+
+		documents = append(documents, doc)
+	}
+
+	return documents, nil
+}
+
 func Decode(input io.Reader, enc types.Encoding) (any, error) {
 	var data any
 
@@ -41,6 +61,21 @@ func Decode(input io.Reader, enc types.Encoding) (any, error) {
 		}
 
 	case types.YamlEncoding:
+		decoded, err := decodeYaml(input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse file as JSON5: %w", err)
+		}
+
+		switch len(decoded) {
+		case 0:
+			data = nil
+		case 1:
+			data = decoded[0]
+		default:
+			data = decoded
+		}
+
+	case types.YamlDocumentsEncoding:
 		decoder := yaml.NewDecoder(input)
 
 		documents := []any{}
@@ -57,11 +92,7 @@ func Decode(input io.Reader, enc types.Encoding) (any, error) {
 			documents = append(documents, doc)
 		}
 
-		if len(documents) == 1 {
-			data = documents[0]
-		} else {
-			data = documents
-		}
+		data = documents
 
 	case types.TomlEncoding:
 		decoder := toml.NewDecoder(input)

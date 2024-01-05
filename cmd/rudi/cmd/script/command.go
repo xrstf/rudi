@@ -16,7 +16,7 @@ import (
 	"go.xrstf.de/rudi/cmd/rudi/util"
 )
 
-func Run(handler *util.SignalHandler, opts *options.Options, args []string) error {
+func Run(handler *util.SignalHandler, opts *options.Options, library rudi.Program, args []string) error {
 	// determine input script to evaluate
 	var (
 		script     string
@@ -39,7 +39,7 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string) erro
 		// consume one arg for the script
 		script = args[0]
 		args = args[1:]
-		scriptName = "(stdin)"
+		scriptName = "(cli)"
 	}
 
 	// parse the script
@@ -74,6 +74,15 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string) erro
 	defer cancel()
 
 	handler.SetCancelFn(cancel)
+
+	// Evaluate the library (its return value is irrelevant, as the main program has to have
+	// at least 1 statement, which will overwrite the total return value anyway).
+	if library != nil {
+		_, err = library.RunContext(rudiCtx.WithGoContext(subCtx))
+		if err != nil {
+			return fmt.Errorf("failed to evaluate script: %w", err)
+		}
+	}
 
 	// evaluate the script
 	evaluated, err := program.RunContext(rudiCtx.WithGoContext(subCtx))

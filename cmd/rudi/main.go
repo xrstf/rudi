@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
+	"strings"
 
 	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/batteries"
@@ -114,8 +115,34 @@ func main() {
 
 	handler := util.SetupSignalHandler()
 
-	if opts.Interactive || len(args) == 0 {
-		if err := console.Run(handler, &opts, args, BuildTag); err != nil {
+	// load all --library files and assemble a single base script for both console/script mode
+	baseScripts := []string{}
+	for _, filename := range opts.LibraryFiles {
+		_, script, err := util.ParseFile(filename)
+		if err != nil {
+			fmt.Printf("Error: library %q: %v\n", filename, err)
+			os.Exit(1)
+		}
+
+		baseScripts = append(baseScripts, script)
+	}
+
+	// parse the base script
+	var baseProgram rudi.Program
+
+	if len(baseScripts) > 0 {
+		var err error
+
+		baseProgram, err = rudi.Parse("(library)", strings.Join(baseScripts, "\n"))
+		if err != nil {
+			// This should never happen, each script was already syntax-checked.
+			fmt.Printf("Error: library: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	if opts.Interactive {
+		if err := console.Run(handler, &opts, baseProgram, args, BuildTag); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -123,7 +150,7 @@ func main() {
 		return
 	}
 
-	if err := script.Run(handler, &opts, args); err != nil {
+	if err := script.Run(handler, &opts, baseProgram, args); err != nil {
 		parseErr := &rudi.ParseError{}
 		if errors.As(err, parseErr) {
 			fmt.Println(parseErr.Snippet())

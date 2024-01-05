@@ -10,10 +10,27 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.xrstf.de/rudi"
 	"go.xrstf.de/rudi/cmd/rudi/encoding"
 	"go.xrstf.de/rudi/cmd/rudi/options"
 	"go.xrstf.de/rudi/cmd/rudi/types"
 )
+
+func ParseFile(filename string) (rudi.Program, string, error) {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to read script: %w", err)
+	}
+
+	script := strings.TrimSpace(string(content))
+
+	prog, err := rudi.Parse(filename, script)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to parse: %w", err)
+	}
+
+	return prog, script, nil
+}
 
 func LoadFiles(opts *options.Options, filenames []string) ([]any, error) {
 	results := make([]any, len(filenames))

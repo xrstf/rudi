@@ -47,7 +47,7 @@ var replCommands = map[string]replCommandFunc{
 	"help": helpCommand,
 }
 
-func Run(handler *util.SignalHandler, opts *options.Options, args []string, rudiVersion string) error {
+func Run(handler *util.SignalHandler, opts *options.Options, library rudi.Program, args []string, rudiVersion string) error {
 	rl, err := readline.New("⮞ ")
 	if err != nil {
 		return fmt.Errorf("failed to setup readline prompt: %w", err)
@@ -66,6 +66,15 @@ func Run(handler *util.SignalHandler, opts *options.Options, args []string, rudi
 	fmt.Printf("Welcome to 🚂Rudi %s\n", rudiVersion)
 	fmt.Println("Type `help` for more information, `exit` or Ctrl-D to exit, Ctrl-C to interrupt statements.")
 	fmt.Println("")
+
+	// Evaluate the library (its return value is irrelevant, as the main program has to have
+	// at least 1 statement, which will overwrite the total return value anyway).
+	if library != nil {
+		_, err = runProgram(handler, rudiCtx, library)
+		if err != nil {
+			return fmt.Errorf("failed to evaluate library: %w", err)
+		}
+	}
 
 	for {
 		line, err := rl.Readline()
@@ -125,13 +134,8 @@ func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *opti
 		return false, err
 	}
 
-	// allow to interrupt the statement
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	handler.SetCancelFn(cancel)
-
-	evaluated, err := program.RunContext(rudiCtx.WithGoContext(ctx))
+	// run the program
+	evaluated, err := runProgram(handler, rudiCtx, program)
 	if err != nil {
 		return false, err
 	}
@@ -148,4 +152,14 @@ func processInput(handler *util.SignalHandler, rudiCtx types.Context, opts *opti
 	fmt.Println(string(encoded))
 
 	return false, nil
+}
+
+func runProgram(handler *util.SignalHandler, rudiCtx types.Context, prog rudi.Program) (any, error) {
+	// allow to interrupt the statement
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	handler.SetCancelFn(cancel)
+
+	return prog.RunContext(rudiCtx.WithGoContext(ctx))
 }
