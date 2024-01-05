@@ -98,7 +98,7 @@ func main() {
 	}
 
 	if err := opts.Validate(); err != nil {
-		fmt.Printf("Invalid command line: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Invalid command line: %v\n", err)
 		os.Exit(2)
 	}
 
@@ -106,7 +106,7 @@ func main() {
 
 	if opts.ShowHelp || (len(args) > 0 && args[0] == "help") {
 		if err := help.Run(&opts, args); err != nil {
-			fmt.Printf("Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -120,7 +120,7 @@ func main() {
 	for _, filename := range opts.LibraryFiles {
 		_, script, err := util.ParseFile(filename)
 		if err != nil {
-			fmt.Printf("Error: library %q: %v\n", filename, err)
+			fmt.Fprintf(os.Stderr, "Error: library %q: %v\n", filename, err)
 			os.Exit(1)
 		}
 
@@ -136,14 +136,14 @@ func main() {
 		baseProgram, err = rudi.Parse("(library)", strings.Join(baseScripts, "\n"))
 		if err != nil {
 			// This should never happen, each script was already syntax-checked.
-			fmt.Printf("Error: library: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error: library: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
 	if opts.Interactive {
 		if err := console.Run(handler, &opts, baseProgram, args, BuildTag); err != nil {
-			fmt.Printf("Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -153,10 +153,10 @@ func main() {
 	if err := script.Run(handler, &opts, baseProgram, args); err != nil {
 		parseErr := &rudi.ParseError{}
 		if errors.As(err, parseErr) {
-			fmt.Println(parseErr.Snippet())
-			fmt.Println(parseErr)
+			fmt.Fprintln(os.Stderr, parseErr.Snippet())
+			fmt.Fprintln(os.Stderr, parseErr)
 		} else {
-			fmt.Printf("Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		}
 
 		os.Exit(1)

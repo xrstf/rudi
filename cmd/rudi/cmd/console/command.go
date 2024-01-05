@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"go.xrstf.de/rudi"
@@ -98,10 +99,10 @@ func Run(handler *util.SignalHandler, opts *options.Options, library rudi.Progra
 		if err != nil {
 			parseErr := &rudi.ParseError{}
 			if errors.As(err, parseErr) {
-				fmt.Println(parseErr.Snippet())
-				fmt.Println(parseErr)
+				fmt.Fprintln(os.Stderr, parseErr.Snippet())
+				fmt.Fprintln(os.Stderr, parseErr)
 			} else {
-				fmt.Printf("Error: %v\n", err)
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			}
 		}
 		if stop {
