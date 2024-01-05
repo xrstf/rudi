@@ -63,7 +63,7 @@ func Decode(input io.Reader, enc types.Encoding) (any, error) {
 	case types.YamlEncoding:
 		decoded, err := decodeYaml(input)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse file as JSON5: %w", err)
+			return nil, err
 		}
 
 		switch len(decoded) {
@@ -76,23 +76,12 @@ func Decode(input io.Reader, enc types.Encoding) (any, error) {
 		}
 
 	case types.YamlDocumentsEncoding:
-		decoder := yaml.NewDecoder(input)
-
-		documents := []any{}
-		for {
-			var doc any
-			if err := decoder.Decode(&doc); err != nil {
-				if errors.Is(err, io.EOF) {
-					break
-				}
-
-				return nil, fmt.Errorf("failed to parse file as YAML: %w", err)
-			}
-
-			documents = append(documents, doc)
+		decoded, err := decodeYaml(input)
+		if err != nil {
+			return nil, err
 		}
 
-		data = documents
+		data = decoded
 
 	case types.TomlEncoding:
 		decoder := toml.NewDecoder(input)
