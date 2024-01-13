@@ -4,7 +4,7 @@
 package jsonpath
 
 import (
-	"fmt"
+	"errors"
 )
 
 type ObjectReader interface {
@@ -16,70 +16,64 @@ type VectorReader interface {
 }
 
 func Get(value any, path Path) (any, error) {
+	if !path.IsValid() {
+		return nil, errors.New("invalid path")
+	}
+
 	if len(path) == 0 {
 		return value, nil
 	}
 
+	if path.IsDynamic() {
+		return getDynamic(value, path)
+	}
+
+	return getSingular(value, path)
+}
+
+func getSingular(value any, path Path) (any, error) {
 	for _, step := range path {
-		if valueAsSlice, ok := value.([]any); ok {
-			index, ok := toIntegerStep(step)
-			if !ok {
-				return nil, fmt.Errorf("cannot use %v as an array index", step)
-			}
-
-			if index < 0 || index >= len(valueAsSlice) {
-				return nil, fmt.Errorf("index %d out of bounds", index)
-			}
-
-			value = valueAsSlice[index]
-			continue
+		_, newValue, err := traverseSingleStep(value, step)
+		if err != nil {
+			return nil, err
 		}
 
-		if vectorReader, ok := value.(VectorReader); ok {
-			index, ok := toIntegerStep(step)
-			if ok {
-				var err error
-
-				value, err = vectorReader.GetVectorItem(index)
-				if err != nil {
-					return nil, fmt.Errorf("cannot descend with %v (%T) into %T: %w", step, step, value, err)
-				}
-
-				continue
-			}
-		}
-
-		if valueAsObject, ok := value.(map[string]any); ok {
-			key, ok := toStringStep(step)
-			if !ok {
-				return nil, fmt.Errorf("cannot use %v as an object key", step)
-			}
-
-			var exists bool
-			value, exists = valueAsObject[key]
-			if !exists {
-				return nil, fmt.Errorf("no such key: %q", key)
-			}
-
-			continue
-		}
-
-		if objectReader, ok := value.(ObjectReader); ok {
-			key, ok := toStringStep(step)
-			if ok {
-				var err error
-
-				value, err = objectReader.GetObjectKey(key)
-				if err != nil {
-					return nil, fmt.Errorf("cannot descend with %v (%T) into %T: %w", step, step, value, err)
-				}
-
-				continue
-			}
-		}
-
-		return nil, fmt.Errorf("cannot descend with %v (%T) into %T", step, step, value)
+		value = newValue
 	}
 
 	return value, nil
+}
+
+func getDynamic(value any, path Path) ([]any, error) {
+	currentLeafValues := []any{value}
+
+	for _, step := range path {
+		newLeafValues := []any{}
+
+		for _, val := range currentLeafValues {
+			_, result, err := traverseSingleStep(val, step)
+			if err != nil {
+				if ignoreErrorInDynamic(err) {
+					continue
+				}
+
+				return nil, err
+			}
+
+			if isDynamicStep(step) {
+				newValues, ok := result.([]any)
+				if !ok {
+					panic("isDynamicStep is out of sync with path.IsDynamic()")
+				}
+
+				newLeafValues = append(newLeafValues, newValues...)
+			} else {
+				newLeafValues = append(newLeafValues, result)
+			}
+		}
+
+		currentLeafValues = newLeafValues
+	}
+
+	return currentLeafValues, nil
 }
