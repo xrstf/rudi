@@ -229,6 +229,18 @@ func (ks keySelector) Keep(key string, _ any) (bool, error) {
 	return false, nil
 }
 
+type indexSelector []int
+
+func (is indexSelector) Keep(index int, _ any) (bool, error) {
+	for _, i := range is {
+		if i == index {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func TestGetDynamic(t *testing.T) {
 	testcases := []struct {
 		value    any
@@ -236,6 +248,24 @@ func TestGetDynamic(t *testing.T) {
 		expected any
 		invalid  bool
 	}{
+		{
+			value:    nil,
+			path:     Path{keySelector{"foo"}},
+			expected: []any{},
+		},
+
+		{
+			value:    "a string",
+			path:     Path{keySelector{"foo"}},
+			expected: []any{},
+		},
+
+		{
+			value:    "a string",
+			path:     Path{indexSelector{2}},
+			expected: []any{},
+		},
+
 		{
 			value: map[string]any{
 				"foo":   "a",
