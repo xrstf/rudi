@@ -64,6 +64,11 @@ func patch(dest any, exists bool, path Path, patchValue PatchFunc) (any, error) 
 
 	// $var[?(…)]
 	case MultiVectorStep:
+		foundValues := foundValueThings.([]any)
+		if len(foundValues) == 0 {
+			return dest, nil
+		}
+
 		// nil values (or non-existing values) can be turned into vectors
 		if dest == nil {
 			dest = []any{}
@@ -73,8 +78,6 @@ func patch(dest any, exists bool, path Path, patchValue PatchFunc) (any, error) 
 		if !ok {
 			panic("VectorStep should have errored on a non-vector value.")
 		}
-
-		foundValues := foundValueThings.([]any)
 
 		for idx, vectorIndex := range foundKeyThings.([]int) {
 			var err error
@@ -102,6 +105,11 @@ func patch(dest any, exists bool, path Path, patchValue PatchFunc) (any, error) 
 
 	// $var[?(…)]
 	case MultiObjectStep:
+		foundValues := foundValueThings.([]any)
+		if len(foundValues) == 0 {
+			return dest, nil
+		}
+
 		// nil values (or non-existing values) can be turned into objects
 		if dest == nil {
 			dest = map[string]any{}
@@ -111,8 +119,6 @@ func patch(dest any, exists bool, path Path, patchValue PatchFunc) (any, error) 
 		if !ok {
 			panic("ObjectStep should have errored on a non-object value.")
 		}
-
-		foundValues := foundValueThings.([]any)
 
 		for idx, key := range foundKeyThings.([]string) {
 			var err error
