@@ -24,7 +24,7 @@ func Get(value any, path Path) (any, error) {
 		return value, nil
 	}
 
-	if path.IsDynamic() {
+	if path.HasMultiSteps() {
 		return getDynamic(value, path)
 	}
 
@@ -60,7 +60,7 @@ func getDynamic(value any, path Path) ([]any, error) {
 				return nil, err
 			}
 
-			if isDynamicStep(step) {
+			if isMultiStep(step) {
 				newValues, ok := result.([]any)
 				if !ok {
 					panic("isDynamicStep is out of sync with path.IsDynamic()")

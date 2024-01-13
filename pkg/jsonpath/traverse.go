@@ -27,52 +27,37 @@ func traverseSingleStep(value any, step Step) (any, any, error) {
 		return traverseVectorSingleStep(valueAsVector, step)
 	}
 
-	// if vectorReader, ok := value.(VectorReader); ok {
-	// 	index, ok := toIntegerStep(step)
-	// 	if ok {
-	// 		var err error
-
-	// 		value, err = vectorReader.GetVectorItem(index)
-	// 		if err != nil {
-	// 			return nil, fmt.Errorf("cannot descend with %v (%T) into %T: %w", step, step, value, err)
-	// 		}
-
-	// 		continue
-	// 	}
-	// }
-
 	if valueAsObject, ok := value.(map[string]any); ok {
 		return traverseObjectSingleStep(valueAsObject, step)
 	}
 
-	// if objectReader, ok := value.(ObjectReader); ok {
-	// 	key, ok := toStringStep(step)
-	// 	if ok {
-	// 		var err error
-
-	// 		value, err = objectReader.GetObjectKey(key)
-	// 		if err != nil {
-	// 			return nil, fmt.Errorf("cannot descend with %v (%T) into %T: %w", step, step, value, err)
-	// 		}
-
-	// 		continue
-	// 	}
-	// }
+	if value == nil {
+		switch s := step.(type) {
+		case SingularVectorStep:
+			return s.Index(), nil, indexOutOfBoundsErr
+		case MultiVectorStep:
+			return []int{}, []any{}, nil
+		case SingularObjectStep:
+			return s.Key(), nil, noSuchKeyErr
+		case MultiObjectStep:
+			return []string{}, []any{}, nil
+		}
+	}
 
 	return nil, nil, fmt.Errorf("cannot traverse %T: %w", value, untraversableErr)
 }
 
 func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
-	if vectorStep, ok := step.(VectorStep); ok {
+	if vectorStep, ok := step.(SingularVectorStep); ok {
 		index := vectorStep.Index()
 		if index < 0 || index >= len(value) {
-			return nil, nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+			return index, nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
 		}
 
 		return index, value[index], nil
 	}
 
-	if vectorStep, ok := step.(DynamicVectorStep); ok {
+	if vectorStep, ok := step.(MultiVectorStep); ok {
 		indexes := []int{}
 		values := []any{}
 
@@ -95,18 +80,18 @@ func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
 }
 
 func traverseObjectSingleStep(value map[string]any, step Step) (any, any, error) {
-	if objStep, ok := step.(ObjectStep); ok {
+	if objStep, ok := step.(SingularObjectStep); ok {
 		key := objStep.Key()
 
 		val, exists := value[key]
 		if !exists {
-			return nil, nil, fmt.Errorf("invalid key %q: %w", key, noSuchKeyErr)
+			return key, nil, fmt.Errorf("invalid key %q: %w", key, noSuchKeyErr)
 		}
 
 		return key, val, nil
 	}
 
-	if objStep, ok := step.(DynamicObjectStep); ok {
+	if objStep, ok := step.(MultiObjectStep); ok {
 		// To allow side effects in the dynamic step to work consistently,
 		// we need to loop over the object in a consistent way.
 		orderedKeys := orderedObjectKeys(value)
