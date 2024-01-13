@@ -10,10 +10,10 @@ type Path []Step
 func (p Path) IsValid() bool {
 	for _, s := range p {
 		switch s.(type) {
-		case VectorStep,
-			ObjectStep,
-			DynamicVectorStep,
-			DynamicObjectStep:
+		case SingularVectorStep,
+			SingularObjectStep,
+			MultiVectorStep,
+			MultiObjectStep:
 			continue
 		default:
 			return false
@@ -23,9 +23,9 @@ func (p Path) IsValid() bool {
 	return true
 }
 
-func (p Path) IsDynamic() bool {
+func (p Path) HasMultiSteps() bool {
 	for _, s := range p {
-		if isDynamicStep(s) {
+		if isMultiStep(s) {
 			return true
 		}
 	}
@@ -33,9 +33,9 @@ func (p Path) IsDynamic() bool {
 	return false
 }
 
-func isDynamicStep(s Step) bool {
+func isMultiStep(s Step) bool {
 	switch s.(type) {
-	case DynamicVectorStep, DynamicObjectStep:
+	case MultiVectorStep, MultiObjectStep:
 		return true
 	default:
 		return false
@@ -44,7 +44,7 @@ func isDynamicStep(s Step) bool {
 
 type Step any
 
-type VectorStep interface {
+type SingularVectorStep interface {
 	Index() int
 }
 
@@ -54,7 +54,7 @@ func (i IndexStep) Index() int {
 	return int(i)
 }
 
-type ObjectStep interface {
+type SingularObjectStep interface {
 	Key() string
 }
 
@@ -64,11 +64,11 @@ func (k KeyStep) Key() string {
 	return string(k)
 }
 
-type DynamicVectorStep interface {
+type MultiVectorStep interface {
 	Keep(index int, value any) (bool, error)
 }
 
-type DynamicObjectStep interface {
+type MultiObjectStep interface {
 	Keep(key string, value any) (bool, error)
 }
 
