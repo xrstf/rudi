@@ -255,6 +255,8 @@ ObjectAccessor <- '.' val:PathIdentifier {
 
 VectorAccessor <- '[' __ expr:ScalarExpression __ ']' {
    return ast.PathStep{Expression: expr.(ast.Expression)}, nil
+} / '[' __ '?' expr:Tuple __ ']' {
+   return ast.PathStep{Filter: expr.(ast.Expression)}, nil
 }
 
 // This Pattern must be kept in-sync with the PathIdentifierPattern variable in the ast package.

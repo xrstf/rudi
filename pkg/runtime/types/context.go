@@ -64,9 +64,13 @@ func (c Context) NewScope() Context {
 	return clone
 }
 
-func (c Context) NewShallowScope(extraVars Variables) Context {
+func (c Context) NewShallowScope(document *Document, extraVars Variables) Context {
 	clone := c.shallowCopy()
 	clone.tempVariables = extraVars
+
+	if document != nil {
+		clone.document = document
+	}
 
 	return clone
 }

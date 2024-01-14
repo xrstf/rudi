@@ -53,7 +53,7 @@ func (b *regularFunction) Evaluate(ctx types.Context, args []ast.Expression) (an
 	return nil, errors.New("none of the available forms matched the given expressions")
 }
 
-type BangHandlerFunc func(ctx types.Context, originalArgs []ast.Expression, value any) (any, error)
+type BangHandlerFunc func(ctx types.Context, originalArgs []ast.Expression) (any, error)
 
 type extendedFunction struct {
 	regularFunction
@@ -66,6 +66,6 @@ var (
 	_ types.BangHandler = &extendedFunction{}
 )
 
-func (f *extendedFunction) BangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (any, error) {
-	return f.bangHandler(ctx, originalArgs, value)
+func (f *extendedFunction) BangHandler(ctx types.Context, originalArgs []ast.Expression) (any, error) {
+	return f.bangHandler(ctx, originalArgs)
 }

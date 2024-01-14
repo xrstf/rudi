@@ -6,6 +6,7 @@ package lists
 import (
 	"fmt"
 
+	"go.xrstf.de/rudi/pkg/builtin/helper"
 	"go.xrstf.de/rudi/pkg/lang/ast"
 	"go.xrstf.de/rudi/pkg/runtime/functions"
 	"go.xrstf.de/rudi/pkg/runtime/types"
@@ -56,7 +57,7 @@ var (
 // (range VECTOR [i item] expr)
 func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression, expr ast.Expression) (any, error) {
 	// decode desired loop variable namings
-	loopIndexName, loopVarName, err := decodeNamingVector(namingVec)
+	loopIndexName, loopVarName, err := helper.DecodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
@@ -75,7 +76,7 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 		// Do not use separate contexts for each loop iteration, as the loop might build up a counter,
 		// but only use the loop variables in a shallow scope, where only these two temporary variables
 		// are laid over the regular scoped/global variables.
-		result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(nil, vars), expr)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +89,7 @@ func rangeVectorFunction(ctx types.Context, data []any, namingVec ast.Expression
 // (range OBJECT [key val] expr)
 func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.Expression, expr ast.Expression) (any, error) {
 	// decode desired loop variable namings
-	loopIndexName, loopVarName, err := decodeNamingVector(namingVec)
+	loopIndexName, loopVarName, err := helper.DecodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
@@ -106,7 +107,7 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 			vars[loopIndexName] = key
 		}
 
-		result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		result, err = ctx.Runtime().EvalExpression(ctx.NewShallowScope(nil, vars), expr)
 		if err != nil {
 			return nil, err
 		}
@@ -119,15 +120,9 @@ func rangeObjectFunction(ctx types.Context, data map[string]any, namingVec ast.E
 type itemHandlerFunc func(ctx types.Context, _ any, value any) (any, error)
 
 // (map VECTOR identifier)
-func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expression) (any, error) {
-	// type check
-	identifier, ok := ident.(ast.Identifier)
-	if !ok {
-		return nil, fmt.Errorf("argument #1: expected identifier, got %T", ident)
-	}
-
+func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Identifier) (any, error) {
 	mapHandler := func(ctx types.Context, _ any, value any) (any, error) {
-		return ctx.Runtime().CallFunction(ctx, identifier, []ast.Expression{types.MakeShim(value)})
+		return ctx.Runtime().CallFunction(ctx, ident, []ast.Expression{types.MakeShim(value)})
 	}
 
 	return mapVector(ctx, data, mapHandler)
@@ -136,7 +131,7 @@ func mapVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Express
 // (map VECTOR [item] expr)
 // (map VECTOR [i item] expr)
 func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Expression, expr ast.Expression) (any, error) {
-	indexVarName, valueVarName, err := decodeNamingVector(namingVec)
+	indexVarName, valueVarName, err := helper.DecodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
@@ -150,7 +145,7 @@ func mapVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Ex
 			vars[indexVarName] = index
 		}
 
-		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(nil, vars), expr)
 	}
 
 	return mapVector(ctx, data, mapHandler)
@@ -189,7 +184,7 @@ func mapObjectAnonymousFunction(ctx types.Context, data map[string]any, ident as
 // (map OBJECT [item] expr)
 // (map OBJECT [i item] expr)
 func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingVec ast.Expression, expr ast.Expression) (any, error) {
-	keyVarName, valueVarName, err := decodeNamingVector(namingVec)
+	keyVarName, valueVarName, err := helper.DecodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
@@ -203,7 +198,7 @@ func mapObjectExpressionFunction(ctx types.Context, data map[string]any, namingV
 			vars[keyVarName] = key
 		}
 
-		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(nil, vars), expr)
 	}
 
 	return mapObject(ctx, data, mapHandler)
@@ -242,7 +237,7 @@ func filterVectorAnonymousFunction(ctx types.Context, data []any, ident ast.Expr
 // (filter VECTOR [item] expr)
 // (filter VECTOR [i item] expr)
 func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast.Expression, expr ast.Expression) (any, error) {
-	indexVarName, valueVarName, err := decodeNamingVector(namingVec)
+	indexVarName, valueVarName, err := helper.DecodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
@@ -256,7 +251,7 @@ func filterVectorExpressionFunction(ctx types.Context, data []any, namingVec ast
 			vars[indexVarName] = index
 		}
 
-		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(nil, vars), expr)
 	}
 
 	return filterVector(ctx, data, mapHandler)
@@ -302,7 +297,7 @@ func filterObjectAnonymousFunction(ctx types.Context, data map[string]any, ident
 // (filter OBJECT [item] expr)
 // (filter OBJECT [i item] expr)
 func filterObjectExpressionFunction(ctx types.Context, data map[string]any, namingVec ast.Expression, expr ast.Expression) (any, error) {
-	keyVarName, valueVarName, err := decodeNamingVector(namingVec)
+	keyVarName, valueVarName, err := helper.DecodeNamingVector(namingVec)
 	if err != nil {
 		return nil, fmt.Errorf("argument #1: not a valid naming vector: %w", err)
 	}
@@ -316,7 +311,7 @@ func filterObjectExpressionFunction(ctx types.Context, data map[string]any, nami
 			vars[keyVarName] = key
 		}
 
-		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(vars), expr)
+		return ctx.Runtime().EvalExpression(ctx.NewShallowScope(nil, vars), expr)
 	}
 
 	return filterObject(ctx, data, mapHandler)
@@ -342,44 +337,4 @@ func filterObject(ctx types.Context, data map[string]any, f itemHandlerFunc) (an
 	}
 
 	return output, nil
-}
-
-func decodeNamingVector(expr ast.Expression) (indexName string, valueName string, err error) {
-	namingVector, ok := expr.(ast.VectorNode)
-	if !ok {
-		return "", "", fmt.Errorf("expected a vector, but got %T", expr)
-	}
-
-	size := len(namingVector.Expressions)
-	if size < 1 || size > 2 {
-		return "", "", fmt.Errorf("expected 1 or 2 identifiers in the naming vector, got %d", size)
-	}
-
-	if size == 1 {
-		varNameIdent, ok := namingVector.Expressions[0].(ast.Identifier)
-		if !ok {
-			return "", "", fmt.Errorf("value variable name must be an identifier, got %T", namingVector.Expressions[0])
-		}
-
-		valueName = varNameIdent.Name
-	} else {
-		indexIdent, ok := namingVector.Expressions[0].(ast.Identifier)
-		if !ok {
-			return "", "", fmt.Errorf("index variable name must be an identifier, got %T", namingVector.Expressions[0])
-		}
-
-		varNameIdent, ok := namingVector.Expressions[1].(ast.Identifier)
-		if !ok {
-			return "", "", fmt.Errorf("value variable name must be an identifier, got %T", namingVector.Expressions[0])
-		}
-
-		indexName = indexIdent.Name
-		valueName = varNameIdent.Name
-
-		if indexName == valueName {
-			return "", "", fmt.Errorf("cannot use %s for both value and index variable", indexName)
-		}
-	}
-
-	return indexName, valueName, nil
 }
