@@ -3,17 +3,14 @@
 
 package jsonpath
 
-import "go.xrstf.de/rudi/pkg/lang/ast"
+import "strconv"
 
 type Path []Step
 
 func (p Path) IsValid() bool {
 	for _, s := range p {
 		switch s.(type) {
-		case SingularVectorStep,
-			SingularObjectStep,
-			MultiVectorStep,
-			MultiObjectStep:
+		case SingleStep, FilterStep:
 			continue
 		default:
 			return false
@@ -23,9 +20,9 @@ func (p Path) IsValid() bool {
 	return true
 }
 
-func (p Path) HasMultiSteps() bool {
+func (p Path) HasFilterSteps() bool {
 	for _, s := range p {
-		if isMultiStep(s) {
+		if isFilterStep(s) {
 			return true
 		}
 	}
@@ -33,76 +30,80 @@ func (p Path) HasMultiSteps() bool {
 	return false
 }
 
-func isMultiStep(s Step) bool {
-	switch s.(type) {
-	case MultiVectorStep, MultiObjectStep:
-		return true
-	default:
-		return false
-	}
+func isFilterStep(s Step) bool {
+	_, ok := s.(FilterStep)
+	return ok
 }
 
 type Step any
 
-type SingularVectorStep interface {
-	Index() int
+type SingleStep interface {
+	ToIndex() (int, bool)
+	ToKey() (string, bool)
 }
 
 type IndexStep int
 
-func (i IndexStep) Index() int {
-	return int(i)
+func (i IndexStep) ToIndex() (int, bool) {
+	return int(i), true
 }
 
-type SingularObjectStep interface {
-	Key() string
+func (i IndexStep) ToKey() (string, bool) {
+	return "", false
 }
 
 type KeyStep string
 
-func (k KeyStep) Key() string {
-	return string(k)
+func (k KeyStep) ToIndex() (int, bool) {
+	return 0, false
 }
 
-type MultiVectorStep interface {
-	Keep(index int, value any) (bool, error)
+func (k KeyStep) ToKey() (string, bool) {
+	return string(k), true
 }
 
-type MultiObjectStep interface {
-	Keep(key string, value any) (bool, error)
-}
+type flexStep string
 
-func FromEvaluatedPath(evaledPath ast.EvaluatedPathExpression) Path {
-	p := Path{}
-	for _, step := range evaledPath.Steps {
-		if i := step.IntegerValue; i != nil {
-			p = append(p, IndexStep(*i))
-		} else if s := step.StringValue; s != nil {
-			p = append(p, KeyStep(*s))
-		}
-	}
-
-	return p
-}
-
-func toIntegerStep(s Step) (int, bool) {
-	switch asserted := s.(type) {
-	case int:
-		return asserted, true
-	case int32:
-		return int(asserted), true
-	case int64:
-		return int(asserted), true
-	default:
+func (f flexStep) ToIndex() (int, bool) {
+	index, err := strconv.ParseInt(string(f), 10, 64)
+	if err != nil {
 		return 0, false
 	}
+
+	return int(index), false
 }
 
-func toStringStep(s Step) (string, bool) {
-	switch asserted := s.(type) {
-	case string:
-		return asserted, true
-	default:
-		return "", false
-	}
+func (f flexStep) ToKey() (string, bool) {
+	return string(f), true
 }
+
+type FilterStep interface {
+	Keep(key any, value any) (bool, error)
+}
+
+func indexOrKey(s SingleStep) (*int, *string) {
+	index, ok := s.ToIndex()
+	if ok {
+		return &index, nil
+	}
+
+	key, ok := s.ToKey()
+	if ok {
+		return nil, &key
+	}
+
+	return nil, nil
+}
+
+// func FromEvaluatedPath(evaledPath ast.EvaluatedPathExpression) Path {
+// 	p := Path{}
+// 	for _, step := range evaledPath.Steps {
+// 		if i := step.IntegerValue; i != nil {
+// 			p = append(p, IndexStep(*i))
+// 		} else if s := step.StringValue; s != nil {
+// 			p = append(p, KeyStep(*s))
+// 		}
+// 	}
+
+// 	return p
+// }

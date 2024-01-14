@@ -4,6 +4,7 @@
 package jsonpath
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -41,7 +42,7 @@ func (g customVecGetter) GetVectorItem(index int) (any, error) {
 	return nil, fmt.Errorf("cannot get index %d", index)
 }
 
-func TestGetSingular(t *testing.T) {
+func TestGetSingle(t *testing.T) {
 	testcases := []struct {
 		value    any
 		path     Path
@@ -219,9 +220,14 @@ func TestGetSingular(t *testing.T) {
 
 type keySelector []string
 
-func (ks keySelector) Keep(key string, _ any) (bool, error) {
+func (ks keySelector) Keep(key any, _ any) (bool, error) {
+	keyString, ok := key.(string)
+	if !ok {
+		return false, errors.New("keySelector is meant to only work on objects")
+	}
+
 	for _, k := range ks {
-		if k == key {
+		if k == keyString {
 			return true, nil
 		}
 	}
@@ -231,7 +237,12 @@ func (ks keySelector) Keep(key string, _ any) (bool, error) {
 
 type indexSelector []int
 
-func (is indexSelector) Keep(index int, _ any) (bool, error) {
+func (is indexSelector) Keep(key any, _ any) (bool, error) {
+	index, ok := key.(int)
+	if !ok {
+		return false, errors.New("indexSelector is meant to only work on vectors")
+	}
+
 	for _, i := range is {
 		if i == index {
 			return true, nil
@@ -241,7 +252,7 @@ func (is indexSelector) Keep(index int, _ any) (bool, error) {
 	return false, nil
 }
 
-func TestGetDynamic(t *testing.T) {
+func TestGetFiltered(t *testing.T) {
 	testcases := []struct {
 		value    any
 		path     Path

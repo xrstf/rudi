@@ -472,9 +472,10 @@ func TestDeleteFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
-			Expression: `(delete .[3])`,
-			Document:   []any{"a", "b", "c"},
-			Invalid:    true,
+			Expression:       `(delete .[3])`,
+			Document:         []any{"a", "b", "c"},
+			Expected:         []any{"a", "b", "c"},
+			ExpectedDocument: []any{"a", "b", "c"},
 		},
 		// can delete sub keys
 		{

@@ -234,7 +234,7 @@ func setFunction(ctx types.Context, target ast.Expression, value any) (any, erro
 		}
 	}
 
-	return jsonpath.Set(targetValue, jsonpath.FromEvaluatedPath(*evaluatedPath), value)
+	return jsonpath.Set(targetValue, pathexpr.ToJSONPath(*evaluatedPath), value)
 }
 
 // (delete TARGET:Pathed)
@@ -273,7 +273,7 @@ func deleteFunction(ctx types.Context, target ast.Expression) (any, error) {
 	}
 
 	// delete the desired path in the value
-	return jsonpath.Delete(targetValue, jsonpath.FromEvaluatedPath(*pathExpr))
+	return jsonpath.Delete(targetValue, pathexpr.ToJSONPath(*pathExpr))
 }
 
 // overwriteEverythingBangHandler is the custom BangHandler for the set and delete functions.

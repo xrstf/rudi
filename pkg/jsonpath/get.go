@@ -24,14 +24,14 @@ func Get(value any, path Path) (any, error) {
 		return value, nil
 	}
 
-	if path.HasMultiSteps() {
-		return getDynamic(value, path)
+	if path.HasFilterSteps() {
+		return getFiltered(value, path)
 	}
 
-	return getSingular(value, path)
+	return getSingle(value, path)
 }
 
-func getSingular(value any, path Path) (any, error) {
+func getSingle(value any, path Path) (any, error) {
 	for _, step := range path {
 		_, newValue, err := traverseSingleStep(value, step)
 		if err != nil {
@@ -44,7 +44,7 @@ func getSingular(value any, path Path) (any, error) {
 	return value, nil
 }
 
-func getDynamic(value any, path Path) ([]any, error) {
+func getFiltered(value any, path Path) ([]any, error) {
 	currentLeafValues := []any{value}
 
 	for _, step := range path {
@@ -53,17 +53,17 @@ func getDynamic(value any, path Path) ([]any, error) {
 		for _, val := range currentLeafValues {
 			_, result, err := traverseSingleStep(val, step)
 			if err != nil {
-				if ignoreErrorInDynamic(err) {
+				if ignoreErrorInFilters(err) {
 					continue
 				}
 
 				return nil, err
 			}
 
-			if isMultiStep(step) {
+			if isFilterStep(step) {
 				newValues, ok := result.([]any)
 				if !ok {
-					panic("isDynamicStep is out of sync with path.IsDynamic()")
+					panic("isFilterStep is out of sync with path.HasFilterSteps()")
 				}
 
 				newLeafValues = append(newLeafValues, newValues...)
