@@ -50,8 +50,13 @@ func traverseSingleStep(value any, step Step) (any, any, error) {
 func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
 	if vectorStep, ok := step.(SingularVectorStep); ok {
 		index := vectorStep.Index()
-		if index < 0 || index >= len(value) {
+		if index >= len(value) {
 			return index, nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+		}
+
+		// this is not an out of bounds because negative indexes should not be silently swallowed
+		if index < 0 {
+			return index, nil, fmt.Errorf("invalid index %d", index)
 		}
 
 		return index, value[index], nil

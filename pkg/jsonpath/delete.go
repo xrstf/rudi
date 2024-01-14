@@ -21,117 +21,159 @@ func removeSliceItem(slice []any, index int) []any {
 }
 
 func Delete(dest any, path Path) (any, error) {
+	if !path.IsValid() {
+		return nil, errors.New("invalid path")
+	}
+
 	if len(path) == 0 {
 		return nil, nil
 	}
 
+	return deleteInternal(dest, path)
+}
+
+func deleteInternal(dest any, path Path) (any, error) {
 	thisStep := path[0]
 	remainingSteps := path[1:]
 
+	foundKeyThings, foundValueThings, err := traverseSingleStep(dest, thisStep)
+	if err != nil {
+		if errors.Is(err, noSuchKeyErr) || errors.Is(err, indexOutOfBoundsErr) {
+			return dest, nil
+		}
+
+		return nil, err
+	}
+
 	// we reached the level at which we want to remove the key
 	if len(remainingSteps) == 0 {
-		// [index]
-		if index, ok := toIntegerStep(thisStep); ok {
-			if slice, ok := dest.([]any); ok {
-				if index < 0 || index >= len(slice) {
-					return nil, fmt.Errorf("index %d out of bounds", index)
-				}
-
-				return removeSliceItem(slice, index), nil
-			}
-
-			if deleter, ok := dest.(VectorItemDeleter); ok {
-				return deleter.DeleteVectorItem(index)
-			}
-
-			return nil, fmt.Errorf("cannot delete index from %T", dest)
-		}
-
-		// .key
-		if key, ok := toStringStep(thisStep); ok {
-			if object, ok := dest.(map[string]any); ok {
-				delete(object, key)
-				return object, nil
-			}
-
-			if deleter, ok := dest.(ObjectKeyDeleter); ok {
-				return deleter.DeleteObjectKey(key)
-			}
-
-			return nil, fmt.Errorf("cannot delete key from %T", dest)
-		}
-
-		return nil, fmt.Errorf("can only remove object keys or slice items, not %T", thisStep)
+		return deleteFromLeaf(dest, thisStep, foundKeyThings)
 	}
 
-	// [index]...
-	if index, ok := toIntegerStep(thisStep); ok {
-		if slice, ok := dest.([]any); ok {
-			if index < 0 || index >= len(slice) {
-				return nil, fmt.Errorf("index %d out of bounds", index)
-			}
+	switch thisStep.(type) {
+	// $var[…]
+	case SingularVectorStep:
+		asVector, ok := dest.([]any)
+		if !ok {
+			panic("VectorStep should have errored on a non-vector value.")
+		}
 
-			existingValue := slice[index]
+		index, ok := foundKeyThings.(int)
+		if !ok {
+			panic("VectorStep should have returned an int index.")
+		}
 
-			updatedValue, err := Delete(existingValue, remainingSteps)
+		deleted, err := deleteInternal(foundValueThings, remainingSteps)
+		if err != nil {
+			return nil, err
+		}
+
+		asVector[index] = deleted
+
+		return asVector, nil
+
+	// $var[?(…)]
+	case MultiVectorStep:
+		foundValues := foundValueThings.([]any)
+		if len(foundValues) == 0 {
+			return dest, nil
+		}
+
+		asVector, ok := dest.([]any)
+		if !ok {
+			panic("VectorStep should have errored on a non-vector value.")
+		}
+
+		for idx, vectorIndex := range foundKeyThings.([]int) {
+			deleted, err := deleteInternal(foundValues[idx], remainingSteps)
 			if err != nil {
 				return nil, err
 			}
 
-			slice[index] = updatedValue
-
-			return slice, nil
+			asVector[vectorIndex] = deleted
 		}
 
-		if writer, ok := dest.(VectorWriter); ok {
-			existingValue, err := writer.GetVectorItem(index)
-			if err != nil {
-				return nil, fmt.Errorf("cannot descend with [%d] into %T", index, dest)
-			}
+		return asVector, nil
 
-			updatedValue, err := Delete(existingValue, remainingSteps)
+	// $var.…
+	case SingularObjectStep:
+		asObject, ok := dest.(map[string]any)
+		if !ok {
+			panic("ObjectStep should have errored on a non-object value.")
+		}
+
+		key, ok := foundKeyThings.(string)
+		if !ok {
+			panic("ObjectStep should have returned an string key.")
+		}
+
+		deleted, err := deleteInternal(foundValueThings, remainingSteps)
+		if err != nil {
+			return nil, err
+		}
+
+		asObject[key] = deleted
+
+		return asObject, nil
+
+	// $var[?(…)]
+	case MultiObjectStep:
+		foundValues := foundValueThings.([]any)
+		if len(foundValues) == 0 {
+			return dest, nil
+		}
+
+		asObject, ok := dest.(map[string]any)
+		if !ok {
+			panic("ObjectStep should have errored on a non-object value.")
+		}
+
+		for idx, key := range foundKeyThings.([]string) {
+			deleted, err := deleteInternal(foundValues[idx], remainingSteps)
 			if err != nil {
 				return nil, err
 			}
 
-			return writer.SetVectorItem(index, updatedValue)
+			asObject[key] = deleted
 		}
 
-		return nil, fmt.Errorf("cannot descend with [%d] into %T", index, dest)
+		return asObject, nil
+
+	default:
+		panic(fmt.Sprintf("Unknown path step type %T", thisStep))
 	}
+}
 
-	// .key
-	if key, ok := toStringStep(thisStep); ok {
-		if object, ok := dest.(map[string]any); ok {
-			// getting the empty value for non-existing keys is fine
-			existingValue := object[key]
-
-			updatedValue, err := Delete(existingValue, remainingSteps)
-			if err != nil {
-				return nil, err
-			}
-
-			object[key] = updatedValue
-
-			return object, nil
+func deleteFromLeaf(dest any, step Step, foundKeyThings any) (any, error) {
+	switch step.(type) {
+	case SingularVectorStep:
+		asVector, ok := dest.([]any)
+		if !ok {
+			panic("VectorStep should have errored on a non-vector value.")
 		}
 
-		if writer, ok := dest.(ObjectWriter); ok {
-			existingValue, err := writer.GetObjectKey(key)
-			if err != nil {
-				return nil, fmt.Errorf("cannot descend with [%s] into %T", key, dest)
-			}
-
-			updatedValue, err := Delete(existingValue, remainingSteps)
-			if err != nil {
-				return nil, err
-			}
-
-			return writer.SetObjectKey(key, updatedValue)
+		index, ok := foundKeyThings.(int)
+		if !ok {
+			panic("VectorStep should have returned an int index.")
 		}
 
-		return nil, fmt.Errorf("cannot descend with [%s] into %T", key, dest)
+		return removeSliceItem(asVector, index), nil
+
+	case SingularObjectStep:
+		asObject, ok := dest.(map[string]any)
+		if !ok {
+			panic("ObjectStep should have errored on a non-object value.")
+		}
+
+		key, ok := foundKeyThings.(string)
+		if !ok {
+			panic("ObjectStep should have returned an string key.")
+		}
+
+		delete(asObject, key)
+		return asObject, nil
+
+	default:
+		panic(fmt.Sprintf("Unknown path step type %T", step))
 	}
-
-	return nil, errors.New("invalid path step: neither key nor index")
 }
