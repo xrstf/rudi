@@ -232,14 +232,14 @@ func TestSetFunction(t *testing.T) {
 			Expression: `(set! $obj[5.6] "new value")`,
 			Invalid:    true,
 		},
-		// not a vector
+		// nil can turn into vectors
 		{
 			Expression: `(set! $obj[5] "new value")`,
-			Invalid:    true,
+			Expected:   []any{nil, nil, nil, nil, nil, "new value"},
 		},
 		{
 			Expression: `(set! $obj.aBool[5] "new value")`,
-			Invalid:    true,
+			Expected:   map[string]any{"aBool": []any{nil, nil, nil, nil, nil, "new value"}},
 		},
 		// update a key within an object variable
 		{

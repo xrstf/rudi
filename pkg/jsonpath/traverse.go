@@ -18,7 +18,6 @@ var (
 
 func ignoreErrorInFilters(err error) bool {
 	// invalidStepErr are not silently swallowed!
-
 	return errors.Is(err, noSuchKeyErr) || errors.Is(err, indexOutOfBoundsErr) || errors.Is(err, untraversableErr)
 }
 
@@ -78,7 +77,10 @@ func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
 		for index, val := range value {
 			keep, err := filterStep.Keep(index, val)
 			if err != nil {
-				return nil, nil, err
+				// Removing the error's type is important so further up the call chain we can distinguish
+				// between "$var.foo" with .foo not existing, or $var[?(eq? .foo 1)]; otherwise too many
+				// errors would be swallowed.
+				return nil, nil, errors.New(err.Error())
 			}
 
 			if keep {
@@ -121,7 +123,10 @@ func traverseObjectSingleStep(value map[string]any, step Step) (any, any, error)
 
 			keep, err := filterStep.Keep(key, val)
 			if err != nil {
-				return nil, nil, err
+				// Removing the error's type is important so further up the call chain we can distinguish
+				// between "$var.foo" with .foo not existing, or $var[?(eq? .foo 1)]; otherwise too many
+				// errors would be swallowed.
+				return nil, nil, errors.New(err.Error())
 			}
 
 			if keep {

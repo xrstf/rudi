@@ -4,6 +4,7 @@
 package rudifunc
 
 import (
+	"errors"
 	"fmt"
 
 	"go.xrstf.de/rudi/pkg/lang/ast"
@@ -18,17 +19,26 @@ var (
 )
 
 // funcFunction should never be called without the bang modifier, as without it, the created function
-// just instantly vanishes into thin air.
+// would just instantly vanish into thin air.
 func funcFunction(ctx types.Context, name ast.Expression, namingVector ast.Expression, body ...ast.Expression) (any, error) {
-	nameIdent, ok := name.(ast.Identifier)
+	return nil, nil
+}
+
+// funcBangHandler is where the side effect of adding a new function to the Rudi runtime actually happens.
+func funcBangHandler(ctx types.Context, originalArgs []ast.Expression) (any, error) {
+	if len(originalArgs) < 3 {
+		return nil, errors.New("none of the available forms matched the given expressions")
+	}
+
+	nameIdent, ok := originalArgs[0].(ast.Identifier)
 	if !ok {
-		return nil, fmt.Errorf("first argument must be an identifier that specifies the function name, but got %T instead", name)
+		return nil, fmt.Errorf("first argument must be an identifier that specifies the function name, but got %T instead", originalArgs[0])
 	}
 
 	// naming vector must be a vector consisting only of identifiers
-	paramVector, ok := namingVector.(ast.VectorNode)
+	paramVector, ok := originalArgs[1].(ast.VectorNode)
 	if !ok {
-		return nil, fmt.Errorf("second argument must be vector containing the parameter names, got %T instead", namingVector)
+		return nil, fmt.Errorf("second argument must be vector containing the parameter names, got %T instead", originalArgs[1])
 	}
 
 	paramNames := []string{}
@@ -40,21 +50,13 @@ func funcFunction(ctx types.Context, name ast.Expression, namingVector ast.Expre
 		paramNames = append(paramNames, paramIdent.Name)
 	}
 
-	return rudispaceFunc{
+	f := rudispaceFunc{
 		name:   nameIdent.Name,
 		params: paramNames,
-		body:   body,
-	}, nil
-}
-
-// funcBangHandler is where the side effect of adding a new function to the Rudi runtime actually happens.
-func funcBangHandler(ctx types.Context, originalArgs []ast.Expression, value any) (any, error) {
-	intermediate, ok := value.(rudispaceFunc)
-	if !ok {
-		panic("This should never happen: func! bang handler called with non-intermediate function.")
+		body:   originalArgs[2:],
 	}
 
-	ctx.SetRudispaceFunction(intermediate.name, intermediate)
+	ctx.SetRudispaceFunction(f.name, f)
 
 	return nil, nil
 }

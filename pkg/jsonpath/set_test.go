@@ -209,7 +209,7 @@ func (tc *setTestcase) Run(t *testing.T) {
 		name:    tc.name,
 		objJSON: tc.objJSON,
 		path:    tc.path,
-		patch: func(_ *testing.T, _ bool, _ any) (any, error) {
+		patch: func(_ *testing.T, _ bool, _ any, _ any) (any, error) {
 			return tc.newValue, nil
 		},
 		expectedJSON: tc.expectedJSON,
@@ -462,7 +462,7 @@ type patchTestcase struct {
 	name         string
 	objJSON      string
 	path         Path
-	patch        func(t *testing.T, exists bool, value any) (any, error)
+	patch        func(t *testing.T, exists bool, key any, value any) (any, error)
 	expectedJSON string
 	invalid      bool
 }
@@ -473,8 +473,8 @@ func (tc *patchTestcase) Run(t *testing.T) {
 		t.Fatalf("Invalid obj in testcase: %v", err)
 	}
 
-	patcher := func(exists bool, value any) (any, error) {
-		return tc.patch(t, exists, value)
+	patcher := func(exists bool, key any, value any) (any, error) {
+		return tc.patch(t, exists, key, value)
 	}
 
 	result, err := Patch(data, tc.path, patcher)
@@ -506,7 +506,7 @@ func TestPatch(t *testing.T) {
 			name:    "scalar root value can simply be changed",
 			objJSON: `null`,
 			path:    Path{},
-			patch: func(t *testing.T, exists bool, val any) (any, error) {
+			patch: func(t *testing.T, exists bool, key any, val any) (any, error) {
 				if !exists {
 					t.Fatal("exists should have been true")
 				}
@@ -524,7 +524,7 @@ func TestPatch(t *testing.T) {
 			name:    "can change an object's value",
 			objJSON: `{"foo": "bar"}`,
 			path:    Path{KeyStep("foo")},
-			patch: func(t *testing.T, exists bool, val any) (any, error) {
+			patch: func(t *testing.T, exists bool, key any, val any) (any, error) {
 				if !exists {
 					t.Fatal("exists should have been true")
 				}

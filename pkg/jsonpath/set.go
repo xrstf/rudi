@@ -19,24 +19,24 @@ type VectorWriter interface {
 }
 
 func Set(dest any, path Path, newValue any) (any, error) {
-	return Patch(dest, path, func(_ bool, _ any) (any, error) {
+	return Patch(dest, path, func(_ bool, _ any, _ any) (any, error) {
 		return newValue, nil
 	})
 }
 
-type PatchFunc func(exists bool, val any) (any, error)
+type PatchFunc func(exists bool, key any, val any) (any, error)
 
 func Patch(dest any, path Path, patchValue PatchFunc) (any, error) {
 	if !path.IsValid() {
 		return nil, errors.New("invalid path")
 	}
 
-	return patch(dest, true, path, patchValue)
+	return patch(dest, nil, true, path, patchValue)
 }
 
-func patch(dest any, exists bool, path Path, patchValue PatchFunc) (any, error) {
+func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any, error) {
 	if len(path) == 0 {
-		return patchValue(exists, dest)
+		return patchValue(exists, key, dest)
 	}
 
 	thisStep := path[0]
@@ -150,7 +150,7 @@ func patchFoundVectorValue(dest []any, index any, existingValue any, existed boo
 		return nil, fmt.Errorf("invalid index %d: %w", idx, indexOutOfBoundsErr)
 	}
 
-	patched, err := patch(existingValue, existed, remainingSteps, patchValue)
+	patched, err := patch(existingValue, idx, existed, remainingSteps, patchValue)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func patchFoundObjectValue(dest map[string]any, anyKey any, existingValue any, e
 		panic("ObjectStep did not return a string key as first return value.")
 	}
 
-	patched, err := patch(existingValue, existed, remainingSteps, patchValue)
+	patched, err := patch(existingValue, key, existed, remainingSteps, patchValue)
 	if err != nil {
 		return nil, err
 	}

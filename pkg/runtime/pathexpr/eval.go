@@ -87,5 +87,24 @@ type filterStep struct {
 var _ jsonpath.FilterStep = &filterStep{}
 
 func (fs *filterStep) Keep(key any, value any) (bool, error) {
-	return false, nil
+	vars := types.NewVariables().Set("key", key)
+
+	doc, err := types.NewDocument(value)
+	if err != nil {
+		return false, fmt.Errorf("cannot use %T in filter expressions", value)
+	}
+
+	stepCtx := fs.ctx.NewShallowScope(&doc, vars)
+
+	result, err := fs.ctx.Runtime().EvalExpression(stepCtx, fs.expr)
+	if err != nil {
+		return false, err
+	}
+
+	converted, err := fs.ctx.Coalesce().ToBool(result)
+	if err != nil {
+		return false, fmt.Errorf("expression result %T cannot be converted to bool", result)
+	}
+
+	return converted, nil
 }

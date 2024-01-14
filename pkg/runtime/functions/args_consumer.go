@@ -16,6 +16,7 @@ var (
 	expressionType = reflect.TypeOf(&dummyExpression).Elem()
 	contextType    = reflect.TypeOf(types.Context{})
 	numberType     = reflect.TypeOf(ast.Number{})
+	identifierType = reflect.TypeOf(ast.Identifier{})
 )
 
 type argsConsumer func(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error)
@@ -67,6 +68,10 @@ func newConsumerFunc(t reflect.Type) (consumer argsConsumer, argsConsumed int) {
 
 		if t.AssignableTo(numberType) {
 			return numberConsumer, 1
+		}
+
+		if t.AssignableTo(identifierType) {
+			return identifierConsumer, 1
 		}
 	}
 
@@ -218,6 +223,19 @@ func expressionConsumer(ctx types.Context, args []cachedExpression) (asserted []
 	}
 
 	return []any{args[0].expr}, args[1:], nil
+}
+
+func identifierConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
+	if len(args) == 0 {
+		return nil, nil, nil
+	}
+
+	ident, ok := args[0].expr.(ast.Identifier)
+	if !ok {
+		return nil, args, nil
+	}
+
+	return []any{ident}, args[1:], nil
 }
 
 func contextConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
