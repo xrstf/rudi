@@ -51,93 +51,89 @@ func deleteInternal(dest any, path Path) (any, error) {
 	}
 
 	switch thisStep.(type) {
-	// $var[…]
-	case SingularVectorStep:
-		asVector, ok := dest.([]any)
-		if !ok {
-			panic("VectorStep should have errored on a non-vector value.")
+	// $var[1], $var.foo, $var["foo"], $var[(+ 1 2)]
+	case SingleStep:
+		switch keyThing := foundKeyThings.(type) {
+		case int:
+			asVector, ok := dest.([]any)
+			if !ok {
+				panic("VectorStep should have errored on a non-vector value.")
+			}
+
+			deleted, err := deleteInternal(foundValueThings, remainingSteps)
+			if err != nil {
+				return nil, err
+			}
+
+			asVector[keyThing] = deleted
+
+			return asVector, nil
+
+		case string:
+			asObject, ok := dest.(map[string]any)
+			if !ok {
+				panic("ObjectStep should have errored on a non-object value.")
+			}
+
+			deleted, err := deleteInternal(foundValueThings, remainingSteps)
+			if err != nil {
+				return nil, err
+			}
+
+			asObject[keyThing] = deleted
+
+			return asObject, nil
+
+		default:
+			panic(fmt.Sprintf("SingleStep should have returned int index or string key, but returned %v (%T)", foundKeyThings, foundKeyThings))
 		}
-
-		index, ok := foundKeyThings.(int)
-		if !ok {
-			panic("VectorStep should have returned an int index.")
-		}
-
-		deleted, err := deleteInternal(foundValueThings, remainingSteps)
-		if err != nil {
-			return nil, err
-		}
-
-		asVector[index] = deleted
-
-		return asVector, nil
 
 	// $var[?(…)]
-	case MultiVectorStep:
+	case FilterStep:
 		foundValues := foundValueThings.([]any)
 		if len(foundValues) == 0 {
 			return dest, nil
 		}
 
-		asVector, ok := dest.([]any)
-		if !ok {
-			panic("VectorStep should have errored on a non-vector value.")
-		}
-
-		for idx, vectorIndex := range foundKeyThings.([]int) {
-			deleted, err := deleteInternal(foundValues[idx], remainingSteps)
-			if err != nil {
-				return nil, err
+		foundsKeys, ok := foundKeyThings.([]string)
+		if ok {
+			asObject, ok := dest.(map[string]any)
+			if !ok {
+				panic("ObjectStep should have errored on a non-object value.")
 			}
 
-			asVector[vectorIndex] = deleted
-		}
+			for idx, key := range foundsKeys {
+				deleted, err := deleteInternal(foundValues[idx], remainingSteps)
+				if err != nil {
+					return nil, err
+				}
 
-		return asVector, nil
-
-	// $var.…
-	case SingularObjectStep:
-		asObject, ok := dest.(map[string]any)
-		if !ok {
-			panic("ObjectStep should have errored on a non-object value.")
-		}
-
-		key, ok := foundKeyThings.(string)
-		if !ok {
-			panic("ObjectStep should have returned an string key.")
-		}
-
-		deleted, err := deleteInternal(foundValueThings, remainingSteps)
-		if err != nil {
-			return nil, err
-		}
-
-		asObject[key] = deleted
-
-		return asObject, nil
-
-	// $var[?(…)]
-	case MultiObjectStep:
-		foundValues := foundValueThings.([]any)
-		if len(foundValues) == 0 {
-			return dest, nil
-		}
-
-		asObject, ok := dest.(map[string]any)
-		if !ok {
-			panic("ObjectStep should have errored on a non-object value.")
-		}
-
-		for idx, key := range foundKeyThings.([]string) {
-			deleted, err := deleteInternal(foundValues[idx], remainingSteps)
-			if err != nil {
-				return nil, err
+				asObject[key] = deleted
 			}
 
-			asObject[key] = deleted
+			return asObject, nil
 		}
 
-		return asObject, nil
+		foundIndexes, ok := foundKeyThings.([]int)
+		if ok {
+			asVector, ok := dest.([]any)
+			if !ok {
+				panic("VectorStep should have errored on a non-vector value.")
+			}
+
+			for idx, vectorIndex := range foundIndexes {
+				deleted, err := deleteInternal(foundValues[idx], remainingSteps)
+				if err != nil {
+					return nil, err
+				}
+
+				asVector[vectorIndex] = deleted
+			}
+
+			return asVector, nil
+		}
+
+		panic(fmt.Sprintf("FilterStep should have returned []int or []string, but returned %v (%T)", foundKeyThings, foundKeyThings))
 
 	default:
 		panic(fmt.Sprintf("Unknown path step type %T", thisStep))
@@ -146,32 +142,28 @@ func deleteInternal(dest any, path Path) (any, error) {
 
 func deleteFromLeaf(dest any, step Step, foundKeyThings any) (any, error) {
 	switch step.(type) {
-	case SingularVectorStep:
-		asVector, ok := dest.([]any)
-		if !ok {
-			panic("VectorStep should have errored on a non-vector value.")
+	case SingleStep:
+		switch keyThing := foundKeyThings.(type) {
+		case int:
+			asVector, ok := dest.([]any)
+			if !ok {
+				panic("SingleStep should have errored on a non-vector value.")
+			}
+
+			return removeSliceItem(asVector, keyThing), nil
+
+		case string:
+			asObject, ok := dest.(map[string]any)
+			if !ok {
+				panic("SingleStep should have errored on a non-object value.")
+			}
+
+			delete(asObject, keyThing)
+			return asObject, nil
+
+		default:
+			panic(fmt.Sprintf("SingleStep should have returned int index or string key, but returned %v (%T)", foundKeyThings, foundKeyThings))
 		}
-
-		index, ok := foundKeyThings.(int)
-		if !ok {
-			panic("VectorStep should have returned an int index.")
-		}
-
-		return removeSliceItem(asVector, index), nil
-
-	case SingularObjectStep:
-		asObject, ok := dest.(map[string]any)
-		if !ok {
-			panic("ObjectStep should have errored on a non-object value.")
-		}
-
-		key, ok := foundKeyThings.(string)
-		if !ok {
-			panic("ObjectStep should have returned an string key.")
-		}
-
-		delete(asObject, key)
-		return asObject, nil
 
 	default:
 		panic(fmt.Sprintf("Unknown path step type %T", step))

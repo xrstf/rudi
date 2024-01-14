@@ -48,87 +48,93 @@ func patch(dest any, exists bool, path Path, patchValue PatchFunc) (any, error) 
 	}
 
 	switch thisStep.(type) {
-	// $var[…]
-	case SingularVectorStep:
-		// nil values (or non-existing values) can be turned into vectors
-		if dest == nil {
-			dest = []any{}
-		}
+	// $var[1], $var.foo, $var["foo"], $var[(+ 1 2)]
+	case SingleStep:
+		switch foundKeyThings.(type) {
+		case int:
+			// nil values (or non-existing values) can be turned into vectors
+			if dest == nil {
+				dest = []any{}
+			}
 
-		asVector, ok := dest.([]any)
-		if !ok {
-			panic("VectorStep should have errored on a non-vector value.")
-		}
+			asVector, ok := dest.([]any)
+			if !ok {
+				panic("VectorStep should have errored on a non-vector value.")
+			}
 
-		return patchFoundVectorValue(asVector, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
+			return patchFoundVectorValue(asVector, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
+
+		case string:
+			// nil values (or non-existing values) can be turned into objects
+			if dest == nil {
+				dest = map[string]any{}
+			}
+
+			asObject, ok := dest.(map[string]any)
+			if !ok {
+				panic("ObjectStep should have errored on a non-object value.")
+			}
+
+			return patchFoundObjectValue(asObject, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
+
+		default:
+			panic(fmt.Sprintf("SingleStep should have returned int index or string key, but returned %v (%T)", foundKeyThings, foundKeyThings))
+		}
 
 	// $var[?(…)]
-	case MultiVectorStep:
+	case FilterStep:
 		foundValues := foundValueThings.([]any)
 		if len(foundValues) == 0 {
 			return dest, nil
 		}
 
-		// nil values (or non-existing values) can be turned into vectors
-		if dest == nil {
-			dest = []any{}
-		}
-
-		asVector, ok := dest.([]any)
-		if !ok {
-			panic("VectorStep should have errored on a non-vector value.")
-		}
-
-		for idx, vectorIndex := range foundKeyThings.([]int) {
-			var err error
-			asVector, err = patchFoundVectorValue(asVector, vectorIndex, foundValues[idx], true, remainingSteps, patchValue)
-			if err != nil {
-				return nil, err
+		foundsKeys, ok := foundKeyThings.([]string)
+		if ok {
+			// nil values (or non-existing values) can be turned into objects
+			if dest == nil {
+				dest = map[string]any{}
 			}
-		}
 
-		return asVector, nil
-
-	// $var.…
-	case SingularObjectStep:
-		// nil values (or non-existing values) can be turned into objects
-		if dest == nil {
-			dest = map[string]any{}
-		}
-
-		asObject, ok := dest.(map[string]any)
-		if !ok {
-			panic("ObjectStep should have errored on a non-object value.")
-		}
-
-		return patchFoundObjectValue(asObject, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
-
-	// $var[?(…)]
-	case MultiObjectStep:
-		foundValues := foundValueThings.([]any)
-		if len(foundValues) == 0 {
-			return dest, nil
-		}
-
-		// nil values (or non-existing values) can be turned into objects
-		if dest == nil {
-			dest = map[string]any{}
-		}
-
-		asObject, ok := dest.(map[string]any)
-		if !ok {
-			panic("ObjectStep should have errored on a non-object value.")
-		}
-
-		for idx, key := range foundKeyThings.([]string) {
-			var err error
-			asObject, err = patchFoundObjectValue(asObject, key, foundValues[idx], true, remainingSteps, patchValue)
-			if err != nil {
-				return nil, err
+			asObject, ok := dest.(map[string]any)
+			if !ok {
+				panic("ObjectStep should have errored on a non-object value.")
 			}
+
+			for idx, key := range foundsKeys {
+				var err error
+				asObject, err = patchFoundObjectValue(asObject, key, foundValues[idx], true, remainingSteps, patchValue)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return asObject, nil
 		}
 
-		return asObject, nil
+		foundIndexes, ok := foundKeyThings.([]int)
+		if ok {
+			// nil values (or non-existing values) can be turned into vectors
+			if dest == nil {
+				dest = []any{}
+			}
+
+			asVector, ok := dest.([]any)
+			if !ok {
+				panic("VectorStep should have errored on a non-vector value.")
+			}
+
+			for idx, vectorIndex := range foundIndexes {
+				var err error
+				asVector, err = patchFoundVectorValue(asVector, vectorIndex, foundValues[idx], true, remainingSteps, patchValue)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return asVector, nil
+		}
+
+		panic(fmt.Sprintf("FilterStep should have returned []int or []string, but returned %v (%T)", foundKeyThings, foundKeyThings))
 
 	default:
 		panic(fmt.Sprintf("Unknown path step type %T", thisStep))

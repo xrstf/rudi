@@ -25,7 +25,7 @@ func Apply(ctx types.Context, value any, path *ast.PathExpression) (any, error) 
 }
 
 func Traverse(value any, path ast.EvaluatedPathExpression) (any, error) {
-	return jsonpath.Get(value, jsonpath.FromEvaluatedPath(path))
+	return jsonpath.Get(value, ToJSONPath(path))
 }
 
 func Eval(ctx types.Context, path *ast.PathExpression) (*ast.EvaluatedPathExpression, error) {
@@ -88,4 +88,17 @@ func convertToAccessor(evaluated any) (*ast.EvaluatedPathStep, error) {
 	default:
 		return nil, fmt.Errorf("cannot use %T in path expression", asserted)
 	}
+}
+
+func ToJSONPath(evaledPath ast.EvaluatedPathExpression) jsonpath.Path {
+	p := jsonpath.Path{}
+	for _, step := range evaledPath.Steps {
+		if i := step.IntegerValue; i != nil {
+			p = append(p, jsonpath.IndexStep(*i))
+		} else if s := step.StringValue; s != nil {
+			p = append(p, jsonpath.KeyStep(*s))
+		}
+	}
+
+	return p
 }

@@ -16,7 +16,7 @@ var (
 	untraversableErr    = errors.New("does not support traversing into this type")
 )
 
-func ignoreErrorInDynamic(err error) bool {
+func ignoreErrorInFilters(err error) bool {
 	// invalidStepErr are not silently swallowed!
 
 	return errors.Is(err, noSuchKeyErr) || errors.Is(err, indexOutOfBoundsErr) || errors.Is(err, untraversableErr)
@@ -33,14 +33,19 @@ func traverseSingleStep(value any, step Step) (any, any, error) {
 
 	if value == nil {
 		switch s := step.(type) {
-		case SingularVectorStep:
-			return s.Index(), nil, indexOutOfBoundsErr
-		case MultiVectorStep:
-			return []int{}, []any{}, nil
-		case SingularObjectStep:
-			return s.Key(), nil, noSuchKeyErr
-		case MultiObjectStep:
-			return []string{}, []any{}, nil
+		case SingleStep:
+			index, key := indexOrKey(s)
+			switch {
+			case index != nil:
+				return *index, nil, indexOutOfBoundsErr
+			case key != nil:
+				return *key, nil, noSuchKeyErr
+			default:
+				panic(fmt.Sprintf("%T is neither key nor index.", s))
+			}
+
+		case FilterStep:
+			return []any{}, []any{}, nil
 		}
 	}
 
@@ -48,8 +53,12 @@ func traverseSingleStep(value any, step Step) (any, any, error) {
 }
 
 func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
-	if vectorStep, ok := step.(SingularVectorStep); ok {
-		index := vectorStep.Index()
+	if vectorStep, ok := step.(SingleStep); ok {
+		index, ok := vectorStep.ToIndex()
+		if !ok {
+			return nil, nil, fmt.Errorf("cannot use step %v to traverses into vectors", step)
+		}
+
 		if index >= len(value) {
 			return index, nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
 		}
@@ -62,12 +71,12 @@ func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
 		return index, value[index], nil
 	}
 
-	if vectorStep, ok := step.(MultiVectorStep); ok {
+	if filterStep, ok := step.(FilterStep); ok {
 		indexes := []int{}
 		values := []any{}
 
 		for index, val := range value {
-			keep, err := vectorStep.Keep(index, val)
+			keep, err := filterStep.Keep(index, val)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -85,8 +94,11 @@ func traverseVectorSingleStep(value []any, step Step) (any, any, error) {
 }
 
 func traverseObjectSingleStep(value map[string]any, step Step) (any, any, error) {
-	if objStep, ok := step.(SingularObjectStep); ok {
-		key := objStep.Key()
+	if objStep, ok := step.(SingleStep); ok {
+		key, ok := objStep.ToKey()
+		if !ok {
+			return nil, nil, fmt.Errorf("cannot use step %v to traverses into objects", step)
+		}
 
 		val, exists := value[key]
 		if !exists {
@@ -96,7 +108,7 @@ func traverseObjectSingleStep(value map[string]any, step Step) (any, any, error)
 		return key, val, nil
 	}
 
-	if objStep, ok := step.(MultiObjectStep); ok {
+	if filterStep, ok := step.(FilterStep); ok {
 		// To allow side effects in the dynamic step to work consistently,
 		// we need to loop over the object in a consistent way.
 		orderedKeys := orderedObjectKeys(value)
@@ -107,7 +119,7 @@ func traverseObjectSingleStep(value map[string]any, step Step) (any, any, error)
 		for _, key := range orderedKeys {
 			val := value[key]
 
-			keep, err := objStep.Keep(key, val)
+			keep, err := filterStep.Keep(key, val)
 			if err != nil {
 				return nil, nil, err
 			}

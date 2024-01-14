@@ -110,7 +110,7 @@ func (*interpreter) CallFunction(ctx types.Context, fun ast.Identifier, args []a
 			}
 
 			// apply the path expression
-			updatedValue, err = jsonpath.Set(currentValue, jsonpath.FromEvaluatedPath(*pathExpr), updatedValue)
+			updatedValue, err = jsonpath.Set(currentValue, pathexpr.ToJSONPath(*pathExpr), updatedValue)
 			if err != nil {
 				return nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 			}
