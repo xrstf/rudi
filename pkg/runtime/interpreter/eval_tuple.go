@@ -35,7 +35,7 @@ func (i *interpreter) EvalTuple(ctx types.Context, tup ast.Tuple) (any, error) {
 		return nil, err
 	}
 
-	deeper, err := pathexpr.Apply(ctx, result, tup.PathExpression)
+	deeper, err := pathexpr.Traverse(ctx, result, tup.PathExpression)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +86,8 @@ func (*interpreter) CallFunction(ctx types.Context, fun ast.Identifier, args []a
 
 		// if the symbol has a path to traverse, do so
 		if updateSymbol.PathExpression != nil {
-			// pre-evaluate the path expression
-			pathExpr, err := pathexpr.Eval(ctx, updateSymbol.PathExpression)
+			// prepare the path expression
+			pathExpr, err := pathexpr.ToJSONPath(ctx, updateSymbol.PathExpression)
 			if err != nil {
 				return nil, fmt.Errorf("argument #0: invalid path expression: %w", err)
 			}
@@ -110,7 +110,7 @@ func (*interpreter) CallFunction(ctx types.Context, fun ast.Identifier, args []a
 			}
 
 			// apply the path expression
-			updatedValue, err = jsonpath.Set(currentValue, pathexpr.ToJSONPath(*pathExpr), updatedValue)
+			updatedValue, err = jsonpath.Set(currentValue, pathExpr, updatedValue)
 			if err != nil {
 				return nil, fmt.Errorf("cannot set value in %T at %s: %w", currentValue, pathExpr, err)
 			}

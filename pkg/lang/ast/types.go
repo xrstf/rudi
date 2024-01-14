@@ -410,11 +410,11 @@ func (Null) ExpressionName() string {
 }
 
 type PathExpression struct {
-	Steps []Expression
+	Steps []PathStep
 }
 
-func (e *PathExpression) Prepend(step Expression) {
-	e.Steps = append([]Expression{step}, e.Steps...)
+func (e *PathExpression) Prepend(step PathStep) {
+	e.Steps = append([]PathStep{step}, e.Steps...)
 }
 
 // IsIdentity returns true if the entire pathExpression was just ".".
@@ -425,11 +425,7 @@ func (e PathExpression) IsIdentity() bool {
 func (e PathExpression) String() string {
 	result := ""
 	for _, step := range e.Steps {
-		if ident, ok := step.(Identifier); ok {
-			result += "." + ident.String()
-		} else {
-			result += "[" + step.String() + "]"
-		}
+		result += step.String()
 	}
 
 	return result
@@ -439,65 +435,29 @@ func (PathExpression) ExpressionName() string {
 	return "PathExpression"
 }
 
-type EvaluatedPathExpression struct {
-	Steps []EvaluatedPathStep
+// PathStep is a single step in a path expression. It can be either a literal
+// expression (e.g. [1] or .foo or ["foo"]), or an expression that yields a
+// literal (e.g. [(add 1 2)]) or a filter expression, which is evaluated within
+// the context of the current element (e.g. [?(eq? .name "foo")]).
+type PathStep struct {
+	Expression Expression
+	Filter     Expression
 }
 
-func (e *EvaluatedPathExpression) Prepend(step EvaluatedPathStep) {
-	e.Steps = append([]EvaluatedPathStep{step}, e.Steps...)
-}
-
-// IsIdentity returns true if the entire EvaluatedPathExpression was just ".".
-func (e EvaluatedPathExpression) IsIdentity() bool {
-	return len(e.Steps) == 0
-}
-
-func (e EvaluatedPathExpression) String() string {
-	result := ""
-	for _, step := range e.Steps {
-		result += step.String()
+func (s PathStep) String() string {
+	if s.Filter != nil {
+		return "[?" + s.Filter.String() + "]"
 	}
 
-	return result
-}
-
-func (EvaluatedPathExpression) ExpressionName() string {
-	return "PathExpression"
-}
-
-type EvaluatedPathStep struct {
-	StringValue  *string
-	IntegerValue *int64
-}
-
-func (a EvaluatedPathStep) String() string {
-	switch {
-	case a.StringValue != nil:
-		if PathIdentifierPattern.MatchString(*a.StringValue) {
-			return fmt.Sprintf(".%s", *a.StringValue)
-		} else {
-			return fmt.Sprintf("[%q]", *a.StringValue)
+	if s.Expression != nil {
+		if s, ok := s.Expression.(String); ok && PathIdentifierPattern.MatchString(string(s)) {
+			return "." + string(s)
 		}
-	case a.IntegerValue != nil:
-		return fmt.Sprintf("[%d]", *a.IntegerValue)
-	default:
-		return "<unknown PathStep>"
-	}
-}
 
-func (a EvaluatedPathStep) ExpressionName() string {
-	var name string
-
-	switch {
-	case a.StringValue != nil:
-		name = "String"
-	case a.IntegerValue != nil:
-		name = "Number"
-	default:
-		name = "?"
+		return "[" + s.Expression.String() + "]"
 	}
 
-	return "PathStep(" + name + ")"
+	return "<?>"
 }
 
 // Shims are used to turn any Go value into a Rudi expression. This is done when

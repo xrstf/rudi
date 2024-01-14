@@ -50,7 +50,7 @@ func (i *interpreter) EvalObjectNode(ctx types.Context, obj ast.ObjectNode) (any
 		result[keyString] = value
 	}
 
-	deeper, err := pathexpr.Apply(ctx, result, obj.PathExpression)
+	deeper, err := pathexpr.Traverse(ctx, result, obj.PathExpression)
 	if err != nil {
 		return nil, err
 	}

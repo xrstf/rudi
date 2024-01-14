@@ -117,19 +117,13 @@ func hasFunction(ctx types.Context, arg ast.Expression) (any, error) {
 		return nil, errors.New("argument has no path expression")
 	}
 
-	// pre-evaluate the path
-	evaluatedPath, err := pathexpr.Eval(ctx, pathExpr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid path expression: %w", err)
-	}
-
 	// evaluate the base value
 	value, err := ctx.Runtime().EvalExpression(ctx, expr)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = pathexpr.Traverse(value, *evaluatedPath)
+	_, err = pathexpr.Traverse(ctx, value, pathExpr)
 	if err != nil {
 		return false, keepContextCanceled(err)
 	}
@@ -212,12 +206,6 @@ func setFunction(ctx types.Context, target ast.Expression, value any) (any, erro
 		return nil, fmt.Errorf("unexpected target value of type %T", target)
 	}
 
-	// pre-evaluate the path (assuming it's cheaper to calculate than the main expression)
-	evaluatedPath, err := pathexpr.Eval(ctx, pathExpr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid path expression: %w", err)
-	}
-
 	// evaluate the target
 	targetValue, err := ctx.Runtime().EvalExpression(ctx, expr)
 	if err != nil {
@@ -234,7 +222,13 @@ func setFunction(ctx types.Context, target ast.Expression, value any) (any, erro
 		}
 	}
 
-	return jsonpath.Set(targetValue, pathexpr.ToJSONPath(*evaluatedPath), value)
+	// prepare path expression
+	jsonpathExpr, err := pathexpr.ToJSONPath(ctx, pathExpr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path expression: %w", err)
+	}
+
+	return jsonpath.Set(targetValue, jsonpathExpr, value)
 }
 
 // (delete TARGET:Pathed)
@@ -248,12 +242,6 @@ func deleteFunction(ctx types.Context, target ast.Expression) (any, error) {
 	pe := pathed.GetPathExpression()
 	if pe == nil {
 		return nil, errors.New("empty path expression")
-	}
-
-	// pre-evaluate the path
-	pathExpr, err := pathexpr.Eval(ctx, pe)
-	if err != nil {
-		return nil, fmt.Errorf("invalid path expression: %w", err)
 	}
 
 	// evaluate the target
@@ -272,8 +260,14 @@ func deleteFunction(ctx types.Context, target ast.Expression) (any, error) {
 		}
 	}
 
+	// prepare the path
+	pathExpr, err := pathexpr.ToJSONPath(ctx, pe)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path expression: %w", err)
+	}
+
 	// delete the desired path in the value
-	return jsonpath.Delete(targetValue, pathexpr.ToJSONPath(*pathExpr))
+	return jsonpath.Delete(targetValue, pathExpr)
 }
 
 // overwriteEverythingBangHandler is the custom BangHandler for the set and delete functions.

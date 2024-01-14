@@ -826,8 +826,10 @@ func TestHasFunction(t *testing.T) {
 			Invalid:    true,
 		},
 		{
+			// root document is an object, so the runtime will convert the step to a string,
+			// so this is equivalent to .["5.6"], which is valid, but yields no matching key nontheless
 			Expression: `(has? .[5.6])`,
-			Invalid:    true,
+			Expected:   false,
 		},
 		{
 			Expression: `(has? (unknown-func).bar)`,

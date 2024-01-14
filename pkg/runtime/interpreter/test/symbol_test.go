@@ -89,7 +89,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $var.foo
 		{
-			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
+			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.PathStep{{Expression: ast.String("foo")}}}),
 			Variables: types.Variables{
 				"var": map[string]any{
 					"foo": "foobar",
@@ -99,7 +99,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $aVector.foo
 		{
-			AST: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "foo"}}}),
+			AST: makeSymbol("aVector", &ast.PathExpression{Steps: []ast.PathStep{{Expression: ast.String("foo")}}}),
 			Variables: types.Variables{
 				"aVector": []any{"first"},
 			},
@@ -107,7 +107,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $var[1]
 		{
-			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
+			AST: makeSymbol("var", &ast.PathExpression{Steps: []ast.PathStep{{Expression: ast.Number{Value: 1}}}}),
 			Variables: types.Variables{
 				"var": []any{
 					"first",
@@ -118,7 +118,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $aString[1]
 		{
-			AST: makeSymbol("aString", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 1}}}),
+			AST: makeSymbol("aString", &ast.PathExpression{Steps: []ast.PathStep{{Expression: ast.Number{Value: 1}}}}),
 			Variables: types.Variables{
 				"aString": "bar",
 			},
@@ -131,7 +131,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $custom.value
 		{
-			AST: makeSymbol("custom", &ast.PathExpression{Steps: []ast.Expression{ast.Identifier{Name: "value"}}}),
+			AST: makeSymbol("custom", &ast.PathExpression{Steps: []ast.PathStep{{Expression: ast.String("value")}}}),
 			Variables: types.Variables{
 				"custom": customObjGetter{value: "foo"},
 			},
@@ -139,7 +139,7 @@ func TestEvalSymbol(t *testing.T) {
 		},
 		// $custom[7]
 		{
-			AST: makeSymbol("custom", &ast.PathExpression{Steps: []ast.Expression{ast.Number{Value: 7}}}),
+			AST: makeSymbol("custom", &ast.PathExpression{Steps: []ast.PathStep{{Expression: ast.Number{Value: 7}}}}),
 			Variables: types.Variables{
 				"custom": customVecGetter{magic: 7, value: "foo"},
 			},

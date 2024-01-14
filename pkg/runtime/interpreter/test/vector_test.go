@@ -54,9 +54,9 @@ func TestEvalVectorNode(t *testing.T) {
 					ast.String("foo"),
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Number{Value: 1},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.Number{Value: 1},
+					}},
 				},
 			},
 			Expected: "foo",
@@ -68,9 +68,9 @@ func TestEvalVectorNode(t *testing.T) {
 					ast.String("foo"),
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Number{Value: 1},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.Number{Value: 1},
+					}},
 				},
 			},
 			Invalid: true,
@@ -82,9 +82,9 @@ func TestEvalVectorNode(t *testing.T) {
 					ast.String("foo"),
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Identifier{Name: "foo"},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.String("foo"),
+					}},
 				},
 			},
 			Invalid: true,
@@ -96,9 +96,9 @@ func TestEvalVectorNode(t *testing.T) {
 					ast.String("foo"),
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Number{Value: 1.2},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.Number{Value: 1.2},
+					}},
 				},
 			},
 			Invalid: true,

@@ -91,13 +91,13 @@ func TestExpressionNames(t *testing.T) {
 		{
 			expr: Symbol{
 				Variable:       makeVar("foo"),
-				PathExpression: &PathExpression{Steps: []Expression{String("foo")}},
+				PathExpression: &PathExpression{Steps: []PathStep{{Expression: String("foo")}}},
 			},
 			expected: "Symbol(Variable)",
 		},
 		{
 			expr: Symbol{
-				PathExpression: &PathExpression{Steps: []Expression{String("foo")}},
+				PathExpression: &PathExpression{Steps: []PathStep{{Expression: String("foo")}}},
 			},
 			expected: "Symbol(PathExpression)",
 		},
@@ -108,18 +108,6 @@ func TestExpressionNames(t *testing.T) {
 		{
 			expr:     PathExpression{},
 			expected: "PathExpression",
-		},
-		{
-			expr:     EvaluatedPathExpression{},
-			expected: "PathExpression",
-		},
-		{
-			expr:     EvaluatedPathStep{StringValue: ptrTo("foo")},
-			expected: "PathStep(String)",
-		},
-		{
-			expr:     EvaluatedPathStep{IntegerValue: ptrTo(int64(42))},
-			expected: "PathStep(Number)",
 		},
 	}
 
@@ -186,9 +174,9 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Number{Value: 1},
-					},
+					Steps: []PathStep{{
+						Expression: Number{Value: 1},
+					}},
 				},
 			},
 			expected: `$foo[1]`,
@@ -197,10 +185,11 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Number{Value: 1},
-						Number{Value: 2},
-					},
+					Steps: []PathStep{{
+						Expression: Number{Value: 1},
+					}, {
+						Expression: Number{Value: 2},
+					}},
 				},
 			},
 			expected: `$foo[1][2]`,
@@ -209,10 +198,11 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Number{Value: 1},
-						Identifier{Name: "foo"},
-					},
+					Steps: []PathStep{{
+						Expression: Number{Value: 1},
+					}, {
+						Expression: String("foo"),
+					}},
 				},
 			},
 			expected: `$foo[1].foo`,
@@ -221,9 +211,9 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Identifier{Name: "foo"},
-					},
+					Steps: []PathStep{{
+						Expression: String("foo"),
+					}},
 				},
 			},
 			expected: `$foo.foo`,
@@ -232,10 +222,22 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Identifier{Name: "foo"},
-						Identifier{Name: "bar"},
-					},
+					Steps: []PathStep{{
+						Expression: String("foo bar"),
+					}},
+				},
+			},
+			expected: `$foo["foo bar"]`,
+		},
+		{
+			expr: Symbol{
+				Variable: makeVar("foo"),
+				PathExpression: &PathExpression{
+					Steps: []PathStep{{
+						Expression: String("foo"),
+					}, {
+						Expression: String("bar"),
+					}},
 				},
 			},
 			expected: `$foo.foo.bar`,
@@ -244,10 +246,11 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Identifier{Name: "foo"},
-						Number{Value: 1},
-					},
+					Steps: []PathStep{{
+						Expression: String("foo"),
+					}, {
+						Expression: Number{Value: 1},
+					}},
 				},
 			},
 			expected: `$foo.foo[1]`,
@@ -256,38 +259,27 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						String("foo"),
-					},
-				},
-			},
-			expected: `$foo["foo"]`,
-		},
-		{
-			expr: Symbol{
-				Variable: makeVar("foo"),
-				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Symbol{
+					Steps: []PathStep{{
+						Expression: Symbol{
 							Variable: makeVar("bla"),
 							PathExpression: &PathExpression{
-								Steps: []Expression{
-									String("sub"),
-								},
+								Steps: []PathStep{{
+									Expression: String("sub"),
+								}},
 							},
 						},
-					},
+					}},
 				},
 			},
-			expected: `$foo[$bla["sub"]]`,
+			expected: `$foo[$bla.sub]`,
 		},
 		{
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Bool(true),
-					},
+					Steps: []PathStep{{
+						Expression: Bool(true),
+					}},
 				},
 			},
 			expected: `$foo[true]`,
@@ -296,9 +288,9 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Null{},
-					},
+					Steps: []PathStep{{
+						Expression: Null{},
+					}},
 				},
 			},
 			expected: `$foo[null]`,
@@ -307,13 +299,13 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						Tuple{
+					Steps: []PathStep{{
+						Expression: Tuple{
 							Expressions: []Expression{
 								Identifier{Name: "ident"},
 							},
 						},
-					},
+					}},
 				},
 			},
 			expected: `$foo[(ident)]`,
@@ -322,8 +314,8 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						ObjectNode{
+					Steps: []PathStep{{
+						Expression: ObjectNode{
 							Data: []KeyValuePair{
 								{
 									Key:   Identifier{Name: "k"},
@@ -331,7 +323,7 @@ func TestStringers(t *testing.T) {
 								},
 							},
 						},
-					},
+					}},
 				},
 			},
 			// technically invalid without a path expr on that object, but still
@@ -342,13 +334,13 @@ func TestStringers(t *testing.T) {
 			expr: Symbol{
 				Variable: makeVar("foo"),
 				PathExpression: &PathExpression{
-					Steps: []Expression{
-						VectorNode{
+					Steps: []PathStep{{
+						Expression: VectorNode{
 							Expressions: []Expression{
 								String("foo"),
 							},
 						},
-					},
+					}},
 				},
 			},
 			// technically invalid without a path expr on that vector, but still

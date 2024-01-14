@@ -162,7 +162,7 @@ KeyValuePair <- (key:ScalarExpression __ value:Expression) {
 // path expressions
 
 Symbol <- '.' acc:VectorAccessor expr:AnyQualifiedPathExpression? {
-   arrAcc := acc.(ast.Expression)
+   arrAcc := acc.(ast.PathStep)
 
    pathExpr := ast.PathExpression{}
    if expr != nil {
@@ -173,7 +173,7 @@ Symbol <- '.' acc:VectorAccessor expr:AnyQualifiedPathExpression? {
 
    return ast.Symbol{PathExpression: &pathExpr}, nil
 } / acc:ObjectAccessor expr:AnyQualifiedPathExpression? {
-   objAcc := acc.(ast.Expression)
+   objAcc := acc.(ast.PathStep)
 
    pathExpr := ast.PathExpression{}
    if expr != nil {
@@ -208,36 +208,36 @@ AnyQualifiedPathExpression <- pathExpr:(Accessor)+ {
    steps := toAnySlice(pathExpr)
 
    for i := range steps {
-      path.Steps = append(path.Steps, steps[i].(ast.Expression))
+      path.Steps = append(path.Steps, steps[i].(ast.PathStep))
    }
 
    return path, nil
 }
 
 // ObjectQualifiedPathExpression follows an object
-ObjectQualifiedPathExpression <- begin:ObjectAccessor pathExpr:(Accessor)* {
+ObjectQualifiedPathExpression <- begin:ObjectAccessor tail:(Accessor)* {
    path := ast.PathExpression{
-      Steps: []ast.Expression{begin.(ast.Expression)},
+      Steps: []ast.PathStep{begin.(ast.PathStep)},
    }
 
-   steps := toAnySlice(pathExpr)
+   steps := toAnySlice(tail)
 
    for i := range steps {
-      path.Steps = append(path.Steps, steps[i].(ast.Expression))
+      path.Steps = append(path.Steps, steps[i].(ast.PathStep))
    }
 
    return path, nil
 }
 
 // VectorQualifiedPathExpression follows a vector
-VectorQualifiedPathExpression <- begin:VectorAccessor pathExpr:(Accessor)* {
+VectorQualifiedPathExpression <- begin:VectorAccessor tail:(Accessor)* {
    path := ast.PathExpression{
-      Steps: []ast.Expression{begin.(ast.Expression)},
+      Steps: []ast.PathStep{begin.(ast.PathStep)},
    }
-   steps := toAnySlice(pathExpr)
+   steps := toAnySlice(tail)
 
    for i := range steps {
-      path.Steps = append(path.Steps, steps[i].(ast.Expression))
+      path.Steps = append(path.Steps, steps[i].(ast.PathStep))
    }
 
    return path, nil
@@ -246,11 +246,15 @@ VectorQualifiedPathExpression <- begin:VectorAccessor pathExpr:(Accessor)* {
 Accessor <- ObjectAccessor / VectorAccessor
 
 ObjectAccessor <- '.' val:PathIdentifier {
-   return val, nil
+   // re-wrap identifier as string, because identifiers cannot be evaluated
+   ident := val.(ast.Identifier)
+   expr := ast.String(ident.Name)
+
+   return ast.PathStep{Expression: expr}, nil
 }
 
 VectorAccessor <- '[' __ expr:ScalarExpression __ ']' {
-   return expr, nil
+   return ast.PathStep{Expression: expr.(ast.Expression)}, nil
 }
 
 // This Pattern must be kept in-sync with the PathIdentifierPattern variable in the ast package.

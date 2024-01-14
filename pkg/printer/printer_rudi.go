@@ -191,7 +191,7 @@ func (p *rudiPrinter) Symbol(sym *ast.Symbol) error {
 		// Path expressions on the global document that start with a vector step
 		// must have an extra leading dot, to distinguish .[1] from [1] (which
 		// would be "a vector with one element: 1" and not a path expression).
-		if p.isVectorStep(steps[0]) {
+		if p.renderAsVectorStep(steps[0]) {
 			if err := p.write("."); err != nil {
 				return err
 			}
@@ -245,13 +245,23 @@ func (p *rudiPrinter) printPathExpression(path *ast.PathExpression) error {
 	}
 
 	for _, step := range path.Steps {
-		if p.isVectorStep(step) {
+		if p.renderAsVectorStep(step) {
 			if err := p.write("["); err != nil {
 				return err
 			}
 
-			if err := printAny(step, p); err != nil {
-				return err
+			if step.Filter != nil {
+				if err := p.write("?"); err != nil {
+					return err
+				}
+
+				if err := printAny(step.Filter, p); err != nil {
+					return err
+				}
+			} else {
+				if err := printAny(step.Expression, p); err != nil {
+					return err
+				}
 			}
 
 			if err := p.write("]"); err != nil {
@@ -262,17 +272,13 @@ func (p *rudiPrinter) printPathExpression(path *ast.PathExpression) error {
 				return err
 			}
 
-			switch asserted := step.(type) {
-			case ast.Identifier:
-				if err := p.write(asserted.Name); err != nil {
-					return err
-				}
+			switch asserted := step.Expression.(type) {
 			case ast.String:
 				if err := p.write(string(asserted)); err != nil {
 					return err
 				}
 			default:
-				panic("Should not reach this point: isVectorStop is out of sync.")
+				panic("Should not reach this point: renderAsVectorStep is out of sync.")
 			}
 		}
 	}
@@ -280,10 +286,12 @@ func (p *rudiPrinter) printPathExpression(path *ast.PathExpression) error {
 	return nil
 }
 
-func (p *rudiPrinter) isVectorStep(step ast.Expression) bool {
-	switch asserted := step.(type) {
-	case ast.Identifier:
-		return false
+func (p *rudiPrinter) renderAsVectorStep(step ast.PathStep) bool {
+	if step.Filter != nil {
+		return true
+	}
+
+	switch asserted := step.Expression.(type) {
 	case ast.String:
 		return !ast.PathIdentifierPattern.MatchString(string(asserted))
 	default:
