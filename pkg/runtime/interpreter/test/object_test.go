@@ -101,9 +101,9 @@ func TestEvalObjectNode(t *testing.T) {
 								},
 							},
 							PathExpression: &ast.PathExpression{
-								Steps: []ast.Expression{
-									ast.Identifier{Name: "foo"},
-								},
+								Steps: []ast.PathStep{{
+									Expression: ast.String("foo"),
+								}},
 							},
 						},
 						Value: ast.String("test"),
@@ -124,9 +124,9 @@ func TestEvalObjectNode(t *testing.T) {
 					},
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Identifier{Name: "foo"},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.String("foo"),
+					}},
 				},
 			},
 			Expected: "bar",

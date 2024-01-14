@@ -136,15 +136,15 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(+ $foo.bar)`,
-			expected: `(tuple (identifier +) (symbol (var foo) (path [(identifier bar)])))`,
+			expected: `(tuple (identifier +) (symbol (var foo) (path [(expr (string "bar"))])))`,
 		},
 		{
 			input:    `(+ $foo[0])`,
-			expected: `(tuple (identifier +) (symbol (var foo) (path [(number (int64 0))])))`,
+			expected: `(tuple (identifier +) (symbol (var foo) (path [(expr (number (int64 0)))])))`,
 		},
 		{
 			input:    `(+ $foo[(foo)])`,
-			expected: `(tuple (identifier +) (symbol (var foo) (path [(tuple (identifier foo))])))`,
+			expected: `(tuple (identifier +) (symbol (var foo) (path [(expr (tuple (identifier foo)))])))`,
 		},
 		{
 			input:   `(+ $)`,
@@ -152,23 +152,23 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(+ .bar)`,
-			expected: `(tuple (identifier +) (symbol (path [(identifier bar)])))`,
+			expected: `(tuple (identifier +) (symbol (path [(expr (string "bar"))])))`,
 		},
 		{
 			input:    `(+ .bar.foo)`,
-			expected: `(tuple (identifier +) (symbol (path [(identifier bar) (identifier foo)])))`,
+			expected: `(tuple (identifier +) (symbol (path [(expr (string "bar")) (expr (string "foo"))])))`,
 		},
 		{
 			input:    `(+ .bar[0])`,
-			expected: `(tuple (identifier +) (symbol (path [(identifier bar) (number (int64 0))])))`,
+			expected: `(tuple (identifier +) (symbol (path [(expr (string "bar")) (expr (number (int64 0)))])))`,
 		},
 		{
 			input:    `(+ .bar[0].bar)`,
-			expected: `(tuple (identifier +) (symbol (path [(identifier bar) (number (int64 0)) (identifier bar)])))`,
+			expected: `(tuple (identifier +) (symbol (path [(expr (string "bar")) (expr (number (int64 0))) (expr (string "bar"))])))`,
 		},
 		{
 			input:    `(+ .bar[0][1])`,
-			expected: `(tuple (identifier +) (symbol (path [(identifier bar) (number (int64 0)) (number (int64 1))])))`,
+			expected: `(tuple (identifier +) (symbol (path [(expr (string "bar")) (expr (number (int64 0))) (expr (number (int64 1)))])))`,
 		},
 		{
 			input:   `(+ .bar[0].[1])`,
@@ -192,7 +192,7 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(+ .[0])`,
-			expected: `(tuple (identifier +) (symbol (path [(number (int64 0))])))`,
+			expected: `(tuple (identifier +) (symbol (path [(expr (number (int64 0)))])))`,
 		},
 		{
 			input:   `(..)`,
@@ -244,11 +244,11 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(+ 1 2) .bar`,
-			expected: `(tuple (identifier +) (number (int64 1)) (number (int64 2))) (symbol (path [(identifier bar)]))`,
+			expected: `(tuple (identifier +) (number (int64 1)) (number (int64 2))) (symbol (path [(expr (string "bar"))]))`,
 		},
 		{
 			input:    `.bar (+ 1 2)`,
-			expected: `(symbol (path [(identifier bar)])) (tuple (identifier +) (number (int64 1)) (number (int64 2)))`,
+			expected: `(symbol (path [(expr (string "bar"))])) (tuple (identifier +) (number (int64 1)) (number (int64 2)))`,
 		},
 		{
 			input:   `.bar.`,
@@ -260,23 +260,23 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `.bar`,
-			expected: `(symbol (path [(identifier bar)]))`,
+			expected: `(symbol (path [(expr (string "bar"))]))`,
 		},
 		{
 			input:    `.bar .bar`,
-			expected: `(symbol (path [(identifier bar)])) (symbol (path [(identifier bar)]))`,
+			expected: `(symbol (path [(expr (string "bar"))])) (symbol (path [(expr (string "bar"))]))`,
 		},
 		{
 			input:    `.bar.foo`,
-			expected: `(symbol (path [(identifier bar) (identifier foo)]))`,
+			expected: `(symbol (path [(expr (string "bar")) (expr (string "foo"))]))`,
 		},
 		{
 			input:    `.bar[0]`,
-			expected: `(symbol (path [(identifier bar) (number (int64 0))]))`,
+			expected: `(symbol (path [(expr (string "bar")) (expr (number (int64 0)))]))`,
 		},
 		{
 			input:    `.[0]`,
-			expected: `(symbol (path [(number (int64 0))]))`,
+			expected: `(symbol (path [(expr (number (int64 0)))]))`,
 		},
 		{
 			input:    `$var`,
@@ -284,7 +284,7 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `$var[0]`,
-			expected: `(symbol (var var) (path [(number (int64 0))]))`,
+			expected: `(symbol (var var) (path [(expr (number (int64 0)))]))`,
 		},
 		{
 			input:    `42`,
@@ -318,31 +318,31 @@ func TestParseProgram(t *testing.T) {
 
 		{
 			input:    `(add 1 2).foo`,
-			expected: `(tuple (identifier add) (number (int64 1)) (number (int64 2))).(path [(identifier foo)])`,
+			expected: `(tuple (identifier add) (number (int64 1)) (number (int64 2))).(path [(expr (string "foo"))])`,
 		},
 		{
 			input:    `(add 1 2)[1]`,
-			expected: `(tuple (identifier add) (number (int64 1)) (number (int64 2))).(path [(number (int64 1))])`,
+			expected: `(tuple (identifier add) (number (int64 1)) (number (int64 2))).(path [(expr (number (int64 1)))])`,
 		},
 		{
 			input:    `(add (bar).foo)`,
-			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(identifier foo)]))`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(expr (string "foo"))]))`,
 		},
 		{
 			input:    `(add (bar).foo[1])`,
-			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(identifier foo) (number (int64 1))]))`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(expr (string "foo")) (expr (number (int64 1)))]))`,
 		},
 		{
 			input:    `(add (bar)[1])`,
-			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(number (int64 1))]))`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(expr (number (int64 1)))]))`,
 		},
 		{
 			input:    `(add (bar)[1].sub)`,
-			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(number (int64 1)) (identifier sub)]))`,
+			expected: `(tuple (identifier add) (tuple (identifier bar)).(path [(expr (number (int64 1))) (expr (string "sub"))]))`,
 		},
 		{
 			input:    `(add [1 2 3][0].foo)`,
-			expected: `(tuple (identifier add) (vector (number (int64 1)) (number (int64 2)) (number (int64 3))).(path [(number (int64 0)) (identifier foo)]))`,
+			expected: `(tuple (identifier add) (vector (number (int64 1)) (number (int64 2)) (number (int64 3))).(path [(expr (number (int64 0))) (expr (string "foo"))]))`,
 		},
 		{
 			input:   `(add [1 2 3].[0])`,
@@ -354,7 +354,7 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(add {foo "bar"}.foo[1])`,
-			expected: `(tuple (identifier add) (object ((identifier foo) (string "bar"))).(path [(identifier foo) (number (int64 1))]))`,
+			expected: `(tuple (identifier add) (object ((identifier foo) (string "bar"))).(path [(expr (string "foo")) (expr (number (int64 1)))]))`,
 		},
 		{
 			input:   `(add {foo "bar"}[1])`,
@@ -362,15 +362,15 @@ func TestParseProgram(t *testing.T) {
 		},
 		{
 			input:    `(add {foo "bar"}.foo[{bla 1}.bla[0]])`,
-			expected: `(tuple (identifier add) (object ((identifier foo) (string "bar"))).(path [(identifier foo) (object ((identifier bla) (number (int64 1)))).(path [(identifier bla) (number (int64 0))])]))`,
+			expected: `(tuple (identifier add) (object ((identifier foo) (string "bar"))).(path [(expr (string "foo")) (expr (object ((identifier bla) (number (int64 1)))).(path [(expr (string "bla")) (expr (number (int64 0)))]))]))`,
 		},
 		{
 			input:    `(add {{foo "bar"}.foo "bar"})`,
-			expected: `(tuple (identifier add) (object ((object ((identifier foo) (string "bar"))).(path [(identifier foo)]) (string "bar"))))`,
+			expected: `(tuple (identifier add) (object ((object ((identifier foo) (string "bar"))).(path [(expr (string "foo"))]) (string "bar"))))`,
 		},
 		{
 			input:    `(add {[0 "foo"][1] "bar"})`,
-			expected: `(tuple (identifier add) (object ((vector (number (int64 0)) (string "foo")).(path [(number (int64 1))]) (string "bar"))))`,
+			expected: `(tuple (identifier add) (object ((vector (number (int64 0)) (string "foo")).(path [(expr (number (int64 1)))]) (string "bar"))))`,
 		},
 	}
 

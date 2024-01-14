@@ -238,8 +238,30 @@ func (p *astPrinter) writePathExpression(path *ast.PathExpression) error {
 	}
 
 	for i, step := range path.Steps {
-		if err := printAny(step, p); err != nil {
-			return err
+		if step.Filter != nil {
+			if err := p.write("(filter "); err != nil {
+				return err
+			}
+
+			if err := printAny(step.Filter, p); err != nil {
+				return err
+			}
+
+			if err := p.write(")"); err != nil {
+				return err
+			}
+		} else {
+			if err := p.write("(expr "); err != nil {
+				return err
+			}
+
+			if err := printAny(step.Expression, p); err != nil {
+				return err
+			}
+
+			if err := p.write(")"); err != nil {
+				return err
+			}
 		}
 
 		if i < len(path.Steps)-1 {

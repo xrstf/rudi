@@ -37,7 +37,7 @@ func (*interpreter) EvalSymbol(ctx types.Context, sym ast.Symbol) (any, error) {
 		}
 	}
 
-	deeper, err := pathexpr.Apply(ctx, rootValue, sym.PathExpression)
+	deeper, err := pathexpr.Traverse(ctx, rootValue, sym.PathExpression)
 	if err != nil {
 		return nil, fmt.Errorf("cannot evaluate %s: %w", sym.String(), err)
 	}

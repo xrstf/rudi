@@ -28,7 +28,7 @@ func (i *interpreter) EvalVectorNode(ctx types.Context, vec ast.VectorNode) (any
 		result[ii] = data
 	}
 
-	deeper, err := pathexpr.Apply(ctx, result, vec.PathExpression)
+	deeper, err := pathexpr.Traverse(ctx, result, vec.PathExpression)
 	if err != nil {
 		return nil, err
 	}

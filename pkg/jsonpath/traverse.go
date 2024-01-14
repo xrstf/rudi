@@ -41,7 +41,7 @@ func traverseSingleStep(value any, step Step) (any, any, error) {
 			case key != nil:
 				return *key, nil, noSuchKeyErr
 			default:
-				panic(fmt.Sprintf("%T is neither key nor index.", s))
+				return nil, nil, fmt.Errorf("%T is neither key nor index.", s)
 			}
 
 		case FilterStep:

@@ -99,9 +99,9 @@ func TestEvalTuple(t *testing.T) {
 					},
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Identifier{Name: "foo"},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.String("foo"),
+					}},
 				},
 			},
 			Expected: "bar",
@@ -121,9 +121,9 @@ func TestEvalTuple(t *testing.T) {
 					},
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Number{Value: 1},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.Number{Value: 1},
+					}},
 				},
 			},
 			Invalid: true,
@@ -141,9 +141,9 @@ func TestEvalTuple(t *testing.T) {
 					},
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.Number{Value: 1},
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.Number{Value: 1},
+					}},
 				},
 			},
 			Expected: 2,
@@ -161,9 +161,9 @@ func TestEvalTuple(t *testing.T) {
 					},
 				},
 				PathExpression: &ast.PathExpression{
-					Steps: []ast.Expression{
-						ast.String("invalid"),
-					},
+					Steps: []ast.PathStep{{
+						Expression: ast.String("invalid"),
+					}},
 				},
 			},
 			Invalid: true,
@@ -216,9 +216,9 @@ func TestEvalTupleBangModifier(t *testing.T) {
 					ast.Identifier{Name: "set", Bang: true},
 					ast.Symbol{
 						PathExpression: &ast.PathExpression{
-							Steps: []ast.Expression{
-								ast.Bool(true),
-							},
+							Steps: []ast.PathStep{{
+								Expression: ast.Bool(true),
+							}},
 						},
 					},
 					ast.String("value"),
@@ -233,9 +233,9 @@ func TestEvalTupleBangModifier(t *testing.T) {
 					ast.Identifier{Name: "set", Bang: true},
 					ast.Symbol{
 						PathExpression: &ast.PathExpression{
-							Steps: []ast.Expression{
-								ast.Number{Value: -1},
-							},
+							Steps: []ast.PathStep{{
+								Expression: ast.Number{Value: -1},
+							}},
 						},
 					},
 					ast.String("value"),
@@ -287,9 +287,9 @@ func TestEvalTupleBangModifier(t *testing.T) {
 				Expressions: []ast.Expression{
 					ast.Identifier{Name: "set", Bang: true},
 					ast.Symbol{PathExpression: &ast.PathExpression{
-						Steps: []ast.Expression{
-							ast.Identifier{Name: "hello"},
-						},
+						Steps: []ast.PathStep{{
+							Expression: ast.String("hello"),
+						}},
 					}},
 					ast.String("value"),
 				},
@@ -304,9 +304,9 @@ func TestEvalTupleBangModifier(t *testing.T) {
 				Expressions: []ast.Expression{
 					ast.Identifier{Name: "set", Bang: true},
 					makeVar("val", &ast.PathExpression{
-						Steps: []ast.Expression{
-							ast.Identifier{Name: "key"},
-						},
+						Steps: []ast.PathStep{{
+							Expression: ast.String("key"),
+						}},
 					}),
 					ast.String("value"),
 				},
@@ -325,17 +325,17 @@ func TestEvalTupleBangModifier(t *testing.T) {
 				Expressions: []ast.Expression{
 					ast.Identifier{Name: "set", Bang: true},
 					ast.Symbol{PathExpression: &ast.PathExpression{
-						Steps: []ast.Expression{
-							ast.Identifier{Name: "hei"},
-						},
+						Steps: []ast.PathStep{{
+							Expression: ast.String("hei"),
+						}},
 					}},
 					ast.Tuple{
 						Expressions: []ast.Expression{
 							ast.Identifier{Name: "set", Bang: true},
 							ast.Symbol{PathExpression: &ast.PathExpression{
-								Steps: []ast.Expression{
-									ast.Identifier{Name: "hello"},
-								},
+								Steps: []ast.PathStep{{
+									Expression: ast.String("hello"),
+								}},
 							}},
 							ast.String("value"),
 						},
