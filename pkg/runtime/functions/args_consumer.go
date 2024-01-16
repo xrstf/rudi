@@ -15,6 +15,7 @@ var (
 
 	expressionType = reflect.TypeOf(&dummyExpression).Elem()
 	contextType    = reflect.TypeOf(types.Context{})
+	vectorNodeType = reflect.TypeOf(ast.VectorNode{})
 	numberType     = reflect.TypeOf(ast.Number{})
 	identifierType = reflect.TypeOf(ast.Identifier{})
 )
@@ -68,6 +69,10 @@ func newConsumerFunc(t reflect.Type) (consumer argsConsumer, argsConsumed int) {
 
 		if t.AssignableTo(numberType) {
 			return numberConsumer, 1
+		}
+
+		if t.AssignableTo(vectorNodeType) {
+			return vectorNodeConsumer, 1
 		}
 
 		if t.AssignableTo(identifierType) {
@@ -236,6 +241,19 @@ func identifierConsumer(ctx types.Context, args []cachedExpression) (asserted []
 	}
 
 	return []any{ident}, args[1:], nil
+}
+
+func vectorNodeConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
+	if len(args) == 0 {
+		return nil, nil, nil
+	}
+
+	vectorNode, ok := args[0].expr.(ast.VectorNode)
+	if !ok {
+		return nil, args, nil
+	}
+
+	return []any{vectorNode}, args[1:], nil
 }
 
 func contextConsumer(ctx types.Context, args []cachedExpression) (asserted []any, remaining []cachedExpression, err error) {
