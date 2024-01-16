@@ -33,7 +33,7 @@ var (
 		"if":      functions.NewBuilder(ifElseFunction, ifFunction).WithDescription("evaluate one of two expressions based on a condition").Build(),
 		"case":    functions.NewBuilder(caseFunction).WithDescription("chooses the first expression for which the test is true").Build(),
 		"set":     functions.NewBuilder(setFunction).WithBangHandler(setFunctionBangHandler).WithDescription("set a value in a variable/document, most often used with ! modifier (set!)").Build(),
-		"patch":   functions.NewBuilder(patchIdentifierFunction).WithBangHandler(patchFunctionBangHandler).WithDescription("applies an expression to all matched values").Build(),
+		"patch":   functions.NewBuilder(patchIdentifierFunction, patchExpressionFunction).WithBangHandler(patchFunctionBangHandler).WithDescription("applies an expression to all matched values").Build(),
 		"try":     functions.NewBuilder(tryWithFallbackFunction, tryFunction).WithDescription("returns the fallback if the first expression errors out").Build(),
 	}
 )
