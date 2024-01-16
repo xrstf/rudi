@@ -165,6 +165,39 @@ func deleteFromLeaf(dest any, step Step, foundKeyThings any) (any, error) {
 			panic(fmt.Sprintf("SingleStep should have returned int index or string key, but returned %v (%T)", foundKeyThings, foundKeyThings))
 		}
 
+	case FilterStep:
+		foundsKeys, ok := foundKeyThings.([]string)
+		if ok {
+			asObject, ok := dest.(map[string]any)
+			if !ok {
+				panic("ObjectStep should have errored on a non-object value.")
+			}
+
+			for _, key := range foundsKeys {
+				delete(asObject, key)
+			}
+
+			return asObject, nil
+		}
+
+		foundIndexes, ok := foundKeyThings.([]int)
+		if ok {
+			asVector, ok := dest.([]any)
+			if !ok {
+				panic("VectorStep should have errored on a non-vector value.")
+			}
+
+			offset := 0
+			for _, index := range foundIndexes {
+				asVector = removeSliceItem(asVector, index-offset)
+				offset++
+			}
+
+			return asVector, nil
+		}
+
+		panic(fmt.Sprintf("FilterStep should have returned []int or []string, but returned %v (%T)", foundKeyThings, foundKeyThings))
+
 	default:
 		panic(fmt.Sprintf("Unknown path step type %T", step))
 	}
