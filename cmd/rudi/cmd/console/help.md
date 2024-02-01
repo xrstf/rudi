@@ -29,6 +29,7 @@ You can also request help for any of these functions using `help FUNCTION`:
 
 <!-- BEGIN_HELP_LIB_TOC -->
 * **core**
+  * `case` – chooses the first expression for which the test is true
   * `default` – returns the default value if the first argument is empty
   * `delete` – removes a key from an object or an item from a vector
   * `do` – eval a sequence of statements where only one expression is valid

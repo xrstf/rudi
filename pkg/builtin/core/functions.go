@@ -30,6 +30,7 @@ var (
 		"error":   functions.NewBuilder(errorFunction, fmtErrorFunction).WithDescription("returns an error").Build(),
 		"has?":    functions.NewBuilder(hasFunction).WithDescription("returns true if the given symbol's path expression points to an existing value").Build(),
 		"if":      functions.NewBuilder(ifElseFunction, ifFunction).WithDescription("evaluate one of two expressions based on a condition").Build(),
+		"case":    functions.NewBuilder(caseFunction).WithDescription("chooses the first expression for which the test is true").Build(),
 		"set":     functions.NewBuilder(setFunction).WithBangHandler(overwriteEverythingBangHandler).WithDescription("set a value in a variable/document, only really useful with ! modifier (set!)").Build(),
 		"try":     functions.NewBuilder(tryWithFallbackFunction, tryFunction).WithDescription("returns the fallback if the first expression errors out").Build(),
 	}
@@ -53,6 +54,34 @@ func ifElseFunction(ctx types.Context, test bool, yes, no ast.Expression) (any, 
 	}
 
 	return ctx.Runtime().EvalExpression(ctx, no)
+}
+
+func caseFunction(ctx types.Context, exprs ...ast.Expression) (any, error) {
+	if len(exprs)%2 != 0 {
+		return nil, errors.New("expected an even number of arguments")
+	}
+
+	for i := 0; i < len(exprs); i += 2 {
+		testExpr := exprs[i]
+		valueExpr := exprs[i+1]
+
+		result, err := ctx.Runtime().EvalExpression(ctx, testExpr)
+		if err != nil {
+			return nil, err
+		}
+
+		enabled, err := ctx.Coalesce().ToBool(result)
+		if err != nil {
+			return nil, err
+		}
+
+		if enabled {
+			return ctx.Runtime().EvalExpression(ctx, valueExpr)
+		}
+	}
+
+	// none of the case statements matched
+	return nil, nil
 }
 
 // NB: Variadic functions always require at least 1 argument in Rudi to match.

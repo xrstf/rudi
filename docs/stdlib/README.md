@@ -16,6 +16,7 @@ Additional functionality is available in the [extended library](../extlib/).
 <!-- BEGIN_STDLIB_TOC -->
 ### core
 
+* [`case`](../stdlib/core/case.md) – chooses the first expression for which the test is true
 * [`default`](../stdlib/core/default.md) – returns the default value if the first argument is empty
 * [`delete`](../stdlib/core/delete.md) – removes a key from an object or an item from a vector
 * [`do`](../stdlib/core/do.md) – eval a sequence of statements where only one expression is valid
