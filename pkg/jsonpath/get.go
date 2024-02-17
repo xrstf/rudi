@@ -7,14 +7,6 @@ import (
 	"errors"
 )
 
-type ObjectReader interface {
-	GetObjectKey(name string) (any, error)
-}
-
-type VectorReader interface {
-	GetVectorItem(index int) (any, error)
-}
-
 func Get(value any, path Path) (any, error) {
 	if !path.IsValid() {
 		return nil, errors.New("invalid path")
@@ -33,7 +25,7 @@ func Get(value any, path Path) (any, error) {
 
 func getSingle(value any, path Path) (any, error) {
 	for _, step := range path {
-		_, newValue, err := traverseSingleStep(value, step)
+		_, newValue, err := traverseStep(value, step.(SingleStep))
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +43,7 @@ func getFiltered(value any, path Path) ([]any, error) {
 		newLeafValues := []any{}
 
 		for _, val := range currentLeafValues {
-			_, result, err := traverseSingleStep(val, step)
+			_, result, err := traverseStep(val, step)
 			if err != nil {
 				if ignoreErrorInFilters(err) {
 					continue

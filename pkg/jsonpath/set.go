@@ -8,16 +8,6 @@ import (
 	"fmt"
 )
 
-type ObjectWriter interface {
-	ObjectReader
-	SetObjectKey(name string, value any) (any, error)
-}
-
-type VectorWriter interface {
-	VectorReader
-	SetVectorItem(index int, value any) (any, error)
-}
-
 func Set(dest any, path Path, newValue any) (any, error) {
 	return Patch(dest, path, func(_ bool, _ any, _ any) (any, error) {
 		return newValue, nil
@@ -42,7 +32,7 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 	thisStep := path[0]
 	remainingSteps := path[1:]
 
-	foundKeyThings, foundValueThings, err := traverseSingleStep(dest, thisStep)
+	foundKeyThings, foundValueThings, err := traverseStep(dest, thisStep)
 	if err != nil && !errors.Is(err, noSuchKeyErr) && !errors.Is(err, indexOutOfBoundsErr) {
 		return nil, err
 	}

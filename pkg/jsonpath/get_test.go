@@ -5,42 +5,12 @@ package jsonpath
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 type unknownType struct{}
-
-type customObjGetter struct {
-	value any
-}
-
-var _ ObjectReader = customObjGetter{}
-
-func (g customObjGetter) GetObjectKey(name string) (any, error) {
-	if name == "value" {
-		return g.value, nil
-	}
-
-	return nil, fmt.Errorf("cannot get property %q", name)
-}
-
-type customVecGetter struct {
-	magic int
-	value any
-}
-
-var _ VectorReader = customVecGetter{}
-
-func (g customVecGetter) GetVectorItem(index int) (any, error) {
-	if index == g.magic {
-		return g.value, nil
-	}
-
-	return nil, fmt.Errorf("cannot get index %d", index)
-}
 
 func TestGetSingle(t *testing.T) {
 	testcases := []struct {
@@ -160,40 +130,6 @@ func TestGetSingle(t *testing.T) {
 			path:    Path{KeyStep("foo"), IndexStep(2), KeyStep("missing")},
 			invalid: true,
 		},
-
-		// descend into custom types
-
-		// {
-		// 	value:    customObjGetter{value: map[string]any{"foo": "bar"}},
-		// 	path:     Path{KeyStep("value"), KeyStep("foo")},
-		// 	expected: "bar",
-		// },
-		// {
-		// 	value:   customObjGetter{value: map[string]any{"foo": "bar"}},
-		// 	path:    Path{KeyStep("unknown")},
-		// 	invalid: true,
-		// },
-		// {
-		// 	value:   customObjGetter{value: nil},
-		// 	path:    Path{IndexStep(0)},
-		// 	invalid: true,
-		// },
-
-		// {
-		// 	value:    customVecGetter{magic: 7, value: map[string]any{"foo": "bar"}},
-		// 	path:     Path{IndexStep(7), KeyStep("foo")},
-		// 	expected: "bar",
-		// },
-		// {
-		// 	value:   customVecGetter{magic: 7, value: map[string]any{"foo": "bar"}},
-		// 	path:    Path{IndexStep(2)},
-		// 	invalid: true,
-		// },
-		// {
-		// 	value:   customVecGetter{magic: 7, value: nil},
-		// 	path:    Path{KeyStep("objectstep")},
-		// 	invalid: true,
-		// },
 	}
 
 	for _, tc := range testcases {
@@ -359,6 +295,218 @@ func TestGetFiltered(t *testing.T) {
 			},
 			path:     Path{keySelector{"nonexisting"}, IndexStep(1), KeyStep("foo")},
 			expected: []any{},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run("", func(t *testing.T) {
+			result, err := Get(tc.value, tc.path)
+			if err != nil {
+				if !tc.invalid {
+					t.Fatalf("Failed to run: %v", err)
+				}
+
+				return
+			}
+
+			if tc.invalid {
+				t.Fatalf("Should not have been able to get value, but got: %v (%T)", result, result)
+			}
+
+			if !cmp.Equal(tc.expected, result) {
+				t.Fatalf("Expected %v (%T), but got %v (%T)", tc.expected, tc.expected, result, result)
+			}
+		})
+	}
+}
+
+func TestGetComplex(t *testing.T) {
+	var nilDummyFunc func() int
+
+	stringPtr := ptrTo("foo")
+	customEmptyInterfacesValues := []CustomEmptyInterface{
+		map[string]*OtherStruct{"foo": {StringField: "bar"}},
+	}
+
+	testcases := []struct {
+		value    any
+		path     Path
+		expected any
+		invalid  bool
+	}{
+		{
+			value:   func() {},
+			path:    Path{KeyStep("foo")},
+			invalid: true,
+		},
+		{
+			value:   emptyStruct{},
+			path:    Path{KeyStep("foo")},
+			invalid: true,
+		},
+
+		{
+			value:   ExampleStruct{},
+			path:    Path{KeyStep("DoesNotExist")},
+			invalid: true,
+		},
+		{
+			value:   ExampleStruct{},
+			path:    Path{KeyStep("privateField")},
+			invalid: true,
+		},
+		{
+			value:    ExampleStruct{StringField: ""},
+			path:     Path{KeyStep("StringField")},
+			expected: "",
+		},
+		{
+			value:   ExampleStruct{StringField: ""},
+			path:    Path{KeyStep("StringField"), KeyStep("dummy")},
+			invalid: true,
+		},
+		{
+			value:    ExampleStruct{StringField: "foo"},
+			path:     Path{KeyStep("StringField")},
+			expected: "foo",
+		},
+		{
+			value:    ExampleStruct{StringPointerField: nil},
+			path:     Path{KeyStep("StringPointerField")},
+			expected: func() *string { return nil }(),
+		},
+		{
+			value:    ExampleStruct{StringPointerField: stringPtr},
+			path:     Path{KeyStep("StringPointerField")},
+			expected: stringPtr,
+		},
+		{
+			value:    ExampleStruct{FuncField: nil},
+			path:     Path{KeyStep("FuncField")},
+			expected: nilDummyFunc,
+		},
+		// is its own testcase because cmp cannot compare functions
+		// {
+		// 	value:    ExampleStruct{FuncField: dummyFieldFunc},
+		// 	path:     Path{"FuncField"},
+		// 	expected: dummyFieldFunc,
+		// },
+		{
+			value:   ExampleStruct{FuncField: dummyFieldFunc},
+			path:    Path{KeyStep("FuncField"), KeyStep("test")},
+			invalid: true,
+		},
+		{
+			value:   ExampleStruct{FuncField: dummyFieldFunc},
+			path:    Path{KeyStep("FuncField"), IndexStep(0)},
+			invalid: true,
+		},
+
+		// root value is pointer
+
+		{
+			value:    &ExampleStruct{StringField: "foo"},
+			path:     Path{KeyStep("StringField")},
+			expected: "foo",
+		},
+		{
+			value:   func() *ExampleStruct { return nil }(),
+			path:    Path{KeyStep("StringField")},
+			invalid: true,
+		},
+
+		// struct map fields
+
+		{
+			value:    ExampleStruct{},
+			path:     Path{KeyStep("StringMapField")},
+			expected: func() map[string]string { return nil }(),
+		},
+		{
+			value:    ExampleStruct{StringMapField: map[string]string{}},
+			path:     Path{KeyStep("StringMapField")},
+			expected: map[string]string{},
+		},
+		{
+			value:   ExampleStruct{StringMapField: map[string]string{}},
+			path:    Path{KeyStep("StringMapField"), IndexStep(0)},
+			invalid: true,
+		},
+		{
+			value:   ExampleStruct{StringMapField: map[string]string{}},
+			path:    Path{KeyStep("StringMapField"), KeyStep("test")},
+			invalid: true,
+		},
+		{
+			value:    ExampleStruct{StringMapField: map[string]string{"test": "value"}},
+			path:     Path{KeyStep("StringMapField"), KeyStep("test")},
+			expected: "value",
+		},
+		{
+			value:    ExampleStruct{EmptyInterfaceMapField: map[string]any{"test": "value"}},
+			path:     Path{KeyStep("EmptyInterfaceMapField"), KeyStep("test")},
+			expected: "value",
+		},
+		{
+			value:    ExampleStruct{StructMapField: map[string]OtherStruct{"foo": {}}},
+			path:     Path{KeyStep("StructMapField"), KeyStep("foo"), KeyStep("StringPointerField")},
+			expected: func() *string { return nil }(),
+		},
+		{
+			value:    ExampleStruct{StructMapField: map[string]OtherStruct{"foo": {StringPointerField: stringPtr}}},
+			path:     Path{KeyStep("StructMapField"), KeyStep("foo"), KeyStep("StringPointerField")},
+			expected: stringPtr,
+		},
+		{
+			value:    ExampleStruct{StructPointerMapField: map[string]*OtherStruct{"foo": {StringField: "bar"}}},
+			path:     Path{KeyStep("StructPointerMapField"), KeyStep("foo"), KeyStep("StringField")},
+			expected: "bar",
+		},
+
+		// embedded structs
+
+		{
+			value:    StructWithEmbed{StringField: "foo"},
+			path:     Path{KeyStep("StringField")},
+			expected: "foo",
+		},
+		{
+			value:    StructWithEmbed{BaseStruct: BaseStruct{StringField: "foo"}},
+			path:     Path{KeyStep("StringField")},
+			expected: "",
+		},
+		{
+			value:    StructWithEmbed{BaseStruct: BaseStruct{StringField: "foo"}},
+			path:     Path{KeyStep("BaseStruct"), KeyStep("StringField")},
+			expected: "foo",
+		},
+		{
+			value:    StructWithEmbed{StringField: "foo", BaseStruct: BaseStruct{StringField: "bar"}},
+			path:     Path{KeyStep("StringField")},
+			expected: "foo",
+		},
+		{
+			value:    StructWithEmbed{StringField: "foo", BaseStruct: BaseStruct{StringField: "bar"}},
+			path:     Path{KeyStep("BaseStruct"), KeyStep("StringField")},
+			expected: "bar",
+		},
+		{
+			value:    StructWithEmbed{BaseStruct: BaseStruct{BaseStringField: "bar"}},
+			path:     Path{KeyStep("BaseStringField")},
+			expected: "bar",
+		},
+
+		// interface fields
+
+		{
+			value:    ExampleStruct{CustomEmptyInterfaceField: map[string]*OtherStruct{"foo": {StringField: "bar"}}},
+			path:     Path{KeyStep("CustomEmptyInterfaceField"), KeyStep("foo"), KeyStep("StringField")},
+			expected: "bar",
+		},
+		{
+			value:    ExampleStruct{CustomEmptyInterfaceSlicePointerField: &customEmptyInterfacesValues},
+			path:     Path{KeyStep("CustomEmptyInterfaceSlicePointerField"), IndexStep(0), KeyStep("foo"), KeyStep("StringField")},
+			expected: "bar",
 		},
 	}
 

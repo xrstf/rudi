@@ -5,59 +5,11 @@ package jsonpath
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
-
-type customObjWriter struct {
-	Value any
-}
-
-var _ ObjectWriter = &customObjWriter{}
-
-func (w customObjWriter) GetObjectKey(name string) (any, error) {
-	if name == "value" {
-		return w.Value, nil
-	}
-
-	return nil, fmt.Errorf("cannot get property %q", name)
-}
-
-func (w *customObjWriter) SetObjectKey(name string, value any) (any, error) {
-	if name == "value" {
-		w.Value = value
-		return w, nil
-	}
-
-	return nil, fmt.Errorf("cannot set property %q", name)
-}
-
-type customVecWriter struct {
-	Magic int
-	Value any
-}
-
-var _ VectorWriter = &customVecWriter{}
-
-func (w customVecWriter) GetVectorItem(index int) (any, error) {
-	if index == w.Magic {
-		return w.Value, nil
-	}
-
-	return nil, fmt.Errorf("cannot get index %d", index)
-}
-
-func (w *customVecWriter) SetVectorItem(index int, value any) (any, error) {
-	if index == w.Magic {
-		w.Value = value
-		return w, nil
-	}
-
-	return nil, fmt.Errorf("index %d out of bounds", index)
-}
 
 func TestInvalidSets(t *testing.T) {
 	testcases := []struct {

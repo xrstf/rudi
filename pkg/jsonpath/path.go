@@ -94,16 +94,3 @@ func indexOrKey(s SingleStep) (*int, *string) {
 
 	return nil, nil
 }
-
-// func FromEvaluatedPath(evaledPath ast.EvaluatedPathExpression) Path {
-// 	p := Path{}
-// 	for _, step := range evaledPath.Steps {
-// 		if i := step.IntegerValue; i != nil {
-// 			p = append(p, IndexStep(*i))
-// 		} else if s := step.StringValue; s != nil {
-// 			p = append(p, KeyStep(*s))
-// 		}
-// 	}
-
-// 	return p
-// }
