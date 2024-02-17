@@ -25,7 +25,8 @@ and not specifying another, custom function set.
 * [`error`](stdlib/core/error.md) – returns an error
 * [`has?`](stdlib/core/has.md) – returns true if the given symbol's path expression points to an existing value
 * [`if`](stdlib/core/if.md) – evaluate one of two expressions based on a condition
-* [`set`](stdlib/core/set.md) – set a value in a variable/document, only really useful with ! modifier (set!)
+* [`patch`](stdlib/core/patch.md) – applies an expression to all matched values
+* [`set`](stdlib/core/set.md) – set a value in a variable/document, most often used with ! modifier (set!)
 * [`try`](stdlib/core/try.md) – returns the fallback if the first expression errors out
 
 ### coalesce

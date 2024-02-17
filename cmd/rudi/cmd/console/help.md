@@ -37,7 +37,8 @@ You can also request help for any of these functions using `help FUNCTION`:
   * `error` – returns an error
   * `has?` – returns true if the given symbol's path expression points to an existing value
   * `if` – evaluate one of two expressions based on a condition
-  * `set` – set a value in a variable/document, only really useful with ! modifier (set!)
+  * `patch` – applies an expression to all matched values
+  * `set` – set a value in a variable/document, most often used with ! modifier (set!)
   * `try` – returns the fallback if the first expression errors out
 
 * **coalesce**
