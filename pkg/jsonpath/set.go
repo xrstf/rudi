@@ -6,6 +6,7 @@ package jsonpath
 import (
 	"errors"
 	"fmt"
+	"reflect"
 )
 
 func Set(dest any, path Path, newValue any) (any, error) {
@@ -169,4 +170,104 @@ func patchFoundObjectValue(dest map[string]any, anyKey any, existingValue any, e
 	dest[key] = patched
 
 	return dest, nil
+}
+
+func setStructField(dest any, fieldName string, newValue any) error {
+	rDest := reflect.ValueOf(dest)
+
+	// fmt.Printf("dest.CanSet   : %v\n", rDest.CanSet())
+	// fmt.Printf("dest.Interface: %v\n", rDest.Interface())
+	// fmt.Printf("dest.Kind     : %v\n", rDest.Kind())
+
+	// if it's a pointer, resolve its value
+	if rDest.Kind() == reflect.Ptr {
+		rDest = reflect.Indirect(rDest)
+
+		// fmt.Printf("resolved pointer indirection\n")
+		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
+		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
+		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
+	}
+
+	if rDest.Kind() == reflect.Interface {
+		rDest = rDest.Elem()
+
+		// fmt.Printf("resolved interface\n")
+		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
+		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
+		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
+	}
+
+	if !rDest.CanSet() {
+		return fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
+	}
+
+	rFieldValue := rDest.FieldByName(fieldName)
+	if rFieldValue == (reflect.Value{}) || !rFieldValue.CanInterface() {
+		return fmt.Errorf("no such field: %q", fieldName)
+	}
+
+	// fmt.Printf("field.CanSet   : %v\n", rFieldValue.CanSet())
+	// fmt.Printf("field.Interface: %v\n", rFieldValue.Interface())
+	// fmt.Printf("field.Kind     : %v\n", rFieldValue.Kind())
+
+	rNewValue := reflect.ValueOf(newValue)
+	// fmt.Printf("newValue.CanSet   : %v\n", rNewValue.CanSet())
+	// fmt.Printf("newValue.Interface: %v\n", rNewValue.Interface())
+	// fmt.Printf("newValue.Kind     : %v\n", rNewValue.Kind())
+
+	// auto pointer handling: automatically convert from pointer to non-pointer
+
+	// for better error message
+	fieldType := rFieldValue.Type().String()
+	originalGivenType := "nil"
+	if newValue != nil {
+		originalGivenType = rNewValue.Type().String()
+	}
+
+	switch rFieldValue.Kind() {
+	case reflect.Ptr:
+		// turn untyped nils into typed ones
+		if newValue == nil {
+			rNewValue = reflect.New(rFieldValue.Type()).Elem()
+		}
+
+		// given value is not a pointer, so let's turn it into one
+		if rNewValue.Kind() != reflect.Ptr {
+			v := reflect.New(rNewValue.Type())
+			v.Elem().Set(rNewValue)
+
+			rNewValue = v
+		}
+
+	case reflect.Interface:
+		// turn untyped nils into typed ones
+		if newValue == nil {
+			rNewValue = reflect.New(rFieldValue.Type()).Elem()
+		}
+
+	default:
+		// catch untyped pointers (literal nils)
+		if newValue == nil {
+			return fmt.Errorf("cannot set %s (%s) to null", fieldName, fieldType)
+		}
+
+		// given value is a pointer
+		if rNewValue.Kind() == reflect.Ptr {
+			if rNewValue.IsNil() {
+				return fmt.Errorf("cannot set %s (%s) to null", fieldName, fieldType)
+			}
+
+			// dereference the pointer
+			rNewValue = rNewValue.Elem()
+		}
+	}
+
+	if !rNewValue.Type().AssignableTo(rFieldValue.Type()) {
+		return fmt.Errorf("cannot set %s (%s) to %s", fieldName, fieldType, originalGivenType)
+	}
+
+	rFieldValue.Set(rNewValue)
+
+	return nil
 }
