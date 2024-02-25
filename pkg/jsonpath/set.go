@@ -191,7 +191,7 @@ func setStructField(dest any, fieldName string, newValue any) error {
 	}
 
 	// update the value, including auto-pointer and auto-dereferencing magic
-	if err := setReflectValue(rFieldValue, newValue); err != nil {
+	if err := setReflectValueAdjusted(rFieldValue, newValue); err != nil {
 		return err
 	}
 
@@ -227,11 +227,35 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 	}
 
 	// update the value, including auto-pointer and auto-dereferencing magic
-	if err := setReflectValue(rDest.Index(index), newValue); err != nil {
+	if err := setReflectValueAdjusted(rDest.Index(index), newValue); err != nil {
 		return nil, err
 	}
 
 	return rDest.Interface(), nil
+}
+
+func setMapItem(dest any, key any, newValue any) error {
+	rDest := unpointer(dest)
+
+	if !rDest.CanSet() {
+		return fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
+	}
+
+	// adjust given key to the key type of the map
+	rKey, err := adjustPointerType(key, rDest.Type().Key())
+	if err != nil {
+		return err
+	}
+
+	// adjust given value to the value type of the map
+	rNewValue, err := adjustPointerType(newValue, rDest.Type().Elem())
+	if err != nil {
+		return err
+	}
+
+	rDest.SetMapIndex(*rKey, *rNewValue)
+
+	return nil
 }
 
 func unpointer(value any) reflect.Value {
@@ -263,7 +287,7 @@ func unpointer(value any) reflect.Value {
 	return rValue
 }
 
-func setReflectValue(dest reflect.Value, newValue any) error {
+func adjustPointerType(value any, dest reflect.Type) (*reflect.Value, error) {
 	// rFieldValue := rDest.FieldByName(fieldName)
 	// if rFieldValue == (reflect.Value{}) || !rFieldValue.CanInterface() {
 	// 	return fmt.Errorf("no such field: %q", fieldName)
@@ -273,7 +297,7 @@ func setReflectValue(dest reflect.Value, newValue any) error {
 	// fmt.Printf("field.Interface: %v\n", rFieldValue.Interface())
 	// fmt.Printf("field.Kind     : %v\n", rFieldValue.Kind())
 
-	rNewValue := reflect.ValueOf(newValue)
+	rValue := reflect.ValueOf(value)
 	// fmt.Printf("newValue.CanSet   : %v\n", rNewValue.CanSet())
 	// fmt.Printf("newValue.Interface: %v\n", rNewValue.Interface())
 	// fmt.Printf("newValue.Kind     : %v\n", rNewValue.Kind())
@@ -281,55 +305,64 @@ func setReflectValue(dest reflect.Value, newValue any) error {
 	// auto pointer handling: automatically convert from pointer to non-pointer
 
 	// for better error message
-	fieldType := dest.Type().String()
+	fieldType := dest.String()
 	originalGivenType := "nil"
-	if newValue != nil {
-		originalGivenType = rNewValue.Type().String()
+	if value != nil {
+		originalGivenType = rValue.Type().String()
 	}
 
 	switch dest.Kind() {
 	case reflect.Ptr:
 		// turn untyped nils into typed ones
-		if newValue == nil {
-			rNewValue = reflect.New(dest.Type()).Elem()
+		if value == nil {
+			rValue = reflect.New(dest).Elem()
 		}
 
 		// given value is not a pointer, so let's turn it into one
-		if rNewValue.Kind() != reflect.Ptr {
-			v := reflect.New(rNewValue.Type())
-			v.Elem().Set(rNewValue)
+		if rValue.Kind() != reflect.Ptr {
+			v := reflect.New(rValue.Type())
+			v.Elem().Set(rValue)
 
-			rNewValue = v
+			rValue = v
 		}
 
 	case reflect.Interface:
 		// turn untyped nils into typed ones
-		if newValue == nil {
-			rNewValue = reflect.New(dest.Type()).Elem()
+		if value == nil {
+			rValue = reflect.New(dest).Elem()
 		}
 
 	default:
 		// catch untyped pointers (literal nils)
-		if newValue == nil {
-			return errors.New("cannot set to null")
+		if value == nil {
+			return nil, errors.New("cannot set to null")
 		}
 
 		// given value is a pointer
-		if rNewValue.Kind() == reflect.Ptr {
-			if rNewValue.IsNil() {
-				return errors.New("cannot set to null")
+		if rValue.Kind() == reflect.Ptr {
+			if rValue.IsNil() {
+				return nil, errors.New("cannot set to null")
 			}
 
 			// dereference the pointer
-			rNewValue = rNewValue.Elem()
+			rValue = rValue.Elem()
 		}
 	}
 
-	if !rNewValue.Type().AssignableTo(dest.Type()) {
-		return fmt.Errorf("cannot set %s to %s", fieldType, originalGivenType)
+	if !rValue.Type().AssignableTo(dest) {
+		return nil, fmt.Errorf("cannot set %s to %s", fieldType, originalGivenType)
 	}
 
-	dest.Set(rNewValue)
+	return &rValue, nil
+}
+
+func setReflectValueAdjusted(dest reflect.Value, newValue any) error {
+	rNewValue, err := adjustPointerType(newValue, dest.Type())
+	if err != nil {
+		return err
+	}
+
+	dest.Set(*rNewValue)
 
 	return nil
 }
