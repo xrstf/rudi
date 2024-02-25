@@ -209,8 +209,12 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 		return nil, fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
 	}
 
+	rNewValue, err := adjustPointerType(newValue, rDest.Type().Elem())
+	if err != nil {
+		return nil, err
+	}
+
 	// pad list to contain enough elements; this only works for slices
-	// TODO: Only do this if and when we're sure the given value is compatible.
 	if missing := (index + 1) - rDest.Cap(); missing > 0 {
 		if rDest.Kind() != reflect.Slice {
 			return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
@@ -227,9 +231,7 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 	}
 
 	// update the value, including auto-pointer and auto-dereferencing magic
-	if err := setReflectValueAdjusted(rDest.Index(index), newValue); err != nil {
-		return nil, err
-	}
+	rDest.Index(index).Set(*rNewValue)
 
 	return rDest.Interface(), nil
 }
@@ -261,46 +263,20 @@ func setMapItem(dest any, key any, newValue any) error {
 func unpointer(value any) reflect.Value {
 	rValue := reflect.ValueOf(value)
 
-	// fmt.Printf("dest.CanSet   : %v\n", rDest.CanSet())
-	// fmt.Printf("dest.Interface: %v\n", rDest.Interface())
-	// fmt.Printf("dest.Kind     : %v\n", rDest.Kind())
-
 	// if it's a pointer, resolve its value
 	if rValue.Kind() == reflect.Ptr {
 		rValue = reflect.Indirect(rValue)
-
-		// fmt.Printf("resolved pointer indirection\n")
-		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
-		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
-		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
 	}
 
 	if rValue.Kind() == reflect.Interface {
 		rValue = rValue.Elem()
-
-		// fmt.Printf("resolved interface\n")
-		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
-		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
-		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
 	}
 
 	return rValue
 }
 
 func adjustPointerType(value any, dest reflect.Type) (*reflect.Value, error) {
-	// rFieldValue := rDest.FieldByName(fieldName)
-	// if rFieldValue == (reflect.Value{}) || !rFieldValue.CanInterface() {
-	// 	return fmt.Errorf("no such field: %q", fieldName)
-	// }
-
-	// fmt.Printf("field.CanSet   : %v\n", rFieldValue.CanSet())
-	// fmt.Printf("field.Interface: %v\n", rFieldValue.Interface())
-	// fmt.Printf("field.Kind     : %v\n", rFieldValue.Kind())
-
 	rValue := reflect.ValueOf(value)
-	// fmt.Printf("newValue.CanSet   : %v\n", rNewValue.CanSet())
-	// fmt.Printf("newValue.Interface: %v\n", rNewValue.Interface())
-	// fmt.Printf("newValue.Kind     : %v\n", rNewValue.Kind())
 
 	// auto pointer handling: automatically convert from pointer to non-pointer
 
