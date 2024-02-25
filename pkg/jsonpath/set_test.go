@@ -790,3 +790,131 @@ func TestSetStructField(t *testing.T) {
 		})
 	}
 }
+
+func TestSetListItem(t *testing.T) {
+	var (
+		emptySlice []string
+	)
+
+	testcases := []struct {
+		name     string
+		dest     any
+		index    int
+		newValue any
+		expected any
+		invalid  bool
+	}{
+		{
+			name:    "catch invalid index",
+			dest:    &[]string{"foo", "bar"},
+			index:   -1,
+			invalid: true,
+		},
+		{
+			name:     "can set string in []string",
+			dest:     &[]string{"foo", "bar"},
+			index:    0,
+			newValue: "new-value",
+			expected: []string{"new-value", "bar"},
+		},
+		{
+			name:     "can set *string in []string (auto-derefencing)",
+			dest:     &[]string{"foo", "bar"},
+			index:    0,
+			newValue: ptrTo("new-value"),
+			expected: []string{"new-value", "bar"},
+		},
+		{
+			name:     "can set *string in []*string",
+			dest:     &[]*string{ptrTo("foo"), ptrTo("bar")},
+			index:    0,
+			newValue: ptrTo("new-value"),
+			expected: []*string{ptrTo("new-value"), ptrTo("bar")},
+		},
+		{
+			name:     "can set string in []*string (auto pointer)",
+			dest:     &[]*string{ptrTo("foo"), ptrTo("bar")},
+			index:    0,
+			newValue: "new-value",
+			expected: []*string{ptrTo("new-value"), ptrTo("bar")},
+		},
+		{
+			name:     "can set non-first slice element",
+			dest:     &[]string{"foo", "bar"},
+			index:    1,
+			newValue: "new-value",
+			expected: []string{"foo", "new-value"},
+		},
+		{
+			name:     "can extend a slice as needed",
+			dest:     &[]string{"foo", "bar"},
+			index:    3,
+			newValue: "new-value",
+			expected: []string{"foo", "bar", "", "new-value"},
+		},
+		{
+			name:     "can extend a pointer slice as needed",
+			dest:     &[]*string{ptrTo("foo"), ptrTo("bar")},
+			index:    3,
+			newValue: "new-value",
+			expected: []*string{ptrTo("foo"), ptrTo("bar"), nil, ptrTo("new-value")},
+		},
+		{
+			name:     "can extend nil slice",
+			dest:     &emptySlice,
+			index:    1,
+			newValue: "new-value",
+			expected: []string{"", "new-value"},
+		},
+		{
+			name:     "can set string in [2]string",
+			dest:     &[2]string{"foo", "bar"},
+			index:    0,
+			newValue: "new-value",
+			expected: [2]string{"new-value", "bar"},
+		},
+		{
+			name:    "cannot grow an array",
+			dest:    &[2]string{"foo", "bar"},
+			index:   2,
+			invalid: true,
+		},
+		{
+			name:     "cannot set incompatible type",
+			dest:     &[]string{"foo", "bar"},
+			index:    0,
+			newValue: 42,
+			invalid:  true,
+		},
+		{
+			name:     "cannot set incompatible pointer type",
+			dest:     &[]string{"foo", "bar"},
+			index:    0,
+			newValue: ptrTo(42),
+			invalid:  true,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			updated, err := setListItem(tc.dest, tc.index, tc.newValue)
+			if err != nil {
+				if !tc.invalid {
+					t.Fatalf("Failed to set index %d to %v (%T): %v", tc.index, tc.newValue, tc.newValue, err)
+				} else {
+					t.Logf("Test returned error (as expected): %v", err)
+				}
+
+				return
+			}
+
+			if tc.invalid {
+				t.Fatalf("Should not have been able to set index %d to %v (%T), but succeeded.", tc.index, tc.newValue, tc.newValue)
+			}
+
+			if !cmp.Equal(tc.expected, updated) {
+				t.Fatalf("Got unexpected result:\n%s\n", cmp.Diff(tc.expected, updated))
+			}
+		})
+	}
+}

@@ -25,7 +25,7 @@ func Get(value any, path Path) (any, error) {
 
 func getSingle(value any, path Path) (any, error) {
 	for _, step := range path {
-		_, newValue, err := traverseStep(value, step.(SingleStep))
+		_, newValue, _, err := traverseStep(value, step.(SingleStep))
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func getFiltered(value any, path Path) ([]any, error) {
 		newLeafValues := []any{}
 
 		for _, val := range currentLeafValues {
-			_, result, err := traverseStep(val, step)
+			_, result, _, err := traverseStep(val, step)
 			if err != nil {
 				if ignoreErrorInFilters(err) {
 					continue

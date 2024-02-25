@@ -22,9 +22,17 @@ func ignoreErrorInFilters(err error) bool {
 	return errors.Is(err, noSuchKeyErr) || errors.Is(err, indexOutOfBoundsErr) || errors.Is(err, untraversableErr)
 }
 
-func traverseStep(value any, step Step) (any, any, error) {
+type variableKind int
+
+const (
+	kindList variableKind = iota
+	kindMap
+	kindStuct
+)
+
+func traverseStep(value any, step Step) (any, any, variableKind, error) {
 	if value == nil {
-		return nil, nil, fmt.Errorf("cannot traverse into null: %w", untraversableErr)
+		return nil, nil, 0, fmt.Errorf("cannot traverse into null: %w", untraversableErr)
 	}
 
 	// fmt.Printf("* value: %v\n", value)
@@ -44,7 +52,7 @@ func traverseStep(value any, step Step) (any, any, error) {
 	// unwrap pointer types to their underlying types (*int => int)
 	if valueKind == reflect.Pointer {
 		if rValue.IsNil() {
-			return nil, nil, errors.New("cannot descend into nil")
+			return nil, nil, 0, errors.New("cannot descend into nil")
 		}
 
 		elemType = valueType.Elem()
@@ -58,16 +66,19 @@ func traverseStep(value any, step Step) (any, any, error) {
 
 	switch elemKind {
 	case reflect.Slice, reflect.Array:
-		return traverseIndexableStep(rValue, step)
+		keys, results, err := traverseIndexableStep(rValue, step)
+		return keys, results, kindList, err
 
 	case reflect.Map:
-		return traverseMapStep(rValue, step)
+		keys, results, err := traverseMapStep(rValue, step)
+		return keys, results, kindMap, err
 
 	case reflect.Struct:
-		return traverseStructStep(rValue, step)
+		keys, results, err := traverseStructStep(rValue, step)
+		return keys, results, kindStuct, err
 
 	default:
-		return nil, nil, fmt.Errorf("cannot traverse %T: %w", value, untraversableErr)
+		return nil, nil, 0, fmt.Errorf("cannot traverse %T: %w", value, untraversableErr)
 	}
 }
 

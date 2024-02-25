@@ -33,7 +33,7 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 	thisStep := path[0]
 	remainingSteps := path[1:]
 
-	foundKeyThings, foundValueThings, err := traverseStep(dest, thisStep)
+	foundKeyThings, foundValueThings, destKind, err := traverseStep(dest, thisStep)
 	if err != nil && !errors.Is(err, noSuchKeyErr) && !errors.Is(err, indexOutOfBoundsErr) {
 		return nil, err
 	}
@@ -41,6 +41,12 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 	switch thisStep.(type) {
 	// $var[1], $var.foo, $var["foo"], $var[(+ 1 2)]
 	case SingleStep:
+		switch destKind {
+		// arrays, slices
+		// case kindList:
+		// 	return patchFoundVectorValue(asVector, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
+		}
+
 		switch foundKeyThings.(type) {
 		case int:
 			// nil values (or non-existing values) can be turned into vectors
@@ -173,30 +179,7 @@ func patchFoundObjectValue(dest map[string]any, anyKey any, existingValue any, e
 }
 
 func setStructField(dest any, fieldName string, newValue any) error {
-	rDest := reflect.ValueOf(dest)
-
-	// fmt.Printf("dest.CanSet   : %v\n", rDest.CanSet())
-	// fmt.Printf("dest.Interface: %v\n", rDest.Interface())
-	// fmt.Printf("dest.Kind     : %v\n", rDest.Kind())
-
-	// if it's a pointer, resolve its value
-	if rDest.Kind() == reflect.Ptr {
-		rDest = reflect.Indirect(rDest)
-
-		// fmt.Printf("resolved pointer indirection\n")
-		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
-		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
-		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
-	}
-
-	if rDest.Kind() == reflect.Interface {
-		rDest = rDest.Elem()
-
-		// fmt.Printf("resolved interface\n")
-		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
-		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
-		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
-	}
+	rDest := unpointer(dest)
 
 	if !rDest.CanSet() {
 		return fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
@@ -206,6 +189,85 @@ func setStructField(dest any, fieldName string, newValue any) error {
 	if rFieldValue == (reflect.Value{}) || !rFieldValue.CanInterface() {
 		return fmt.Errorf("no such field: %q", fieldName)
 	}
+
+	// update the value, including auto-pointer and auto-dereferencing magic
+	if err := setReflectValue(rFieldValue, newValue); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setListItem(dest any, index int, newValue any) (any, error) {
+	if index < 0 {
+		return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+	}
+
+	rDest := unpointer(dest)
+
+	if !rDest.CanSet() {
+		return nil, fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
+	}
+
+	// pad list to contain enough elements; this only works for slices
+	// TODO: Only do this if and when we're sure the given value is compatible.
+	if missing := (index + 1) - rDest.Cap(); missing > 0 {
+		if rDest.Kind() != reflect.Slice {
+			return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+		}
+
+		// extend slice capacity
+		rDest.Grow(missing)
+
+		// fill-in zero values
+		zeroVal := reflect.New(rDest.Type().Elem()).Elem()
+		for i := 0; i < missing; i++ {
+			rDest = reflect.Append(rDest, zeroVal)
+		}
+	}
+
+	// update the value, including auto-pointer and auto-dereferencing magic
+	if err := setReflectValue(rDest.Index(index), newValue); err != nil {
+		return nil, err
+	}
+
+	return rDest.Interface(), nil
+}
+
+func unpointer(value any) reflect.Value {
+	rValue := reflect.ValueOf(value)
+
+	// fmt.Printf("dest.CanSet   : %v\n", rDest.CanSet())
+	// fmt.Printf("dest.Interface: %v\n", rDest.Interface())
+	// fmt.Printf("dest.Kind     : %v\n", rDest.Kind())
+
+	// if it's a pointer, resolve its value
+	if rValue.Kind() == reflect.Ptr {
+		rValue = reflect.Indirect(rValue)
+
+		// fmt.Printf("resolved pointer indirection\n")
+		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
+		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
+		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
+	}
+
+	if rValue.Kind() == reflect.Interface {
+		rValue = rValue.Elem()
+
+		// fmt.Printf("resolved interface\n")
+		// fmt.Printf(" -> new dest.CanSet   : %v\n", rDest.CanSet())
+		// fmt.Printf(" -> new dest.Interface: %v\n", rDest.Interface())
+		// fmt.Printf(" -> new dest.Kind     : %v\n", rDest.Kind())
+	}
+
+	return rValue
+}
+
+func setReflectValue(dest reflect.Value, newValue any) error {
+	// rFieldValue := rDest.FieldByName(fieldName)
+	// if rFieldValue == (reflect.Value{}) || !rFieldValue.CanInterface() {
+	// 	return fmt.Errorf("no such field: %q", fieldName)
+	// }
 
 	// fmt.Printf("field.CanSet   : %v\n", rFieldValue.CanSet())
 	// fmt.Printf("field.Interface: %v\n", rFieldValue.Interface())
@@ -219,17 +281,17 @@ func setStructField(dest any, fieldName string, newValue any) error {
 	// auto pointer handling: automatically convert from pointer to non-pointer
 
 	// for better error message
-	fieldType := rFieldValue.Type().String()
+	fieldType := dest.Type().String()
 	originalGivenType := "nil"
 	if newValue != nil {
 		originalGivenType = rNewValue.Type().String()
 	}
 
-	switch rFieldValue.Kind() {
+	switch dest.Kind() {
 	case reflect.Ptr:
 		// turn untyped nils into typed ones
 		if newValue == nil {
-			rNewValue = reflect.New(rFieldValue.Type()).Elem()
+			rNewValue = reflect.New(dest.Type()).Elem()
 		}
 
 		// given value is not a pointer, so let's turn it into one
@@ -243,19 +305,19 @@ func setStructField(dest any, fieldName string, newValue any) error {
 	case reflect.Interface:
 		// turn untyped nils into typed ones
 		if newValue == nil {
-			rNewValue = reflect.New(rFieldValue.Type()).Elem()
+			rNewValue = reflect.New(dest.Type()).Elem()
 		}
 
 	default:
 		// catch untyped pointers (literal nils)
 		if newValue == nil {
-			return fmt.Errorf("cannot set %s (%s) to null", fieldName, fieldType)
+			return errors.New("cannot set to null")
 		}
 
 		// given value is a pointer
 		if rNewValue.Kind() == reflect.Ptr {
 			if rNewValue.IsNil() {
-				return fmt.Errorf("cannot set %s (%s) to null", fieldName, fieldType)
+				return errors.New("cannot set to null")
 			}
 
 			// dereference the pointer
@@ -263,11 +325,11 @@ func setStructField(dest any, fieldName string, newValue any) error {
 		}
 	}
 
-	if !rNewValue.Type().AssignableTo(rFieldValue.Type()) {
-		return fmt.Errorf("cannot set %s (%s) to %s", fieldName, fieldType, originalGivenType)
+	if !rNewValue.Type().AssignableTo(dest.Type()) {
+		return fmt.Errorf("cannot set %s to %s", fieldType, originalGivenType)
 	}
 
-	rFieldValue.Set(rNewValue)
+	dest.Set(rNewValue)
 
 	return nil
 }
