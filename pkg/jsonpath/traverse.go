@@ -165,19 +165,19 @@ func traverseMapFilterStep(value reflect.Value, step FilterStep) (key any, resul
 	// we need to loop over the object in a consistent way.
 	orderedKeys := orderedObjectKeys(value)
 
-	selectedKeys := []string{}
+	selectedKeys := []any{}
 	selectedValues := []any{}
 
-	for _, key := range orderedKeys {
-		keyName := key.String()
-		val := value.MapIndex(key).Interface()
+	for _, rKey := range orderedKeys {
+		key := rKey.Interface()
+		val := value.MapIndex(rKey).Interface()
 
 		// TODO: Would a check like this be needed?
 		// if keyValue == (reflect.Value{}) {
 		// 	return key, nil, fmt.Errorf("invalid key %q: %w", key, noSuchKeyErr)
 		// }
 
-		keep, err := step.Keep(keyName, val)
+		keep, err := step.Keep(key, val)
 		if err != nil {
 			// Removing the error's type is important so further up the call chain we can distinguish
 			// between "$var.foo" with .foo not existing, or $var[?(eq? .foo 1)]; otherwise too many
@@ -186,7 +186,7 @@ func traverseMapFilterStep(value reflect.Value, step FilterStep) (key any, resul
 		}
 
 		if keep {
-			selectedKeys = append(selectedKeys, keyName)
+			selectedKeys = append(selectedKeys, key)
 			selectedValues = append(selectedValues, val)
 		}
 	}

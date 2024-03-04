@@ -816,7 +816,7 @@ func TestSetListItem(t *testing.T) {
 	}{
 		{
 			name:    "catch invalid index",
-			dest:    &[]string{"foo", "bar"},
+			dest:    []string{"foo", "bar"},
 			index:   -1,
 			invalid: true,
 		},
@@ -978,64 +978,64 @@ func TestSetMapItem(t *testing.T) {
 	}{
 		{
 			name:     "can set string at string in map[string]string",
-			dest:     &map[string]string{"foo": "bar"},
+			dest:     map[string]string{"foo": "bar"},
 			key:      "foo",
 			newValue: "new-value",
-			expected: &map[string]string{"foo": "new-value"},
+			expected: map[string]string{"foo": "new-value"},
 		},
 		{
 			name:     "can set new key",
-			dest:     &map[string]string{"foo": "bar"},
+			dest:     map[string]string{"foo": "bar"},
 			key:      "foobar",
 			newValue: "new-value",
-			expected: &map[string]string{"foo": "bar", "foobar": "new-value"},
+			expected: map[string]string{"foo": "bar", "foobar": "new-value"},
 		},
 		{
 			name:     "can set *string at string in map[string]string (auto-dereferencing)",
-			dest:     &map[string]string{"foo": "bar"},
+			dest:     map[string]string{"foo": "bar"},
 			key:      "foo",
 			newValue: ptrTo("new-value"),
-			expected: &map[string]string{"foo": "new-value"},
+			expected: map[string]string{"foo": "new-value"},
 		},
 		{
 			name:     "can set string at string in map[string]*string (auto-pointerize)",
-			dest:     &map[string]*string{"foo": ptrTo("bar")},
+			dest:     map[string]*string{"foo": ptrTo("bar")},
 			key:      "foo",
 			newValue: "new-value",
-			expected: &map[string]*string{"foo": ptrTo("new-value")},
+			expected: map[string]*string{"foo": ptrTo("new-value")},
 		},
 		{
 			name:     "can set *string at *string in map[string]string (auto-dereferencing the key)",
-			dest:     &map[string]string{"foo": "bar"},
+			dest:     map[string]string{"foo": "bar"},
 			key:      ptrTo("foo"),
 			newValue: ptrTo("new-value"),
-			expected: &map[string]string{"foo": "new-value"},
+			expected: map[string]string{"foo": "new-value"},
 		},
 		{
-			name:    "catch incomaptible key type",
-			dest:    &map[string]string{"foo": "bar"},
+			name:    "catch incompatible key type",
+			dest:    map[string]string{"foo": "bar"},
 			key:     42,
 			invalid: true,
 		},
 		{
-			name:     "catch incomaptible value type",
-			dest:     &map[string]string{"foo": "bar"},
+			name:     "catch incompatible value type",
+			dest:     map[string]string{"foo": "bar"},
 			key:      "foo",
 			newValue: 42,
 			invalid:  true,
 		},
 		{
 			name:     "can set string in map[string]any",
-			dest:     &map[string]any{},
+			dest:     map[string]any{},
 			key:      "foo",
 			newValue: "bar",
-			expected: &map[string]any{"foo": "bar"},
+			expected: map[string]any{"foo": "bar"},
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := setMapItem(tc.dest, tc.key, tc.newValue)
+			updated, err := setMapItem(tc.dest, tc.key, tc.newValue)
 			if err != nil {
 				if !tc.invalid {
 					t.Fatalf("Failed to set key %v (%T) to %v (%T): %v", tc.key, tc.key, tc.newValue, tc.newValue, err)
@@ -1050,8 +1050,8 @@ func TestSetMapItem(t *testing.T) {
 				t.Fatalf("Should not have been able to set key %v (%T) to %v (%T), but succeeded.", tc.key, tc.key, tc.newValue, tc.newValue)
 			}
 
-			if !cmp.Equal(tc.expected, tc.dest) {
-				t.Fatalf("Got unexpected result:\n%s\n", cmp.Diff(tc.expected, tc.dest))
+			if !cmp.Equal(tc.expected, updated) {
+				t.Fatalf("Got unexpected result:\n%s\n", cmp.Diff(tc.expected, updated))
 			}
 		})
 	}

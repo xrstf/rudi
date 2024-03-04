@@ -55,137 +55,90 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 			}
 
 			return setListItem(dest, idx, patched)
-		}
 
-		switch foundKeyThings.(type) {
-		case int:
-			// nil values (or non-existing values) can be turned into vectors
-			if dest == nil {
-				dest = []any{}
+		case kindMap:
+			patched, err := patch(foundValueThings, foundKeyThings, err == nil, remainingSteps, patchValue)
+			if err != nil {
+				return nil, err
 			}
 
-			asVector, ok := dest.([]any)
-			if !ok {
-				panic("VectorStep should have errored on a non-vector value.")
-			}
-
-			return patchFoundVectorValue(asVector, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
-
-		case string:
-			// nil values (or non-existing values) can be turned into objects
-			if dest == nil {
-				dest = map[string]any{}
-			}
-
-			asObject, ok := dest.(map[string]any)
-			if !ok {
-				panic("ObjectStep should have errored on a non-object value.")
-			}
-
-			return patchFoundObjectValue(asObject, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
+			return setMapItem(dest, foundKeyThings, patched)
 
 		default:
-			panic(fmt.Sprintf("SingleStep should have returned int index or string key, but returned %v (%T)", foundKeyThings, foundKeyThings))
+			panic(fmt.Sprintf("SingleStep returned unimplemented destination kind %v", destKind))
 		}
 
 	// $var[?(…)]
 	case FilterStep:
+		// this step found nothing, so there is no values to be updated and we can stop
 		foundValues := foundValueThings.([]any)
 		if len(foundValues) == 0 {
 			return dest, nil
 		}
 
-		foundsKeys, ok := foundKeyThings.([]string)
-		if ok {
-			// nil values (or non-existing values) can be turned into objects
-			if dest == nil {
-				dest = map[string]any{}
-			}
-
-			asObject, ok := dest.(map[string]any)
+		switch destKind {
+		// arrays, slices
+		case kindList:
+			foundIndexes, ok := foundKeyThings.([]int)
 			if !ok {
-				panic("ObjectStep should have errored on a non-object value.")
+				panic(fmt.Sprintf("Slice/array keys are not []int, but %T?", foundKeyThings))
 			}
 
-			for idx, key := range foundsKeys {
+			for idx, listIndex := range foundIndexes {
 				var err error
-				asObject, err = patchFoundObjectValue(asObject, key, foundValues[idx], true, remainingSteps, patchValue)
+				dest, err = patchFoundListItem(dest, listIndex, foundValues[idx], true, remainingSteps, patchValue)
 				if err != nil {
 					return nil, err
 				}
 			}
 
-			return asObject, nil
-		}
+			return dest, nil
 
-		foundIndexes, ok := foundKeyThings.([]int)
-		if ok {
-			// nil values (or non-existing values) can be turned into vectors
-			if dest == nil {
-				dest = []any{}
-			}
-
-			asVector, ok := dest.([]any)
+		case kindMap:
+			foundKeys, ok := foundKeyThings.([]any)
 			if !ok {
-				panic("VectorStep should have errored on a non-vector value.")
+				panic(fmt.Sprintf("Map keys are not []any, but %T?", foundKeyThings))
 			}
 
-			for idx, vectorIndex := range foundIndexes {
+			for idx, key := range foundKeys {
 				var err error
-				asVector, err = patchFoundVectorValue(asVector, vectorIndex, foundValues[idx], true, remainingSteps, patchValue)
+				dest, err = patchFoundMapItem(dest, key, foundValues[idx], true, remainingSteps, patchValue)
 				if err != nil {
 					return nil, err
 				}
 			}
 
-			return asVector, nil
-		}
+			return dest, nil
 
-		panic(fmt.Sprintf("FilterStep should have returned []int or []string, but returned %v (%T)", foundKeyThings, foundKeyThings))
+		default:
+			panic(fmt.Sprintf("FilterStep returned unimplemented destination kind %v", destKind))
+		}
 
 	default:
 		panic(fmt.Sprintf("Unknown path step type %T", thisStep))
 	}
 }
 
-func patchFoundVectorValue(dest []any, index any, existingValue any, existed bool, remainingSteps Path, patchValue PatchFunc) ([]any, error) {
-	idx, ok := index.(int)
-	if !ok {
-		panic("VectorStep did not return an int index as first return value.")
-	}
-	if idx < 0 {
-		return nil, fmt.Errorf("invalid index %d: %w", idx, indexOutOfBoundsErr)
+func patchFoundListItem(dest any, index int, existingValue any, existed bool, remainingSteps Path, patchValue PatchFunc) (any, error) {
+	if index < 0 {
+		panic(fmt.Sprintf("Found negative index %d in slice?", index))
 	}
 
-	patched, err := patch(existingValue, idx, existed, remainingSteps, patchValue)
+	patched, err := patch(existingValue, index, existed, remainingSteps, patchValue)
 	if err != nil {
 		return nil, err
 	}
 
-	// expand destination to make room for the target index
-	for len(dest) < idx+1 {
-		dest = append(dest, nil)
-	}
-
-	dest[idx] = patched
-
-	return dest, nil
+	return setListItem(dest, index, patched)
 }
 
-func patchFoundObjectValue(dest map[string]any, anyKey any, existingValue any, existed bool, remainingSteps Path, patchValue PatchFunc) (map[string]any, error) {
-	key, ok := anyKey.(string)
-	if !ok {
-		panic("ObjectStep did not return a string key as first return value.")
-	}
-
+func patchFoundMapItem(dest any, key any, existingValue any, existed bool, remainingSteps Path, patchValue PatchFunc) (any, error) {
 	patched, err := patch(existingValue, key, existed, remainingSteps, patchValue)
 	if err != nil {
 		return nil, err
 	}
 
-	dest[key] = patched
-
-	return dest, nil
+	return setMapItem(dest, key, patched)
 }
 
 func setStructField(dest any, fieldName string, newValue any) error {
@@ -245,28 +198,24 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 	return rDest.Interface(), nil
 }
 
-func setMapItem(dest any, key any, newValue any) error {
+func setMapItem(dest any, key any, newValue any) (any, error) {
 	rDest := unpointer(dest)
-
-	if !rDest.CanSet() {
-		return fmt.Errorf("cannot set value in %T (must call this function with a pointer)", dest)
-	}
 
 	// adjust given key to the key type of the map
 	rKey, err := adjustPointerType(key, rDest.Type().Key())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// adjust given value to the value type of the map
 	rNewValue, err := adjustPointerType(newValue, rDest.Type().Elem())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rDest.SetMapIndex(*rKey, *rNewValue)
 
-	return nil
+	return rDest.Interface(), nil
 }
 
 func rValueString(rv reflect.Value) string {
