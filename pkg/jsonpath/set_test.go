@@ -681,7 +681,7 @@ func TestSetStructField(t *testing.T) {
 			expected:  &aTestStruct{EmptyInterfaceField: map[string]int{"foo": 42}},
 		},
 		{
-			name:      "can set any-typed field to *string",
+			name:      "can set any-typed field to *string (pointer stays pointer)",
 			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  ptrTo("new-value"),
@@ -791,9 +791,19 @@ func TestSetStructField(t *testing.T) {
 	}
 }
 
+func getEmptySlice[T any]() any {
+	return []T{}
+}
+
+func getStringSlice() any {
+	return []string{"foo", "bar"}
+}
+
 func TestSetListItem(t *testing.T) {
 	var (
-		emptySlice []string
+		emptySlice    []string
+		returnedSlice = getEmptySlice[string]()
+		stringSlice   = getStringSlice()
 	)
 
 	testcases := []struct {
@@ -812,59 +822,79 @@ func TestSetListItem(t *testing.T) {
 		},
 		{
 			name:     "can set string in []string",
-			dest:     &[]string{"foo", "bar"},
+			dest:     []string{"foo", "bar"},
+			index:    0,
+			newValue: "new-value",
+			expected: []string{"new-value", "bar"},
+		},
+		{
+			name:     "can set string in []string (any variable)",
+			dest:     stringSlice,
 			index:    0,
 			newValue: "new-value",
 			expected: []string{"new-value", "bar"},
 		},
 		{
 			name:     "can set *string in []string (auto-derefencing)",
-			dest:     &[]string{"foo", "bar"},
+			dest:     []string{"foo", "bar"},
 			index:    0,
 			newValue: ptrTo("new-value"),
 			expected: []string{"new-value", "bar"},
 		},
 		{
 			name:     "can set *string in []*string",
-			dest:     &[]*string{ptrTo("foo"), ptrTo("bar")},
+			dest:     []*string{ptrTo("foo"), ptrTo("bar")},
 			index:    0,
 			newValue: ptrTo("new-value"),
 			expected: []*string{ptrTo("new-value"), ptrTo("bar")},
 		},
 		{
 			name:     "can set string in []*string (auto pointer)",
-			dest:     &[]*string{ptrTo("foo"), ptrTo("bar")},
+			dest:     []*string{ptrTo("foo"), ptrTo("bar")},
 			index:    0,
 			newValue: "new-value",
 			expected: []*string{ptrTo("new-value"), ptrTo("bar")},
 		},
 		{
 			name:     "can set non-first slice element",
-			dest:     &[]string{"foo", "bar"},
+			dest:     []string{"foo", "bar"},
 			index:    1,
 			newValue: "new-value",
 			expected: []string{"foo", "new-value"},
 		},
 		{
 			name:     "can extend a slice as needed",
-			dest:     &[]string{"foo", "bar"},
+			dest:     []string{"foo", "bar"},
 			index:    3,
 			newValue: "new-value",
 			expected: []string{"foo", "bar", "", "new-value"},
 		},
 		{
 			name:     "can extend a pointer slice as needed",
-			dest:     &[]*string{ptrTo("foo"), ptrTo("bar")},
+			dest:     []*string{ptrTo("foo"), ptrTo("bar")},
 			index:    3,
 			newValue: "new-value",
 			expected: []*string{ptrTo("foo"), ptrTo("bar"), nil, ptrTo("new-value")},
 		},
 		{
 			name:     "can extend nil slice",
-			dest:     &emptySlice,
+			dest:     emptySlice,
 			index:    1,
 			newValue: "new-value",
 			expected: []string{"", "new-value"},
+		},
+		{
+			name:     "can extend returned string slice",
+			dest:     returnedSlice,
+			index:    1,
+			newValue: "new-value",
+			expected: []string{"", "new-value"},
+		},
+		{
+			name:    "arrays must be passed as pointers",
+			dest:    [2]string{"foo", "bar"},
+			index:   0,
+			invalid: true,
 		},
 		{
 			name:     "can set string in [2]string",
@@ -874,21 +904,35 @@ func TestSetListItem(t *testing.T) {
 			expected: [2]string{"new-value", "bar"},
 		},
 		{
+			name:     "can set string in []any",
+			dest:     []any{"foo"},
+			index:    0,
+			newValue: "new-value",
+			expected: []any{"new-value"},
+		},
+		{
+			name:     "can extend []any",
+			dest:     []any{"foo"},
+			index:    2,
+			newValue: 42,
+			expected: []any{"foo", nil, 42},
+		},
+		{
 			name:    "cannot grow an array",
-			dest:    &[2]string{"foo", "bar"},
+			dest:    [2]string{"foo", "bar"},
 			index:   2,
 			invalid: true,
 		},
 		{
 			name:     "cannot set incompatible type",
-			dest:     &[]string{"foo", "bar"},
+			dest:     []string{"foo", "bar"},
 			index:    0,
 			newValue: 42,
 			invalid:  true,
 		},
 		{
 			name:     "cannot set incompatible pointer type",
-			dest:     &[]string{"foo", "bar"},
+			dest:     []string{"foo", "bar"},
 			index:    0,
 			newValue: ptrTo(42),
 			invalid:  true,
@@ -979,6 +1023,13 @@ func TestSetMapItem(t *testing.T) {
 			key:      "foo",
 			newValue: 42,
 			invalid:  true,
+		},
+		{
+			name:     "can set string in map[string]any",
+			dest:     &map[string]any{},
+			key:      "foo",
+			newValue: "bar",
+			expected: &map[string]any{"foo": "bar"},
 		},
 	}
 

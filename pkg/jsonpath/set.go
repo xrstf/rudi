@@ -43,8 +43,18 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 	case SingleStep:
 		switch destKind {
 		// arrays, slices
-		// case kindList:
-		// 	return patchFoundVectorValue(asVector, foundKeyThings, foundValueThings, err == nil, remainingSteps, patchValue)
+		case kindList:
+			idx, ok := foundKeyThings.(int)
+			if !ok {
+				panic(fmt.Sprintf("Slice/array key is not an integer, but %T?", foundKeyThings))
+			}
+
+			patched, err := patch(foundValueThings, idx, err == nil, remainingSteps, patchValue)
+			if err != nil {
+				return nil, err
+			}
+
+			return setListItem(dest, idx, patched)
 		}
 
 		switch foundKeyThings.(type) {
@@ -205,29 +215,28 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 
 	rDest := unpointer(dest)
 
-	if !rDest.CanSet() {
-		return nil, fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
-	}
-
 	rNewValue, err := adjustPointerType(newValue, rDest.Type().Elem())
 	if err != nil {
 		return nil, err
 	}
 
-	// pad list to contain enough elements; this only works for slices
-	if missing := (index + 1) - rDest.Cap(); missing > 0 {
+	// pad list to contain enough elements; this only works for slices;
+	// this creates a completely new slice
+	if missing := (index + 1) - rDest.Len(); missing > 0 {
 		if rDest.Kind() != reflect.Slice {
 			return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
 		}
 
-		// extend slice capacity
-		rDest.Grow(missing)
+		totalLength := rDest.Len() + missing
 
-		// fill-in zero values
-		zeroVal := reflect.New(rDest.Type().Elem()).Elem()
-		for i := 0; i < missing; i++ {
-			rDest = reflect.Append(rDest, zeroVal)
-		}
+		newSlice := reflect.MakeSlice(rDest.Type(), totalLength, totalLength)
+		reflect.Copy(newSlice, rDest)
+
+		rDest = newSlice
+	}
+
+	if rDest.Kind() == reflect.Array && !rDest.CanSet() {
+		return nil, errors.New("arrays must be passed as pointers")
 	}
 
 	// update the value, including auto-pointer and auto-dereferencing magic
@@ -240,7 +249,7 @@ func setMapItem(dest any, key any, newValue any) error {
 	rDest := unpointer(dest)
 
 	if !rDest.CanSet() {
-		return fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
+		return fmt.Errorf("cannot set value in %T (must call this function with a pointer)", dest)
 	}
 
 	// adjust given key to the key type of the map
@@ -260,17 +269,31 @@ func setMapItem(dest any, key any, newValue any) error {
 	return nil
 }
 
+func rValueString(rv reflect.Value) string {
+	return fmt.Sprintf("rvalue{kind=%v, type=%v, canSet=%v, canInterface=%v}", rv.Kind(), rv.Type().String(), rv.CanSet(), rv.CanInterface())
+}
+
+func rSliceValueString(rv reflect.Value) string {
+	return fmt.Sprintf("rvalue{kind=%v, type=%v, cap=%d, len=%d, canSet=%v, canInterface=%v}", rv.Kind(), rv.Type().String(), rv.Cap(), rv.Len(), rv.CanSet(), rv.CanInterface())
+}
+
 func unpointer(value any) reflect.Value {
 	rValue := reflect.ValueOf(value)
+
+	// fmt.Printf("input rvalue: %s\n", rValueString(rValue))
 
 	// if it's a pointer, resolve its value
 	if rValue.Kind() == reflect.Ptr {
 		rValue = reflect.Indirect(rValue)
+		// fmt.Printf(" -> unpointered: %s\n", rValueString(rValue))
 	}
 
 	if rValue.Kind() == reflect.Interface {
 		rValue = rValue.Elem()
+		// fmt.Printf(" -> uninterfaced: %s\n", rValueString(rValue))
 	}
+
+	// fmt.Printf("final input rvalue: %s\n", rValueString(rValue))
 
 	return rValue
 }
