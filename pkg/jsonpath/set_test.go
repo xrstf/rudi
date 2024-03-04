@@ -828,6 +828,13 @@ func TestSetListItem(t *testing.T) {
 			expected: []string{"new-value", "bar"},
 		},
 		{
+			name:     "pointer to a slice is returned as pointer",
+			dest:     &[]string{"foo", "bar"},
+			index:    0,
+			newValue: "new-value",
+			expected: &[]string{"new-value", "bar"},
+		},
+		{
 			name:     "can set string in []string (any variable)",
 			dest:     stringSlice,
 			index:    0,
@@ -901,7 +908,7 @@ func TestSetListItem(t *testing.T) {
 			dest:     &[2]string{"foo", "bar"},
 			index:    0,
 			newValue: "new-value",
-			expected: [2]string{"new-value", "bar"},
+			expected: &[2]string{"new-value", "bar"},
 		},
 		{
 			name:     "can set string in []any",
@@ -982,6 +989,13 @@ func TestSetMapItem(t *testing.T) {
 			key:      "foo",
 			newValue: "new-value",
 			expected: map[string]string{"foo": "new-value"},
+		},
+		{
+			name:     "pointer to a map is returned as a pointer",
+			dest:     &map[string]string{"foo": "bar"},
+			key:      "foobar",
+			newValue: "new-value",
+			expected: &map[string]string{"foo": "bar", "foobar": "new-value"},
 		},
 		{
 			name:     "can set new key",

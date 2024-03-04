@@ -142,7 +142,7 @@ func patchFoundMapItem(dest any, key any, existingValue any, existed bool, remai
 }
 
 func setStructField(dest any, fieldName string, newValue any) error {
-	rDest := unpointer(dest)
+	rDest, wasPointer := unpointer(dest)
 
 	if !rDest.CanSet() {
 		return fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
@@ -158,6 +158,10 @@ func setStructField(dest any, fieldName string, newValue any) error {
 		return err
 	}
 
+	if wasPointer {
+		rDest = rDest.Addr()
+	}
+
 	return nil
 }
 
@@ -166,7 +170,7 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 		return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
 	}
 
-	rDest := unpointer(dest)
+	rDest, wasPointer := unpointer(dest)
 
 	rNewValue, err := adjustPointerType(newValue, rDest.Type().Elem())
 	if err != nil {
@@ -195,11 +199,15 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 	// update the value, including auto-pointer and auto-dereferencing magic
 	rDest.Index(index).Set(*rNewValue)
 
+	if wasPointer {
+		rDest = rDest.Addr()
+	}
+
 	return rDest.Interface(), nil
 }
 
 func setMapItem(dest any, key any, newValue any) (any, error) {
-	rDest := unpointer(dest)
+	rDest, wasPointer := unpointer(dest)
 
 	// adjust given key to the key type of the map
 	rKey, err := adjustPointerType(key, rDest.Type().Key())
@@ -215,6 +223,10 @@ func setMapItem(dest any, key any, newValue any) (any, error) {
 
 	rDest.SetMapIndex(*rKey, *rNewValue)
 
+	if wasPointer {
+		rDest = rDest.Addr()
+	}
+
 	return rDest.Interface(), nil
 }
 
@@ -226,13 +238,15 @@ func rSliceValueString(rv reflect.Value) string {
 	return fmt.Sprintf("rvalue{kind=%v, type=%v, cap=%d, len=%d, canSet=%v, canInterface=%v}", rv.Kind(), rv.Type().String(), rv.Cap(), rv.Len(), rv.CanSet(), rv.CanInterface())
 }
 
-func unpointer(value any) reflect.Value {
+func unpointer(value any) (reflect.Value, bool) {
 	rValue := reflect.ValueOf(value)
+	isPointer := false
 
 	// fmt.Printf("input rvalue: %s\n", rValueString(rValue))
 
 	// if it's a pointer, resolve its value
 	if rValue.Kind() == reflect.Ptr {
+		isPointer = true
 		rValue = reflect.Indirect(rValue)
 		// fmt.Printf(" -> unpointered: %s\n", rValueString(rValue))
 	}
@@ -244,7 +258,7 @@ func unpointer(value any) reflect.Value {
 
 	// fmt.Printf("final input rvalue: %s\n", rValueString(rValue))
 
-	return rValue
+	return rValue, isPointer
 }
 
 func adjustPointerType(value any, dest reflect.Type) (*reflect.Value, error) {
