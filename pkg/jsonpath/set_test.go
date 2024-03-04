@@ -44,85 +44,18 @@ func TestInvalidSets(t *testing.T) {
 			path:    Path{IndexStep(0)},
 			invalid: true,
 		},
-
-		// custom types
-
-		// {
-		// 	name: "can set in custom object writer",
-		// 	dest: &customObjWriter{
-		// 		Value: "old",
-		// 	},
-		// 	path:     Path{KeyStep("value")},
-		// 	newValue: "new-value",
-		// 	expected: &customObjWriter{
-		// 		Value: "new-value",
-		// 	},
-		// },
-		// {
-		// 	name: "can set deeper in custom object writer",
-		// 	dest: &customObjWriter{
-		// 		Value: map[string]any{
-		// 			"foo": "old",
-		// 		},
-		// 	},
-		// 	path:     Path{KeyStep("value"), KeyStep("foo")},
-		// 	newValue: "new-value",
-		// 	expected: &customObjWriter{
-		// 		Value: map[string]any{
-		// 			"foo": "new-value",
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	name: "vector steps on custom object getter should fail",
-		// 	dest: &customObjWriter{
-		// 		Value: "old",
-		// 	},
-		// 	path:     Path{0},
-		// 	newValue: "new-value",
-		// 	invalid:  true,
-		// },
-
-		// {
-		// 	name: "can set in custom vector writer",
-		// 	dest: &customVecWriter{
-		// 		Magic: 7,
-		// 		Value: "old",
-		// 	},
-		// 	path:     Path{IndexStep(7)},
-		// 	newValue: "new-value",
-		// 	expected: &customVecWriter{
-		// 		Magic: 7,
-		// 		Value: "new-value",
-		// 	},
-		// },
-		// {
-		// 	name: "can set deeper in custom vector writer",
-		// 	dest: &customVecWriter{
-		// 		Magic: 7,
-		// 		Value: map[string]any{
-		// 			"foo": "old",
-		// 		},
-		// 	},
-		// 	path:     Path{IndexStep(7), KeyStep("foo")},
-		// 	newValue: "new-value",
-		// 	expected: &customVecWriter{
-		// 		Magic: 7,
-		// 		Value: map[string]any{
-		// 			"foo": "new-value",
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	name: "object steps on custom vector getter should fail",
-		// 	dest: &customVecWriter{
-		// 		Magic: 7,
-		// 		Value: "old",
-		// 	},
-		// 	path:     Path{KeyStep("foo")},
-		// 	newValue: "new-value",
-		// 	invalid:  true,
-		// },
+		{
+			name:    "unknown field",
+			dest:    aTestStruct{},
+			path:    Path{KeyStep("DoesNotExist")},
+			invalid: true,
+		},
+		{
+			name:    "unknown sub field",
+			dest:    aTestStruct{},
+			path:    Path{KeyStep("SubStruct"), KeyStep("DoesNotExist")},
+			invalid: true,
+		},
 	}
 
 	for _, tc := range testcases {

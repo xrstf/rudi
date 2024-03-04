@@ -64,6 +64,23 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 
 			return setMapItem(dest, foundKeyThings, patched)
 
+		case kindStuct:
+			fieldName, ok := foundKeyThings.(string)
+			if !ok {
+				panic(fmt.Sprintf("Struct field name is not a string, but %T?", foundKeyThings))
+			}
+
+			patched, err := patch(foundValueThings, foundKeyThings, err == nil, remainingSteps, patchValue)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := setStructField(&dest, fieldName, patched); err != nil {
+				return nil, err
+			}
+
+			return dest, nil
+
 		default:
 			panic(fmt.Sprintf("SingleStep returned unimplemented destination kind %v", destKind))
 		}
