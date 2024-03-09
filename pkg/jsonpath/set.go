@@ -44,6 +44,11 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 		switch destKind {
 		// arrays, slices
 		case kindList:
+			// nil values (or non-existing values) can be turned into vectors
+			if dest == nil {
+				dest = []any{}
+			}
+
 			idx, ok := foundKeyThings.(int)
 			if !ok {
 				panic(fmt.Sprintf("Slice/array key is not an integer, but %T?", foundKeyThings))
@@ -57,6 +62,11 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 			return setListItem(dest, idx, patched)
 
 		case kindMap:
+			// nil values (or non-existing values) can be turned into objects
+			if dest == nil {
+				dest = map[string]any{}
+			}
+
 			patched, err := patch(foundValueThings, foundKeyThings, err == nil, remainingSteps, patchValue)
 			if err != nil {
 				return nil, err

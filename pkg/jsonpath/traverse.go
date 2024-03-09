@@ -32,10 +32,24 @@ const (
 
 func traverseStep(value any, step Step) (any, any, variableKind, error) {
 	if value == nil {
+		switch s := step.(type) {
+		case SingleStep:
+			index, key := indexOrKey(s)
+			switch {
+			case index != nil:
+				return *index, nil, kindList, indexOutOfBoundsErr
+			case key != nil:
+				return *key, nil, kindMap, noSuchKeyErr
+			default:
+				return nil, nil, 0, fmt.Errorf("%T is neither key nor index.", s)
+			}
+
+		case FilterStep:
+			return []any{}, []any{}, 0, nil
+		}
+
 		return nil, nil, 0, fmt.Errorf("cannot traverse into null: %w", untraversableErr)
 	}
-
-	// fmt.Printf("* value: %v\n", value)
 
 	// determine the current value's type
 	valueType := reflect.TypeOf(value)
@@ -44,8 +58,6 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 	// get the type's kind
 	valueKind := valueType.Kind()
 	elemKind := valueKind
-
-	// fmt.Printf("  kitty: %v (%v)\n", valueType, elemType)
 
 	rValue := reflect.ValueOf(value)
 
@@ -60,8 +72,6 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 
 		// dereference the pointer
 		rValue = rValue.Elem()
-
-		// fmt.Printf("  pkitty: %v (%v)\n", elemType, elemKind)
 	}
 
 	switch elemKind {
