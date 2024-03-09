@@ -82,9 +82,11 @@ func TestInvalidSets(t *testing.T) {
 
 type setTestcase struct {
 	name         string
+	dest         any
 	objJSON      string
 	path         Path
 	newValue     any
+	expected     any
 	expectedJSON string
 	invalid      bool
 }
@@ -92,17 +94,24 @@ type setTestcase struct {
 func (tc *setTestcase) Run(t *testing.T) {
 	(&patchTestcase{
 		name:    tc.name,
+		dest:    tc.dest,
 		objJSON: tc.objJSON,
 		path:    tc.path,
 		patch: func(_ *testing.T, _ bool, _ any, _ any) (any, error) {
 			return tc.newValue, nil
 		},
+		expected:     tc.expected,
 		expectedJSON: tc.expectedJSON,
 		invalid:      tc.invalid,
 	}).Run(t)
 }
 
 func TestSet(t *testing.T) {
+	var (
+		oldStructAsAny    any = aTestStruct{Field: "old"}
+		oldStructPtrAsAny any = &aTestStruct{Field: "old"}
+	)
+
 	testcases := []setTestcase{
 		{
 			name:         "scalar root value can simply be changed",
@@ -237,6 +246,34 @@ func TestSet(t *testing.T) {
 			newValue:     "new-value",
 			expectedJSON: `{"foo": "bar", "deep": [null, null, [null, {"bar": "new-value"}]]}`,
 		},
+		{
+			name:     "set set struct field",
+			dest:     aTestStruct{Field: "old"},
+			path:     Path{KeyStep("Field")},
+			newValue: "new-value",
+			expected: aTestStruct{Field: "new-value"},
+		},
+		{
+			name:     "set set struct field when struct is any",
+			dest:     oldStructAsAny,
+			path:     Path{KeyStep("Field")},
+			newValue: "new-value",
+			expected: aTestStruct{Field: "new-value"},
+		},
+		{
+			name:     "set set *struct field",
+			dest:     &aTestStruct{Field: "old"},
+			path:     Path{KeyStep("Field")},
+			newValue: "new-value",
+			expected: &aTestStruct{Field: "new-value"},
+		},
+		{
+			name:     "set set *struct field when struct is any",
+			dest:     oldStructPtrAsAny,
+			path:     Path{KeyStep("Field")},
+			newValue: "new-value",
+			expected: &aTestStruct{Field: "new-value"},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -345,17 +382,21 @@ func TestMultiSet(t *testing.T) {
 
 type patchTestcase struct {
 	name         string
+	dest         any
 	objJSON      string
 	path         Path
 	patch        func(t *testing.T, exists bool, key any, value any) (any, error)
+	expected     any
 	expectedJSON string
 	invalid      bool
 }
 
 func (tc *patchTestcase) Run(t *testing.T) {
-	var data interface{}
-	if err := json.Unmarshal([]byte(strings.TrimSpace(tc.objJSON)), &data); err != nil {
-		t.Fatalf("Invalid obj in testcase: %v", err)
+	data := tc.dest
+	if tc.objJSON != "" {
+		if err := json.Unmarshal([]byte(strings.TrimSpace(tc.objJSON)), &data); err != nil {
+			t.Fatalf("Invalid obj in testcase: %v", err)
+		}
 	}
 
 	patcher := func(exists bool, key any, value any) (any, error) {
@@ -375,9 +416,11 @@ func (tc *patchTestcase) Run(t *testing.T) {
 		t.Fatalf("Should not have been able to patch value, but got: %v (%T)", result, result)
 	}
 
-	var expected interface{}
-	if err := json.Unmarshal([]byte(strings.TrimSpace(tc.expectedJSON)), &expected); err != nil {
-		t.Fatalf("Invalid expected in testcase: %v", err)
+	expected := tc.expected
+	if tc.expectedJSON != "" {
+		if err := json.Unmarshal([]byte(strings.TrimSpace(tc.expectedJSON)), &expected); err != nil {
+			t.Fatalf("Invalid expected in testcase: %v", err)
+		}
 	}
 
 	if !cmp.Equal(expected, result) {
@@ -473,8 +516,10 @@ type aSubStruct struct {
 
 func TestSetStructField(t *testing.T) {
 	var (
-		strPointer     *string
-		emptyInterface customEmptyInterface
+		strPointer        *string
+		emptyInterface    customEmptyInterface
+		oldStructAsAny    any = aTestStruct{Field: "old"}
+		oldStructPtrAsAny any = &aTestStruct{Field: "old"}
 	)
 
 	var nonEmptyImp customNonEmptyInterface = &customNonEmptyImplementor{}
@@ -488,221 +533,228 @@ func TestSetStructField(t *testing.T) {
 		invalid   bool
 	}{
 		{
-			name:      "catch bad calls: must call with pointer to the struct",
-			dest:      aTestStruct{},
-			fieldName: "Field",
-			newValue:  "irrelevant",
-			invalid:   true,
-		},
-		{
 			name:      "cannot set unknown field",
-			dest:      &aTestStruct{},
+			dest:      aTestStruct{},
 			fieldName: "DoesNotExist",
 			newValue:  "irrelevant",
 			invalid:   true,
 		},
 		{
 			name:      "can set string = string",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  "new-value",
-			expected:  &aTestStruct{Field: "new-value"},
+			expected:  aTestStruct{Field: "new-value"},
 		},
 		{
 			name:      "can set string = *string (auto-deference)",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  ptrTo("new-value"),
-			expected:  &aTestStruct{Field: "new-value"},
+			expected:  aTestStruct{Field: "new-value"},
 		},
 		{
 			name:      "catch untyped nil pointers when trying auto-dereferencing",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  nil,
 			invalid:   true,
 		},
 		{
 			name:      "catch typed nil pointers when trying auto-dereferencing",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  strPointer,
 			invalid:   true,
 		},
 		{
 			name:      "auto-dereferencing only works 1 level deep",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  ptrTo(strPointer),
 			invalid:   true,
 		},
 		{
 			name:      "can set *string = *string",
-			dest:      &aTestStruct{PointerField: ptrTo("old-value")},
+			dest:      aTestStruct{PointerField: ptrTo("old-value")},
 			fieldName: "PointerField",
 			newValue:  ptrTo("new-value"),
-			expected:  &aTestStruct{PointerField: ptrTo("new-value")},
+			expected:  aTestStruct{PointerField: ptrTo("new-value")},
 		},
 		{
 			name:      "can set *string = string (auto-pointerize)",
-			dest:      &aTestStruct{PointerField: ptrTo("old-value")},
+			dest:      aTestStruct{PointerField: ptrTo("old-value")},
 			fieldName: "PointerField",
 			newValue:  "new-value",
-			expected:  &aTestStruct{PointerField: ptrTo("new-value")},
+			expected:  aTestStruct{PointerField: ptrTo("new-value")},
 		},
 		{
 			name:      "can set *string = untyped nil",
-			dest:      &aTestStruct{PointerField: ptrTo("old-value")},
+			dest:      aTestStruct{PointerField: ptrTo("old-value")},
 			fieldName: "PointerField",
 			newValue:  nil,
-			expected:  &aTestStruct{PointerField: nil},
+			expected:  aTestStruct{PointerField: nil},
 		},
 		{
 			name:      "can set *string = typed nil",
-			dest:      &aTestStruct{PointerField: ptrTo("old-value")},
+			dest:      aTestStruct{PointerField: ptrTo("old-value")},
 			fieldName: "PointerField",
 			newValue:  strPointer,
-			expected:  &aTestStruct{PointerField: strPointer},
+			expected:  aTestStruct{PointerField: strPointer},
 		},
 		{
 			name:      "cannot set to wrong type, string != int",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  42,
 			invalid:   true,
 		},
 		{
 			name:      "cannot set to wrong type, string != *int",
-			dest:      &aTestStruct{Field: "old-value"},
+			dest:      aTestStruct{Field: "old-value"},
 			fieldName: "Field",
 			newValue:  ptrTo(42),
 			invalid:   true,
 		},
 		{
 			name:      "can set complex type",
-			dest:      &aTestStruct{SubStruct: aSubStruct{Field: "old-value"}},
+			dest:      aTestStruct{SubStruct: aSubStruct{Field: "old-value"}},
 			fieldName: "SubStruct",
 			newValue:  aSubStruct{Field: "new-value"},
-			expected:  &aTestStruct{SubStruct: aSubStruct{Field: "new-value"}},
+			expected:  aTestStruct{SubStruct: aSubStruct{Field: "new-value"}},
 		},
 		{
 			name:      "can set complex type (auto-dereference)",
-			dest:      &aTestStruct{SubStruct: aSubStruct{Field: "old-value"}},
+			dest:      aTestStruct{SubStruct: aSubStruct{Field: "old-value"}},
 			fieldName: "SubStruct",
 			newValue:  &aSubStruct{Field: "new-value"},
-			expected:  &aTestStruct{SubStruct: aSubStruct{Field: "new-value"}},
+			expected:  aTestStruct{SubStruct: aSubStruct{Field: "new-value"}},
 		},
 		{
 			name:      "can set any-typed field to nil",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  nil,
-			expected:  &aTestStruct{},
+			expected:  aTestStruct{},
 		},
 		{
 			name:      "can set any-typed field to string",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  "new-value",
-			expected:  &aTestStruct{EmptyInterfaceField: "new-value"},
+			expected:  aTestStruct{EmptyInterfaceField: "new-value"},
 		},
 		{
 			name:      "can set any-typed field to map",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  map[string]int{"foo": 42},
-			expected:  &aTestStruct{EmptyInterfaceField: map[string]int{"foo": 42}},
+			expected:  aTestStruct{EmptyInterfaceField: map[string]int{"foo": 42}},
 		},
 		{
 			name:      "can set any-typed field to *string (pointer stays pointer)",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  ptrTo("new-value"),
-			expected:  &aTestStruct{EmptyInterfaceField: ptrTo("new-value")},
+			expected:  aTestStruct{EmptyInterfaceField: ptrTo("new-value")},
 		},
 		// assertion doesn't work with go-cmp
 		// {
 		// 	name:      "can set any-typed field to func",
-		// 	dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+		// 	dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 		// 	fieldName: "EmptyInterfaceField",
 		// 	newValue:  setStructField,
-		// 	expected:  &aTestStruct{EmptyInterfaceField: setStructField},
+		// 	expected:  aTestStruct{EmptyInterfaceField: setStructField},
 		// },
 		{
 			name:      "can set any-typed field to custom empty interface",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  emptyInterface,
-			expected:  &aTestStruct{EmptyInterfaceField: emptyInterface},
+			expected:  aTestStruct{EmptyInterfaceField: emptyInterface},
 		},
 		{
 			name:      "can set any-typed field to custom other interface implementation",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  nonEmptyImp,
-			expected:  &aTestStruct{EmptyInterfaceField: nonEmptyImp},
+			expected:  aTestStruct{EmptyInterfaceField: nonEmptyImp},
 		},
 		{
 			name:      "can set any-typed field to custom empty struct",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  customEmptyImplementor{},
-			expected:  &aTestStruct{EmptyInterfaceField: customEmptyImplementor{}},
+			expected:  aTestStruct{EmptyInterfaceField: customEmptyImplementor{}},
 		},
 		{
 			name:      "can set any-typed field to custom empty struct pointer",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  &customEmptyImplementor{},
-			expected:  &aTestStruct{EmptyInterfaceField: &customEmptyImplementor{}},
+			expected:  aTestStruct{EmptyInterfaceField: &customEmptyImplementor{}},
 		},
 		{
 			name:      "can set any-typed field to custom non-empty struct",
-			dest:      &aTestStruct{EmptyInterfaceField: "old-value"},
+			dest:      aTestStruct{EmptyInterfaceField: "old-value"},
 			fieldName: "EmptyInterfaceField",
 			newValue:  customNonEmptyImplementor{},
-			expected:  &aTestStruct{EmptyInterfaceField: customNonEmptyImplementor{}},
+			expected:  aTestStruct{EmptyInterfaceField: customNonEmptyImplementor{}},
 		},
 		{
 			name:      "can set any-typed field to nil",
-			dest:      &aTestStruct{},
+			dest:      aTestStruct{},
 			fieldName: "NonEmptyInterfaceField",
 			newValue:  &customNonEmptyImplementor{},
-			expected:  &aTestStruct{NonEmptyInterfaceField: &customNonEmptyImplementor{}},
+			expected:  aTestStruct{NonEmptyInterfaceField: &customNonEmptyImplementor{}},
 		},
 		{
 			name:      "cannot set string to non-empty interface",
-			dest:      &aTestStruct{},
+			dest:      aTestStruct{},
 			fieldName: "NonEmptyInterfaceField",
 			newValue:  "new-value",
 			invalid:   true,
 		},
 		{
 			name:      "struct would only implement interface when it's a pointer (no auto-pointering here)",
-			dest:      &aTestStruct{},
+			dest:      aTestStruct{},
 			fieldName: "NonEmptyInterfaceField",
 			newValue:  customNonEmptyImplementor{},
 			invalid:   true,
 		},
 		{
 			name:      "can set field in embedded struct directly",
-			dest:      &aTestStruct{},
+			dest:      aTestStruct{},
 			fieldName: "EmbeddedField",
 			newValue:  "new-value",
-			expected:  &aTestStruct{EmbeddedStruct: EmbeddedStruct{EmbeddedField: "new-value"}},
+			expected:  aTestStruct{EmbeddedStruct: EmbeddedStruct{EmbeddedField: "new-value"}},
 		},
 		{
 			name:      "can set field in embedded struct directly (auto-dereferencing)",
-			dest:      &aTestStruct{},
+			dest:      aTestStruct{},
 			fieldName: "EmbeddedField",
 			newValue:  ptrTo("new-value"),
-			expected:  &aTestStruct{EmbeddedStruct: EmbeddedStruct{EmbeddedField: "new-value"}},
+			expected:  aTestStruct{EmbeddedStruct: EmbeddedStruct{EmbeddedField: "new-value"}},
+		},
+		{
+			name:      "can set field in struct that's given as any",
+			dest:      oldStructAsAny,
+			fieldName: "Field",
+			newValue:  ptrTo("new-value"),
+			expected:  aTestStruct{Field: "new-value"},
+		},
+		{
+			name:      "can set field in *struct that's given as any",
+			dest:      oldStructPtrAsAny,
+			fieldName: "Field",
+			newValue:  ptrTo("new-value"),
+			expected:  &aTestStruct{Field: "new-value"},
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := setStructField(tc.dest, tc.fieldName, tc.newValue)
+			updated, err := setStructField(tc.dest, tc.fieldName, tc.newValue)
 			if err != nil {
 				if !tc.invalid {
 					t.Fatalf("Failed to set field %s to %v (%T): %v", tc.fieldName, tc.newValue, tc.newValue, err)
@@ -717,8 +769,8 @@ func TestSetStructField(t *testing.T) {
 				t.Fatalf("Should not have been able to set %s to %v (%T), but succeeded.", tc.fieldName, tc.newValue, tc.newValue)
 			}
 
-			if !cmp.Equal(tc.expected, tc.dest) {
-				t.Fatalf("Got unexpected result:\n%s\n", cmp.Diff(tc.expected, tc.dest))
+			if !cmp.Equal(tc.expected, updated) {
+				t.Fatalf("Got unexpected result:\n%s\n", cmp.Diff(tc.expected, updated))
 			}
 		})
 	}

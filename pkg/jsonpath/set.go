@@ -75,11 +75,7 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 				return nil, err
 			}
 
-			if err := setStructField(&dest, fieldName, patched); err != nil {
-				return nil, err
-			}
-
-			return dest, nil
+			return setStructField(dest, fieldName, patched)
 
 		default:
 			panic(fmt.Sprintf("SingleStep returned unimplemented destination kind %v", destKind))
@@ -158,28 +154,32 @@ func patchFoundMapItem(dest any, key any, existingValue any, existed bool, remai
 	return setMapItem(dest, key, patched)
 }
 
-func setStructField(dest any, fieldName string, newValue any) error {
+func setStructField(dest any, fieldName string, newValue any) (any, error) {
 	rDest, wasPointer := unpointer(dest)
 
+	// fmt.Printf("input rDest: %s\n", rValueString(rDest))
+
 	if !rDest.CanSet() {
-		return fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
+		return nil, fmt.Errorf("cannot set field in %T (must call this function with a pointer)", dest)
 	}
 
 	rFieldValue := rDest.FieldByName(fieldName)
 	if rFieldValue == (reflect.Value{}) || !rFieldValue.CanInterface() {
-		return fmt.Errorf("no such field: %q", fieldName)
+		return nil, fmt.Errorf("no such field: %q", fieldName)
 	}
+
+	// fmt.Printf("field value: %s\n", rValueString(rFieldValue))
 
 	// update the value, including auto-pointer and auto-dereferencing magic
 	if err := setReflectValueAdjusted(rFieldValue, newValue); err != nil {
-		return err
+		return nil, err
 	}
 
 	if wasPointer {
 		rDest = rDest.Addr()
 	}
 
-	return nil
+	return rDest.Interface(), nil
 }
 
 func setListItem(dest any, index int, newValue any) (any, error) {
@@ -256,27 +256,41 @@ func rSliceValueString(rv reflect.Value) string {
 }
 
 func unpointer(value any) (reflect.Value, bool) {
-	rValue := reflect.ValueOf(value)
-	isPointer := false
+	rValue := reflect.ValueOf(&value)
+	isPointer := reflect.ValueOf(value).Kind() == reflect.Ptr
 
 	// fmt.Printf("input rvalue: %s\n", rValueString(rValue))
 
-	// if it's a pointer, resolve its value
-	if rValue.Kind() == reflect.Ptr {
-		isPointer = true
-		rValue = reflect.Indirect(rValue)
-		// fmt.Printf(" -> unpointered: %s\n", rValueString(rValue))
-	}
+	rValue = reflect.Indirect(rValue)
+	// fmt.Printf(" -> unpointered : %s\n", rValueString(rValue))
 
 	if rValue.Kind() == reflect.Interface {
 		rValue = rValue.Elem()
 		// fmt.Printf(" -> uninterfaced: %s\n", rValueString(rValue))
+
+		var field reflect.Value
+		if rValue.Kind() == reflect.Ptr {
+			field = reflect.New(rValue.Elem().Type())
+			// fmt.Printf(" -> new field pre: %s\n", rValueString(field))
+			field.Elem().Set(rValue.Elem())
+		} else {
+			field = reflect.New(rValue.Type())
+			field.Elem().Set(rValue)
+		}
+		// fmt.Printf(" -> new field   : %s\n", rValueString(field))
+
+		rValue = field.Elem()
+		// fmt.Printf(" -> new rValue  : %s\n", rValueString(field.Elem()))
 	}
 
 	// fmt.Printf("final input rvalue: %s\n", rValueString(rValue))
 
 	return rValue, isPointer
 }
+
+// func unpointer(value any) (reflect.Value, bool) {
+// 	return unpointerValue(reflect.ValueOf(&value))
+// }
 
 func adjustPointerType(value any, dest reflect.Type) (*reflect.Value, error) {
 	rValue := reflect.ValueOf(value)
