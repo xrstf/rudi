@@ -925,7 +925,7 @@ func TestSetListItem(t *testing.T) {
 			expected: []string{"new-value", "bar"},
 		},
 		{
-			name:     "can set *string in []string (auto-derefencing)",
+			name:     "can set *string in []string (auto-dereferencing)",
 			dest:     []string{"foo", "bar"},
 			index:    0,
 			newValue: ptrTo("new-value"),

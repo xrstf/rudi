@@ -827,7 +827,7 @@ func TestHasFunction(t *testing.T) {
 		},
 		{
 			// root document is an object, so the runtime will convert the step to a string,
-			// so this is equivalent to .["5.6"], which is valid, but yields no matching key nontheless
+			// so this is equivalent to .["5.6"], which is valid, but yields no matching key nonetheless
 			Expression: `(has? .[5.6])`,
 			Expected:   false,
 		},
