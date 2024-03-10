@@ -13,13 +13,24 @@ import (
 var (
 	noSuchKeyErr        = errors.New("no such key")
 	indexOutOfBoundsErr = errors.New("index out of bounds")
+	pointerIsNilErr     = errors.New("pointer to struct is nil")
 	invalidStepErr      = errors.New("cannot use this step type to traverse")
 	untraversableErr    = errors.New("does not support traversing into this type")
 )
 
+func isAnyError(err error, candidates ...error) bool {
+	for _, cand := range candidates {
+		if errors.Is(err, cand) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func ignoreErrorInFilters(err error) bool {
 	// invalidStepErr are not silently swallowed!
-	return errors.Is(err, noSuchKeyErr) || errors.Is(err, indexOutOfBoundsErr) || errors.Is(err, untraversableErr)
+	return isAnyError(err, noSuchKeyErr, indexOutOfBoundsErr, untraversableErr, pointerIsNilErr)
 }
 
 type variableKind int
@@ -27,10 +38,11 @@ type variableKind int
 const (
 	kindList variableKind = iota
 	kindMap
-	kindStuct
+	kindStruct
 )
 
 func traverseStep(value any, step Step) (any, any, variableKind, error) {
+	// untyped nils
 	if value == nil {
 		switch s := step.(type) {
 		case SingleStep:
@@ -46,9 +58,10 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 
 		case FilterStep:
 			return []any{}, []any{}, 0, nil
-		}
 
-		return nil, nil, 0, fmt.Errorf("cannot traverse into null: %w", untraversableErr)
+		default:
+			panic(fmt.Sprintf("Unexpected step type %T", step))
+		}
 	}
 
 	// determine the current value's type
@@ -64,7 +77,25 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 	// unwrap pointer types to their underlying types (*int => int)
 	if valueKind == reflect.Pointer {
 		if rValue.IsNil() {
-			return nil, nil, 0, errors.New("cannot descend into nil")
+			if rValue.Type().Elem().Kind() != reflect.Struct {
+				return nil, nil, 0, errors.New("cannot descend into nil")
+			}
+
+			switch s := step.(type) {
+			case SingleStep:
+				key, ok := s.ToKey()
+				if !ok {
+					return nil, nil, 0, fmt.Errorf("cannot use step %v to traverses into vectors", step)
+				}
+
+				return key, nil, kindStruct, pointerIsNilErr
+
+			case FilterStep:
+				return []any{}, []any{}, 0, nil
+
+			default:
+				panic(fmt.Sprintf("Unexpected step type %T", step))
+			}
 		}
 
 		elemType = valueType.Elem()
@@ -85,7 +116,7 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 
 	case reflect.Struct:
 		keys, results, err := traverseStructStep(rValue, step)
-		return keys, results, kindStuct, err
+		return keys, results, kindStruct, err
 
 	default:
 		return nil, nil, 0, fmt.Errorf("cannot traverse %T: %w", value, untraversableErr)

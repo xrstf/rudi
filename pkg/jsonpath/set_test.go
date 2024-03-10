@@ -106,12 +106,7 @@ func (tc *setTestcase) Run(t *testing.T) {
 	}).Run(t)
 }
 
-func TestSet(t *testing.T) {
-	var (
-		oldStructAsAny    any = aTestStruct{Field: "old"}
-		oldStructPtrAsAny any = &aTestStruct{Field: "old"}
-	)
-
+func TestSetJsonlike(t *testing.T) {
 	testcases := []setTestcase{
 		{
 			name:         "scalar root value can simply be changed",
@@ -246,33 +241,135 @@ func TestSet(t *testing.T) {
 			newValue:     "new-value",
 			expectedJSON: `{"foo": "bar", "deep": [null, null, [null, {"bar": "new-value"}]]}`,
 		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, tc.Run)
+	}
+}
+
+func TestSetComplex(t *testing.T) {
+	var (
+		oldStructAsAny    any = aTestStruct{Field: "old"}
+		oldStructPtrAsAny any = &aTestStruct{Field: "old"}
+	)
+
+	testcases := []setTestcase{
 		{
-			name:     "set set struct field",
+			name:     "set struct field",
 			dest:     aTestStruct{Field: "old"},
 			path:     Path{KeyStep("Field")},
 			newValue: "new-value",
 			expected: aTestStruct{Field: "new-value"},
 		},
 		{
-			name:     "set set struct field when struct is any",
+			name:     "set struct field when struct is any",
 			dest:     oldStructAsAny,
 			path:     Path{KeyStep("Field")},
 			newValue: "new-value",
 			expected: aTestStruct{Field: "new-value"},
 		},
 		{
-			name:     "set set *struct field",
+			name:     "set *struct field",
 			dest:     &aTestStruct{Field: "old"},
 			path:     Path{KeyStep("Field")},
 			newValue: "new-value",
 			expected: &aTestStruct{Field: "new-value"},
 		},
 		{
-			name:     "set set *struct field when struct is any",
+			name:     "set *struct field when struct is any",
 			dest:     oldStructPtrAsAny,
 			path:     Path{KeyStep("Field")},
 			newValue: "new-value",
 			expected: &aTestStruct{Field: "new-value"},
+		},
+		{
+			name:     "set .Field = *string (auto-pointer)",
+			dest:     aTestStruct{Field: "old"},
+			path:     Path{KeyStep("Field")},
+			newValue: ptrTo("new-value"),
+			expected: aTestStruct{Field: "new-value"},
+		},
+		{
+			name:     "set .PointerField = *string",
+			dest:     aTestStruct{PointerField: ptrTo("old")},
+			path:     Path{KeyStep("PointerField")},
+			newValue: ptrTo("new-value"),
+			expected: aTestStruct{PointerField: ptrTo("new-value")},
+		},
+		{
+			name:     "set .PointerField = *string (auto-pointerize)",
+			dest:     aTestStruct{PointerField: ptrTo("old")},
+			path:     Path{KeyStep("PointerField")},
+			newValue: "new-value",
+			expected: aTestStruct{PointerField: ptrTo("new-value")},
+		},
+		{
+			name:     "cannot set .Field = int (incompatible type)",
+			dest:     aTestStruct{},
+			path:     Path{KeyStep("Field")},
+			newValue: 42,
+			invalid:  true,
+		},
+		{
+			name:     "set .EmptyInterfaceField = *string",
+			dest:     aTestStruct{},
+			path:     Path{KeyStep("EmptyInterfaceField")},
+			newValue: ptrTo("new-value"),
+			expected: aTestStruct{EmptyInterfaceField: ptrTo("new-value")},
+		},
+		{
+			name:     "set .SubStruct.Field = *string",
+			dest:     aTestStruct{},
+			path:     Path{KeyStep("SubStruct"), KeyStep("Field")},
+			newValue: ptrTo("new-value"),
+			expected: aTestStruct{SubStruct: aSubStruct{Field: "new-value"}},
+		},
+		{
+			name:     "set .PointerSubStruct = aSubStruct",
+			dest:     aTestStruct{PointerSubStruct: nil},
+			path:     Path{KeyStep("PointerSubStruct")},
+			newValue: aSubStruct{Field: "new-value"},
+			expected: aTestStruct{PointerSubStruct: &aSubStruct{Field: "new-value"}},
+		},
+		{
+			name:     "set .PointerSubStruct.Field = string (field pre-existed)",
+			dest:     aTestStruct{PointerSubStruct: &aSubStruct{Field: "old"}},
+			path:     Path{KeyStep("PointerSubStruct"), KeyStep("Field")},
+			newValue: "new-value",
+			expected: aTestStruct{PointerSubStruct: &aSubStruct{Field: "new-value"}},
+		},
+		{
+			name:     "set .PointerSubStruct.Field = string (field did not exist)",
+			dest:     aTestStruct{PointerSubStruct: nil},
+			path:     Path{KeyStep("PointerSubStruct"), KeyStep("Field")},
+			newValue: "new-value",
+			expected: aTestStruct{PointerSubStruct: &aSubStruct{Field: "new-value"}},
+		},
+		{
+			name:     "turn .EmptyInterfaceField into a map on demand",
+			dest:     aTestStruct{},
+			path:     Path{KeyStep("EmptyInterfaceField"), KeyStep("foobar"), KeyStep("substep")},
+			newValue: ptrTo("new-value"),
+			expected: aTestStruct{EmptyInterfaceField: map[string]any{
+				"foobar": map[string]any{
+					"substep": ptrTo("new-value"),
+				},
+			}},
+		},
+		{
+			name:     "turn .EmptyInterfaceField into a slice on demand",
+			dest:     aTestStruct{},
+			path:     Path{KeyStep("EmptyInterfaceField"), IndexStep(2), IndexStep(1)},
+			newValue: ptrTo("new-value"),
+			expected: aTestStruct{EmptyInterfaceField: []any{
+				nil,
+				nil,
+				[]any{
+					nil,
+					ptrTo("new-value"),
+				},
+			}},
 		},
 	}
 
@@ -506,6 +603,7 @@ type aTestStruct struct {
 	EmptyInterfaceField    any
 	NonEmptyInterfaceField customNonEmptyInterface
 	SubStruct              aSubStruct
+	PointerSubStruct       *aSubStruct
 }
 
 type aSubStruct struct {

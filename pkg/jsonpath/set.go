@@ -34,7 +34,7 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 	remainingSteps := path[1:]
 
 	foundKeyThings, foundValueThings, destKind, err := traverseStep(dest, thisStep)
-	if err != nil && !errors.Is(err, noSuchKeyErr) && !errors.Is(err, indexOutOfBoundsErr) {
+	if err != nil && !errors.Is(err, noSuchKeyErr) && !errors.Is(err, indexOutOfBoundsErr) && !errors.Is(err, pointerIsNilErr) {
 		return nil, err
 	}
 
@@ -74,7 +74,13 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 
 			return setMapItem(dest, foundKeyThings, patched)
 
-		case kindStuct:
+		case kindStruct:
+			// nil values can be automatically instantiated
+			if errors.Is(err, pointerIsNilErr) {
+				newValue := reflect.New(reflect.TypeOf(dest).Elem())
+				dest = newValue.Interface()
+			}
+
 			fieldName, ok := foundKeyThings.(string)
 			if !ok {
 				panic(fmt.Sprintf("Struct field name is not a string, but %T?", foundKeyThings))
