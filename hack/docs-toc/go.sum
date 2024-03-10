@@ -16,8 +16,8 @@ github.com/muesli/termenv v0.15.2 h1:GohcuySI0QmI3wN8Ok9PtKGkgkFIk7y6Vpb5PvrY+Wo
 github.com/muesli/termenv v0.15.2/go.mod h1:Epx+iuz8sNs7mNKhxzH4fWXGNpZwUaJKRS1noLXviQ8=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
-go.xrstf.de/rudi-contrib/semver v0.1.5 h1:qnp5dfoHk7X7EBuBHGplUfbtfpHcOD9f9zXo+GegErI=
-go.xrstf.de/rudi-contrib/semver v0.1.5/go.mod h1:4YieUyLSWXEF0nF3hUW3nydeJr6Hm2QDHdiLizIW97c=
+go.xrstf.de/rudi-contrib/semver v0.1.6-0.20240310001428-224ad07ee9e9 h1:5CJN+0qWwM/ESWMo75Lg4NYgzsBhaUnG9pC6vymJujY=
+go.xrstf.de/rudi-contrib/semver v0.1.6-0.20240310001428-224ad07ee9e9/go.mod h1:4YieUyLSWXEF0nF3hUW3nydeJr6Hm2QDHdiLizIW97c=
 go.xrstf.de/rudi-contrib/set v0.1.1 h1:7MBJrZrrAc3a6MjoBzp4/l2BRn94+lrjTDwWKcCHXBY=
 go.xrstf.de/rudi-contrib/set v0.1.1/go.mod h1:sSVG87d5+N3F+q+a83uMsYKityChmbC23fUEUfAEQWU=
 go.xrstf.de/rudi-contrib/uuid v0.1.4 h1:zYDebdBnAi6lX5ktBrwIK2tuCpJXfGKDqmx6SVcSw0Q=

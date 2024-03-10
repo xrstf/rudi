@@ -18,7 +18,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	go.xrstf.de/rudi-contrib/semver v0.1.5 // indirect
+	go.xrstf.de/rudi-contrib/semver v0.1.6-0.20240310001428-224ad07ee9e9 // indirect
 	go.xrstf.de/rudi-contrib/set v0.1.1 // indirect
 	go.xrstf.de/rudi-contrib/uuid v0.1.4 // indirect
 	go.xrstf.de/rudi-contrib/yaml v0.1.4 // indirect
