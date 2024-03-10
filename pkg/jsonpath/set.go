@@ -34,7 +34,7 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 	remainingSteps := path[1:]
 
 	foundKeyThings, foundValueThings, destKind, err := traverseStep(dest, thisStep)
-	if err != nil && !errors.Is(err, noSuchKeyErr) && !errors.Is(err, indexOutOfBoundsErr) && !errors.Is(err, pointerIsNilErr) {
+	if err != nil && !errors.Is(err, errNoSuchKey) && !errors.Is(err, errIndexOutOfBounds) && !errors.Is(err, errPointerIsNil) {
 		return nil, err
 	}
 
@@ -76,7 +76,7 @@ func patch(dest any, key any, exists bool, path Path, patchValue PatchFunc) (any
 
 		case kindStruct:
 			// nil values can be automatically instantiated
-			if errors.Is(err, pointerIsNilErr) {
+			if errors.Is(err, errPointerIsNil) {
 				newValue := reflect.New(reflect.TypeOf(dest).Elem())
 				dest = newValue.Interface()
 			}
@@ -200,7 +200,7 @@ func setStructField(dest any, fieldName string, newValue any) (any, error) {
 
 func setListItem(dest any, index int, newValue any) (any, error) {
 	if index < 0 {
-		return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+		return nil, fmt.Errorf("invalid index %d: %w", index, errIndexOutOfBounds)
 	}
 
 	rDest, wasPointer := unpointer(dest)
@@ -214,7 +214,7 @@ func setListItem(dest any, index int, newValue any) (any, error) {
 	// this creates a completely new slice
 	if missing := (index + 1) - rDest.Len(); missing > 0 {
 		if rDest.Kind() != reflect.Slice {
-			return nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+			return nil, fmt.Errorf("invalid index %d: %w", index, errIndexOutOfBounds)
 		}
 
 		totalLength := rDest.Len() + missing

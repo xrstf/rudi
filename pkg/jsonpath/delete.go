@@ -38,7 +38,7 @@ func deleteInternal(dest any, path Path) (any, error) {
 
 	foundKeyThings, foundValueThings, _, err := traverseStep(dest, thisStep)
 	if err != nil {
-		if errors.Is(err, noSuchKeyErr) || errors.Is(err, indexOutOfBoundsErr) {
+		if errors.Is(err, errNoSuchKey) || errors.Is(err, errIndexOutOfBounds) {
 			return dest, nil
 		}
 

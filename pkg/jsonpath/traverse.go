@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	noSuchKeyErr        = errors.New("no such key")
-	indexOutOfBoundsErr = errors.New("index out of bounds")
-	pointerIsNilErr     = errors.New("pointer to struct is nil")
-	invalidStepErr      = errors.New("cannot use this step type to traverse")
-	untraversableErr    = errors.New("does not support traversing into this type")
+	errNoSuchKey        = errors.New("no such key")
+	errIndexOutOfBounds = errors.New("index out of bounds")
+	errPointerIsNil     = errors.New("pointer to struct is nil")
+	errInvalidStep      = errors.New("cannot use this step type to traverse")
+	errUntraversable    = errors.New("does not support traversing into this type")
 )
 
 func isAnyError(err error, candidates ...error) bool {
@@ -30,7 +30,7 @@ func isAnyError(err error, candidates ...error) bool {
 
 func ignoreErrorInFilters(err error) bool {
 	// invalidStepErr are not silently swallowed!
-	return isAnyError(err, noSuchKeyErr, indexOutOfBoundsErr, untraversableErr, pointerIsNilErr)
+	return isAnyError(err, errNoSuchKey, errIndexOutOfBounds, errUntraversable, errPointerIsNil)
 }
 
 type variableKind int
@@ -49,9 +49,9 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 			index, key := indexOrKey(s)
 			switch {
 			case index != nil:
-				return *index, nil, kindList, indexOutOfBoundsErr
+				return *index, nil, kindList, errIndexOutOfBounds
 			case key != nil:
-				return *key, nil, kindMap, noSuchKeyErr
+				return *key, nil, kindMap, errNoSuchKey
 			default:
 				return nil, nil, 0, fmt.Errorf("%T is neither key nor index.", s)
 			}
@@ -66,7 +66,6 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 
 	// determine the current value's type
 	valueType := reflect.TypeOf(value)
-	elemType := valueType
 
 	// get the type's kind
 	valueKind := valueType.Kind()
@@ -88,7 +87,7 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 					return nil, nil, 0, fmt.Errorf("cannot use step %v to traverses into vectors", step)
 				}
 
-				return key, nil, kindStruct, pointerIsNilErr
+				return key, nil, kindStruct, errPointerIsNil
 
 			case FilterStep:
 				return []any{}, []any{}, 0, nil
@@ -98,11 +97,9 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 			}
 		}
 
-		elemType = valueType.Elem()
-		elemKind = elemType.Kind()
-
 		// dereference the pointer
 		rValue = rValue.Elem()
+		elemKind = rValue.Kind()
 	}
 
 	switch elemKind {
@@ -119,7 +116,7 @@ func traverseStep(value any, step Step) (any, any, variableKind, error) {
 		return keys, results, kindStruct, err
 
 	default:
-		return nil, nil, 0, fmt.Errorf("cannot traverse %T: %w", value, untraversableErr)
+		return nil, nil, 0, fmt.Errorf("cannot traverse %T: %w", value, errUntraversable)
 	}
 }
 
@@ -146,7 +143,7 @@ func traverseIndexableSingleStep(value reflect.Value, step SingleStep) (key any,
 	}
 
 	if index >= value.Len() {
-		return index, nil, fmt.Errorf("invalid index %d: %w", index, indexOutOfBoundsErr)
+		return index, nil, fmt.Errorf("invalid index %d: %w", index, errIndexOutOfBounds)
 	}
 
 	return index, value.Index(index).Interface(), nil
@@ -195,7 +192,7 @@ func traverseMapSingleStep(value reflect.Value, step SingleStep) (key any, resul
 
 	keyValue := value.MapIndex(reflect.ValueOf(key))
 	if keyValue == (reflect.Value{}) {
-		return key, nil, fmt.Errorf("invalid key %q: %w", key, noSuchKeyErr)
+		return key, nil, fmt.Errorf("invalid key %q: %w", key, errNoSuchKey)
 	}
 
 	return key, keyValue.Interface(), nil
