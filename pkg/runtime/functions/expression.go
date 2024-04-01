@@ -26,6 +26,8 @@ func convertArgs(args []ast.Expression) []cachedExpression {
 	return result
 }
 
+var _ ast.Expression = &cachedExpression{}
+
 func (e *cachedExpression) Eval(ctx types.Context) (any, error) {
 	if !e.evaluated {
 		result, err := ctx.Runtime().EvalExpression(ctx, e.expr)
@@ -38,4 +40,12 @@ func (e *cachedExpression) Eval(ctx types.Context) (any, error) {
 	}
 
 	return e.result, nil
+}
+
+func (e *cachedExpression) ExpressionName() string {
+	return e.expr.ExpressionName()
+}
+
+func (e *cachedExpression) String() string {
+	return e.expr.String()
 }

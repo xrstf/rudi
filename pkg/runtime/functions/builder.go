@@ -17,6 +17,11 @@ type Builder struct {
 	description string
 }
 
+// NewBuilder returns a new Rudi function builder by combining multiple "forms"
+// into one Rudi function. Each form is a regular Go function that can have
+// arbitrary arguments, but must return (any, error).
+// When called from within a Rudi program, the first compatible form is evaluated,
+// so care must be taken to not accidentally shadow a form with another.
 func NewBuilder(forms ...any) *Builder {
 	b := &Builder{
 		forms: []form{},
