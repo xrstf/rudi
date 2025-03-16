@@ -1,4 +1,11 @@
-# Rudi
+# Migration note
+
+> [!IMPORTANT]
+> Rudi has been migrated to [codeberg.org/xrstf/rudi](https://codeberg.org/xrstf/rudi).
+
+---
+
+## Rudi
 
 <p align="center">
   <img src="./docs/rudi-portrait.png" alt="">
@@ -29,7 +36,7 @@ series of statements that are evaluated in order:
 Rudi is great for making tasks like manipulating data, implementing policies, setting default values
 or normalizing data configurable.
 
-## Contents
+### Contents
 
 * [Features](#features)
 * [Installation](#installation)
@@ -45,7 +52,7 @@ or normalizing data configurable.
 * [Credits](#credits)
 * [License](#license)
 
-## Features
+### Features
 
 * **Safe** evaluation: Rudi is not Turing-complete and so Rudi programs are always guaranteed to
   complete in a reasonable time frame. You can add support for functions defined in Rudi code (i.e.
@@ -62,7 +69,7 @@ or normalizing data configurable.
 * **Flexible**: The Rudi CLI interpreter (`rudi`) supports reading/writing JSON,
   [JSON5](https://json5.org/), [YAML](https://yaml.org/) and [TOML](https://toml.io/en/).
 
-## Installation
+### Installation
 
 Rudi is primarily meant to be embedded into other Go programs, but a standalone CLI application,
 `rudi`, is also available to test your scripts with. `rudi` can be installed using Git & Go. Rudi
@@ -79,7 +86,7 @@ This will result in a `rudi` binary in `_build/`; to install system-wide, use `m
 Alternatively, you can download the [latest release](https://github.com/xrstf/rudi/releases/latest)
 from GitHub.
 
-## Documentation
+### Documentation
 
 Make yourself familiar with Rudi using the documentation:
 
@@ -88,9 +95,9 @@ Make yourself familiar with Rudi using the documentation:
 * Additional functions are available in the [extended library](docs/extlib/README.md).
 * [Type Handling](docs/coalescing.md) describes how Rudi handles, converts and compares values.
 
-## Usage
+### Usage
 
-### Command Line
+#### Command Line
 
 Rudi comes with a standalone CLI tool called `rudi`.
 
@@ -125,7 +132,7 @@ Usage of rudi:
 
 `rudi` has extensive help built right into it, try running `rudi help` to get started.
 
-#### File Handling
+##### File Handling
 
 Rudi can load JSON, JSON5, YAML and TOML files and will determine the file format based on the
 file extension (`.json` for JSON, `.json5` for JSON5, `.yml` and `.yaml` for YAML and `.tml` /
@@ -144,7 +151,7 @@ you to load files regardless of their extension and also allows to load raw file
 kept as strings) using `"myvar=raw:file:logo.png"`. Raw file encoding is not supported for files
 given as arguments, those files must have a recognized file extension.
 
-### Embedding
+#### Embedding
 
 Rudi is well suited to be embedded into Go applications. A clean and simple API makes it a breeze:
 
@@ -200,7 +207,7 @@ func main() {
 }
 ```
 
-## Alternatives
+### Alternatives
 
 Rudi doesn't exist in a vacuum; there are many other great embeddable programming/scripting languages
 out there, allbeit with slightly different ideas and goals than Rudi:
@@ -230,7 +237,7 @@ out there, allbeit with slightly different ideas and goals than Rudi:
   _Bonus mention:_ Mastermind's [sprig](https://github.com/Masterminds/sprig) served as inspiration
   for quite a few of the functions in Rudi.
 
-## Credits
+### Credits
 
 Rudi has been named after my grandfather.
 
@@ -239,6 +246,6 @@ my constant questions for feedback :smile:
 
 Rudi has been made possible by the amazing [Pigeon](https://github.com/mna/pigeon) parser generator.
 
-## License
+### License
 
 MIT
